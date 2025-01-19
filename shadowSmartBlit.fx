@@ -1,0 +1,935 @@
+//Globals
+shared float4 gAllGlobals[64] : AllGlobals;
+shared float4x3 gBoneMtx[48] : WorldMatrixArray;
+shared float4x4 gWorld : World;
+shared float4x4 gWorldView : WorldView;
+shared float4x4 gWorldViewProj : WorldViewProjection;
+shared float4x4 gViewInverse : ViewInverse;
+shared texture stippletexture;
+shared sampler StippleTexture = 
+sampler_state
+{
+    Texture = <stippletexture>;
+    MinFilter = POINT;
+    MagFilter = POINT;
+    MipFilter = POINT;
+    AddressU = WRAP;
+    AddressV = WRAP;
+};
+shared float4 gDepthFxParams : DepthFxParams = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 gDirectionalLight : DirectionalLight;
+shared float4 gDirectionalColour : DirectionalColour;
+shared float4 gLightPosX : LightPositionX;
+shared float4 gLightPosY : LightPositionY;
+shared float4 gLightPosZ : LightPositionZ;
+shared float4 gLightDirX : LightDirX;
+shared float4 gLightDirY : LightDirY;
+shared float4 gLightDirZ : LightDirZ;
+shared float4 gLightFallOff : LightFallOff;
+shared float4 gLightConeScale : LightConeScale;
+shared float4 gLightConeOffset : LightConeOffset;
+shared float4 gLightColR : LightColR;
+shared float4 gLightColG : LightColG;
+shared float4 gLightColB : LightColB;
+shared float4 gLightPointPosX : LightPointPositionX;
+shared float4 gLightPointPosY : LightPointPositionY;
+shared float4 gLightPointPosZ : LightPointPositionZ;
+shared float4 gLightPointColR : LightPointColR;
+shared float4 gLightPointColG : LightPointColG;
+shared float4 gLightPointColB : LightPointColB;
+shared float4 gLightPointFallOff : LightPointFallOff;
+shared float4 gLightDir2X : LightDir2X;
+shared float4 gLightDir2Y : LightDir2Y;
+shared float4 gLightDir2Z : LightDir2Z;
+shared float4 gLightConeScale2 : LightConeScale2;
+shared float4 gLightConeOffset2 : LightConeOffset2;
+shared float4 gLightAmbient0 : LightAmbientColor0<string UIWidget = "Ambient Light Color 0"; string Space = "material";> = float4(0.000000, 0.000000, 0.000000, 1.000000);
+shared float4 gLightAmbient1 : LightAmbientColor1<string UIWidget = "Ambient Light Color 1"; string Space = "material";> = float4(0.000000, 0.000000, 0.000000, 1.000000);
+shared float4 globalScalars : globalScalars = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 globalScalars2 : globalScalars2 = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 gAspectRatio : gAspectRatio = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 globalScreenSize : globalScreenSize = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 globalFogParams : globalFogParams = float4(1600.000000, 9000000.000000, 0.010000, 1.000000);
+shared float4 globalFogColor : globalFogColor = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 globalFogColorN : globalFogColorN = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 gDayNightEffects : globalDayNightEffects = float4(1.000000, 0.000000, 1.000000, 0.000000);
+shared float gInvColorExpBias : ColorExpBias = 1.000000;
+shared float4 colorize : Colorize = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 stencil : Stencil = float4(0.000000, 255.000000, 0.000000, 0.000000);
+shared float4 gFacetCentre : FacetCentre;
+shared float4 gShadowCommonParam0123 : ShadowCommonParam0123;
+shared float4 gShadowParam14151617 : ShadowParam14151617;
+shared float4 gShadowParam18192021 : ShadowParam18192021;
+shared float4 gShadowParam0123 : ShadowParam0123;
+shared float4 gShadowParam4567 : ShadowParam4567;
+shared float4 gShadowParam891113 : ShadowParam891113;
+shared float4x4 gShadowMatrix : ShadowMatrix;
+shared texture ShadowZTextureDir;
+shared sampler gShadowZSamplerDir = 
+sampler_state
+{
+    Texture = <ShadowZTextureDir>;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+    MipFilter = POINT;
+    MinFilter = POINT;
+    MagFilter = POINT;
+};
+shared texture ShadowZTextureDirVS;
+shared sampler gShadowZSamplerDirVS = 
+sampler_state
+{
+    Texture = <ShadowZTextureDirVS>;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+    MipFilter = POINT;
+    MinFilter = POINT;
+    MagFilter = POINT;
+};
+shared texture ShadowZTextureCache;
+shared sampler gShadowZSamplerCache = 
+sampler_state
+{
+    Texture = <ShadowZTextureCache>;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+    MipFilter = POINT;
+    MinFilter = POINT;
+    MagFilter = POINT;
+};
+shared texture ShadowTextureLUT;
+shared sampler gShadowSamplerLUT = 
+sampler_state
+{
+    Texture = <ShadowTextureLUT>;
+    AddressU = WRAP;
+    AddressV = WRAP;
+    MipFilter = POINT;
+    MinFilter = LINEAR;
+    MagFilter = LINEAR;
+};
+
+//Locals
+float shadowmap_res : ShadowMapResolution = 1280.000000;
+texture HemiCubeTexture;
+sampler HemiCubeSampler = 
+sampler_state
+{
+    Texture = <HemiCubeTexture>;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+    AddressW = CLAMP;
+    MipFilter = POINT;
+    MinFilter = POINT;
+    MagFilter = POINT;
+};
+texture SmartBlitTexture;
+sampler SmartBlitSampler = 
+sampler_state
+{
+    Texture = <SmartBlitTexture>;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+    AddressW = CLAMP;
+    MipFilter = POINT;
+    MinFilter = POINT;
+    MagFilter = POINT;
+};
+float4 clearcol : ClearfColour = float4(0.000000, 0.000000, 0.000000, 1.000000);
+float4 hemi_params : HemiCubeParams = float4(0.000000, 0.000000, 0.000000, 0.000000);
+float hemi_res : HemiCubeResolution = 1024.000000;
+float hemi_range : HemiCubeDepthRange = 16.000000;
+float hemi_near : HemiCubeNear = 0.010000;
+float hemi_bias : HemiCubeBias = -0.025000;
+float sampleAngle[16] : sampleAngle = 
+{
+    0.000000, 
+    90.000000, 
+    225.000000, 
+    170.000000, 
+    327.500000, 
+    286.000000, 
+    41.000000, 
+    133.000000, 
+    11.000000, 
+    83.000000, 
+    234.000000, 
+    181.000000, 
+    333.000000, 
+    286.000000, 
+    47.000000, 
+    141.000000
+};
+float sampleScale[16] : sampleScale = 
+{
+    1.000000, 
+    0.750000, 
+    0.500000, 
+    0.875000, 
+    0.250000, 
+    0.810000, 
+    0.620000, 
+    0.700000, 
+    0.130000, 
+    0.420000, 
+    0.900000, 
+    0.210000, 
+    0.830000, 
+    0.810000, 
+    0.300000, 
+    0.350000
+};
+
+//Vertex shaders
+VertexShader VS_Blit
+<
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+        vs_3_0
+        def c0, 1, 0, 0, 0
+        dcl_position v0
+        dcl_texcoord v1
+        dcl_position o0
+        dcl_texcoord o1.xy
+        mad o0, v0.xyzx, c0.xxxy, c0.yyyx
+        mov o1.xy, v1
+    
+    // approximately 2 instruction slots used
+};
+
+//Pixel shaders
+PixelShader PixelShader0 = NULL;
+
+PixelShader PS_Rewarp
+<
+    string HemiCubeSampler = "parameter register(0)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   sampler2D HemiCubeSampler;
+    //
+    //
+    // Registers:
+    //
+    //   Name            Reg   Size
+    //   --------------- ----- ----
+    //   HemiCubeSampler s0       1
+    //
+    
+        ps_3_0
+        def c0, -0.5, 0, 1, -2
+        def c1, 2, 9.99999975e-006, 1, -1
+        def c2, 0.5, 0.00048828125, 0.001953125, 0
+        def c3, 0.25, 1, -0.25, 2
+        def c4, 0.75, 1, 0.25, 1.25
+        def c5, 0.25, -1, 1.25, 1
+        dcl_texcoord v0.xy
+        dcl_2d s0
+        add r0.xy, c0.x, v0
+        add r0.zw, r0.xyxy, r0.xyxy
+        dp2add r1.z, r0.zwzw, r0.zwzw, c0.y
+        dp2add r0.z, r0.zwzw, -r0.zwzw, c0.z
+        mad r0.xy, r0, c1.x, c1.y
+        dp2add r0.w, r0, r0, c0.y
+        rsq r0.w, r0.w
+        mul r2.xy, r0, r0.w
+        mad r1.xy, v0, -c0.w, -c0.z
+        mov r2.z, c0.z
+        cmp r0.xyz, r0.z, r1, r2
+        add r0.x, r0.x, r0.x
+        add r0.zw, r0.z, c1
+        rcp r0.z, r0.z
+        mul r1.yw, r0.xxzy, r0.z
+        add r1.z, r1.w, r1.w
+        mul r1.x, r0.w, r0.z
+        max r0.x, r1_abs.y, r1_abs.z
+        max r2.x, -r1.x, r0.x
+        mad r0.xy, r0.w, -r0.z, -r1_abs.yzzw
+        cmp r0.y, r0.y, c0.z, c0.y
+        cmp r0.x, r0.x, r0.y, c0.y
+        if_ne r0.x, -r0.x
+          rcp r0.x, r2.x
+          mul r0.xy, r1.yzzw, r0.x
+          mad r2.yz, r0.xxyw, c3.xxyw, c3.xxyw
+          mad r3.zw, r2.xyyz, c2.x, c2.xyyz
+          mov r3, r3.zwzw
+          mov r2.yz, c0.xzyw
+          mov r4.xy, c0.yzzw
+        else
+          if_ge r1_abs.y, r1_abs.z
+            rcp r2.w, r2.x
+            mul r0, r1.xzxw, r2.w
+            cmp r4.xy, -r1.y, c0.zyzw, c0.yzzw
+            mov r5, c3
+            mad r5, r0, r5, c4.xyxy
+            mad r3, r5, c2.x, c2.yzyz
+            mov r2.yz, r4.xxyw
+          else
+            rcp r5.z, r2.x
+            mul r0.xy, r1.yxzw, r5.z
+            cmp r4.xy, -r1.w, c0.yzzw, c0.zyzw
+            mov r5.y, c0.z
+            mul r1.yz, r1.xyxw, r5
+            mul r1.x, r5.z, r1.y
+            mad r0.zw, r1.xyxz, c5.xyxy, c5
+            mad r3.xy, r0.zwzw, c2.x, c2.yzzw
+            mad r0.zw, r0.xyxy, c4.xyzy, c4.xywy
+            mad r3.zw, r0, c2.x, c2.xyyz
+            mov r2.yz, r4.xxyw
+          endif
+        endif
+        texld r1, r3, s0
+        dp2add r0.z, r1, r2.yzzw, c0.y
+        texld r1, r3.zwzw, s0
+        dp2add r0.w, r1, r4, c0.y
+        dp2add r0.x, r0, r0, c0.z
+        rsq r0.x, r0.x
+        rcp r0.x, r0.x
+        mul oC0.xy, r0.zwzw, r0.x
+        mov oC0.zw, c0.xyyz
+    
+    // approximately 72 instruction slots used (2 texture, 70 arithmetic)
+};
+
+PixelShader PS_Clearf
+<
+    string clearcol = "parameter register(66)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   float4 clearcol;
+    //
+    //
+    // Registers:
+    //
+    //   Name         Reg   Size
+    //   ------------ ----- ----
+    //   clearcol     c66      1
+    //
+    
+        ps_3_0
+        mov oC0, c66
+    
+    // approximately 1 instruction slot used
+};
+
+PixelShader PS_ShadBlit
+<
+    string SmartBlitSampler = "parameter register(0)";
+    string clearcol         = "parameter register(66)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   sampler2D SmartBlitSampler;
+    //   float4 clearcol;
+    //
+    //
+    // Registers:
+    //
+    //   Name             Reg   Size
+    //   ---------------- ----- ----
+    //   clearcol         c66      1
+    //   SmartBlitSampler s0       1
+    //
+    
+        ps_3_0
+        dcl_texcoord v0.xy
+        dcl_2d s0
+        texld r0, v0, s0
+        mov_sat r1, r0
+        mov oC0, r0
+        dp4 oDepth, r1, c66
+    
+    // approximately 4 instruction slots used (1 texture, 3 arithmetic)
+};
+
+PixelShader PS_DitherGen
+<
+    string sampleAngle = "parameter register(72)";
+    string sampleScale = "parameter register(88)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   float sampleAngle[16];
+    //   float sampleScale[16];
+    //
+    //
+    // Registers:
+    //
+    //   Name         Reg   Size
+    //   ------------ ----- ----
+    //   sampleAngle  c72     16
+    //   sampleScale  c88     16
+    //
+    
+        ps_3_0
+        def c0, 6.28318548, 16, 0, 1
+        def c1, -0, -1, -2, -3
+        def c2, -8, -9, -10, -11
+        def c3, -12, -13, -14, -15
+        def c4, -4, -5, -6, -7
+        def c5, 0.0174532924, 0.159154937, 0.5, 0
+        def c6, 6.28318548, -3.14159274, 0, 0
+        dcl_texcoord v0.xy
+        mul r0.xy, c0, v0
+        frc r0.z, r0.y
+        add r0.y, r0.y, -r0.z
+        cmp r0.z, -r0.z, c0.z, c0.w
+        cmp r0.z, v0.y, c0.z, r0.z
+        add r0.y, r0.y, r0.z
+        add r1, r0.y, c1
+        mov r0.z, c0.z
+        cmp r0.w, -r1_abs.x, c72.x, r0.z
+        cmp r0.w, -r1_abs.y, c73.x, r0.w
+        cmp r0.w, -r1_abs.z, c74.x, r0.w
+        cmp r0.w, -r1_abs.w, c75.x, r0.w
+        add r2, r0.y, c4
+        cmp r0.w, -r2_abs.x, c76.x, r0.w
+        cmp r0.w, -r2_abs.y, c77.x, r0.w
+        cmp r0.w, -r2_abs.z, c78.x, r0.w
+        cmp r0.w, -r2_abs.w, c79.x, r0.w
+        add r3, r0.y, c2
+        add r4, r0.y, c3
+        cmp r0.y, -r3_abs.x, c80.x, r0.w
+        cmp r0.y, -r3_abs.y, c81.x, r0.y
+        cmp r0.y, -r3_abs.z, c82.x, r0.y
+        cmp r0.y, -r3_abs.w, c83.x, r0.y
+        cmp r0.y, -r4_abs.x, c84.x, r0.y
+        cmp r0.y, -r4_abs.y, c85.x, r0.y
+        cmp r0.y, -r4_abs.z, c86.x, r0.y
+        cmp r0.y, -r4_abs.w, c87.x, r0.y
+        mad r0.x, r0.y, c5.x, r0.x
+        mad r0.x, r0.x, c5.y, c5.z
+        frc r0.x, r0.x
+        mad r0.x, r0.x, c6.x, c6.y
+        sincos r5.xy, r0.x
+        cmp r0.x, -r1_abs.x, c88.x, r0.z
+        cmp r0.x, -r1_abs.y, c89.x, r0.x
+        cmp r0.x, -r1_abs.z, c90.x, r0.x
+        cmp r0.x, -r1_abs.w, c91.x, r0.x
+        cmp r0.x, -r2_abs.x, c92.x, r0.x
+        cmp r0.x, -r2_abs.y, c93.x, r0.x
+        cmp r0.x, -r2_abs.z, c94.x, r0.x
+        cmp r0.x, -r2_abs.w, c95.x, r0.x
+        cmp r0.x, -r3_abs.x, c96.x, r0.x
+        cmp r0.x, -r3_abs.y, c97.x, r0.x
+        cmp r0.x, -r3_abs.z, c98.x, r0.x
+        cmp r0.x, -r3_abs.w, c99.x, r0.x
+        cmp r0.x, -r4_abs.x, c100.x, r0.x
+        cmp r0.x, -r4_abs.y, c101.x, r0.x
+        cmp r0.x, -r4_abs.z, c102.x, r0.x
+        cmp r0.x, -r4_abs.w, c103.x, r0.x
+        mul oC0.xy, r5.yxzw, r0.x
+        mov oC0.zw, c0
+    
+    // approximately 57 instruction slots used
+};
+
+PixelShader PS_WarpCascade
+<
+    string SmartBlitSampler = "parameter register(0)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   sampler2D SmartBlitSampler;
+    //
+    //
+    // Registers:
+    //
+    //   Name             Reg   Size
+    //   ---------------- ----- ----
+    //   SmartBlitSampler s0       1
+    //
+    
+        ps_3_0
+        def c0, 1, 0, 0, 0
+        dcl_texcoord v0.xy
+        dcl_2d s0
+        mul r0, c0.xxyy, v0.xyxx
+        texldl r0, r0, s0
+        mov oC0.xy, r0.x
+        mov oC0.zw, c0.x
+    
+    // approximately 5 instruction slots used (2 texture, 3 arithmetic)
+};
+
+PixelShader PS_BlitShaft
+<
+    string SmartBlitSampler = "parameter register(0)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   sampler2D SmartBlitSampler;
+    //
+    //
+    // Registers:
+    //
+    //   Name             Reg   Size
+    //   ---------------- ----- ----
+    //   SmartBlitSampler s0       1
+    //
+    
+        ps_3_0
+        def c0, 0, 0, -16384, 16384
+        def c1, 0.001953125, 1, 0, 0
+        defi i0, 8, 0, 0, 0
+        dcl_texcoord v0.xy
+        dcl_2d s0
+        mov r0.zw, c0.x
+        mov r1.xyz, c0.zwxw
+        rep i0
+          mov r2.x, r1.z
+          mov r1.w, c0.x
+          rep i0
+            mov r2.y, r1.w
+            mad r0.xy, r2, c1.x, v0
+            texldl r3, r0, s0
+            max r0.x, r3.y, r1.x
+            min r0.y, r1.y, r3.y
+            add r1.w, r1.w, c1.y
+            mov r1.xy, r0
+          endrep
+          add r1.z, r1.z, c1.y
+        endrep
+        add r0.x, -r1.y, r1.x
+        cmp oC0.z, -r0_abs.x, c1.y, c1.z
+        mov oC0.w, c1.y
+        mov oC0.xy, r1
+    
+    // approximately 27 instruction slots used (2 texture, 25 arithmetic)
+};
+
+PixelShader PS_Shad2MinMax
+<
+    string SmartBlitSampler = "parameter register(0)";
+    string clearcol         = "parameter register(66)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   sampler2D SmartBlitSampler;
+    //   float4 clearcol;
+    //
+    //
+    // Registers:
+    //
+    //   Name             Reg   Size
+    //   ---------------- ----- ----
+    //   clearcol         c66      1
+    //   SmartBlitSampler s0       1
+    //
+    
+        ps_3_0
+        def c0, 0.5, -0.5, 0, 1
+        dcl_texcoord v0.xy
+        dcl_2d s0
+        mov r0.xy, c0
+        mad r0.zw, c66.xyxy, r0.x, v0.xyxy
+        mad r1.xy, c66, r0.y, r0.zwzw
+        texld r1, r1, s0
+        mad r1.yz, c66.xxyw, r0.xxyw, r0.xzww
+        texld r2, r1.yzzw, s0
+        min r3.x, r2.x, r1.x
+        max r3.y, r1.x, r2.x
+        mad r1.xy, c66, r0.yxzw, r0.zwzw
+        mad r0.xy, c66, r0.x, r0.zwzw
+        texld r0, r0, s0
+        texld r1, r1, s0
+        min r0.y, r1.x, r3.x
+        max r0.z, r3.y, r1.x
+        max oC0.y, r0.z, r0.x
+        min oC0.x, r0.x, r0.y
+        mov oC0.zw, c0
+    
+    // approximately 17 instruction slots used (4 texture, 13 arithmetic)
+};
+
+PixelShader PS_MinMax2MinMax
+<
+    string SmartBlitSampler = "parameter register(0)";
+    string clearcol         = "parameter register(66)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   sampler2D SmartBlitSampler;
+    //   float4 clearcol;
+    //
+    //
+    // Registers:
+    //
+    //   Name             Reg   Size
+    //   ---------------- ----- ----
+    //   clearcol         c66      1
+    //   SmartBlitSampler s0       1
+    //
+    
+        ps_3_0
+        def c0, 0.5, -0.5, 0, 1
+        dcl_texcoord v0.xy
+        dcl_2d s0
+        mov r0.xy, c0
+        mad r0.zw, c66.xyxy, r0.x, v0.xyxy
+        mad r1.xy, c66, r0.y, r0.zwzw
+        texld r1, r1, s0
+        mad r1.zw, c66.xyxy, r0.xyxy, r0
+        texld r2, r1.zwzw, s0
+        min r3.x, r2.x, r1.x
+        max r3.y, r1.y, r2.y
+        mad r1.xy, c66, r0.yxzw, r0.zwzw
+        mad r0.xy, c66, r0.x, r0.zwzw
+        texld r0, r0, s0
+        texld r1, r1, s0
+        min r0.z, r1.x, r3.x
+        max r0.w, r3.y, r1.y
+        max oC0.y, r0.w, r0.y
+        min oC0.x, r0.x, r0.z
+        mov oC0.zw, c0
+    
+    // approximately 17 instruction slots used (4 texture, 13 arithmetic)
+};
+
+PixelShader PS_MinMax2MinMaxB
+<
+    string SmartBlitSampler = "parameter register(0)";
+    string clearcol         = "parameter register(66)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   sampler2D SmartBlitSampler;
+    //   float4 clearcol;
+    //
+    //
+    // Registers:
+    //
+    //   Name             Reg   Size
+    //   ---------------- ----- ----
+    //   clearcol         c66      1
+    //   SmartBlitSampler s0       1
+    //
+    
+        ps_3_0
+        def c0, 1, 0, -1, 2
+        dcl_texcoord v0.xy
+        dcl_2d s0
+        add r0.xy, -c66, v0
+        texld r0, r0, s0
+        min r1.x, r0.x, c0.x
+        max r1.y, r0.y, c0.y
+        mov r0.xy, c66
+        mad r0.zw, r0.xyxy, c0.xyyz, v0.xyxy
+        texld r2, r0.zwzw, s0
+        min r0.z, r2.x, r1.x
+        max r0.w, r1.y, r2.y
+        mad r1.xy, r0, c0.xzzw, v0
+        texld r1, r1, s0
+        min r2.x, r1.x, r0.z
+        max r2.y, r0.w, r1.y
+        mad r0.zw, r0.xyxy, c0.xywz, v0.xyxy
+        texld r1, r0.zwzw, s0
+        min r0.z, r1.x, r2.x
+        max r0.w, r2.y, r1.y
+        mad r1.xy, r0, c0.zyzw, v0
+        texld r1, r1, s0
+        min r2.x, r1.x, r0.z
+        max r2.y, r0.w, r1.y
+        texld r1, v0, s0
+        min r0.z, r1.x, r2.x
+        max r0.w, r2.y, r1.y
+        mad r1.xy, r0, c0, v0
+        texld r1, r1, s0
+        min r2.x, r1.x, r0.z
+        max r2.y, r0.w, r1.y
+        mad r0.zw, r0.xyxy, c0.xywy, v0.xyxy
+        texld r1, r0.zwzw, s0
+        min r0.z, r1.x, r2.x
+        max r0.w, r2.y, r1.y
+        mad r1.xy, r0, c0.zxzw, v0
+        texld r1, r1, s0
+        min r2.x, r1.x, r0.z
+        max r2.y, r0.w, r1.y
+        mad r0.zw, r0.xyxy, c0.xyyx, v0.xyxy
+        texld r1, r0.zwzw, s0
+        min r0.z, r1.x, r2.x
+        max r0.w, r2.y, r1.y
+        add r1.xy, c66, v0
+        texld r1, r1, s0
+        min r2.x, r1.x, r0.z
+        max r2.y, r0.w, r1.y
+        mad r0.zw, r0.xyxy, c0.xywx, v0.xyxy
+        texld r1, r0.zwzw, s0
+        min r0.z, r1.x, r2.x
+        max r0.w, r2.y, r1.y
+        mad r1.xy, r0, c0.zwzw, v0
+        texld r1, r1, s0
+        min r2.x, r1.x, r0.z
+        max r2.y, r0.w, r1.y
+        mad r0.zw, r0.xyxy, c0.xyyw, v0.xyxy
+        texld r1, r0.zwzw, s0
+        min r0.z, r1.x, r2.x
+        max r0.w, r2.y, r1.y
+        mad r1.xy, r0, c0.xwzw, v0
+        texld r1, r1, s0
+        min r2.x, r1.x, r0.z
+        max r2.y, r0.w, r1.y
+        mad r0.xy, r0, c0.w, v0
+        texld r0, r0, s0
+        min oC0.x, r0.x, r2.x
+        max oC0.y, r2.y, r0.y
+        mov oC0.zw, c0.xyyx
+    
+    // approximately 65 instruction slots used (16 texture, 49 arithmetic)
+};
+
+PixelShader PS_ProcessFaceted
+<
+    string SmartBlitSampler     = "parameter register(0)";
+    string gShadowParam14151617 = "parameter register(56)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   sampler2D SmartBlitSampler;
+    //   float4 gShadowParam14151617;
+    //
+    //
+    // Registers:
+    //
+    //   Name                 Reg   Size
+    //   -------------------- ----- ----
+    //   gShadowParam14151617 c56      1
+    //   SmartBlitSampler     s0       1
+    //
+    
+        ps_3_0
+        def c0, 0.5, 2, -1, 1
+        dcl_texcoord v0.xy
+        dcl_2d s0
+        rcp r0.x, c56.w
+        mad r0.xy, r0.x, -c0.x, v0
+        mad r0.xy, r0, c0.y, c0.z
+        max r1.x, r0_abs.x, r0_abs.y
+        add r0.x, -r1.x, c0.w
+        rcp r0.x, r0.x
+        add r0.x, r0.x, r0.x
+        texld r1, v0, s0
+        mul oC0, r0.x, r1.x
+    
+    // approximately 9 instruction slots used (1 texture, 8 arithmetic)
+};
+
+technique rewarp
+{
+    pass p0
+    {
+        CullMode = NONE;
+        AlphaBlendEnable = false;
+        AlphaTestEnable = false;
+        ZEnable = false;
+        ZWriteEnable = false;
+
+        VertexShader = VS_Blit;
+        PixelShader = PS_Rewarp;
+    }
+}
+
+technique clearf
+{
+    pass p0
+    {
+        CullMode = NONE;
+        AlphaBlendEnable = false;
+        AlphaTestEnable = false;
+        ZEnable = false;
+        ZWriteEnable = false;
+
+        VertexShader = VS_Blit;
+        PixelShader = PS_Clearf;
+    }
+}
+
+technique shadblit
+{
+    pass p0
+    {
+        CullMode = NONE;
+        AlphaBlendEnable = false;
+        AlphaTestEnable = false;
+        ZFunc = ALWAYS;
+
+        VertexShader = VS_Blit;
+        PixelShader = PS_ShadBlit;
+    }
+}
+
+technique dithergen
+{
+    pass p0
+    {
+        CullMode = NONE;
+        AlphaBlendEnable = false;
+        AlphaTestEnable = false;
+        ZEnable = false;
+        ZWriteEnable = false;
+
+        VertexShader = VS_Blit;
+        PixelShader = PS_DitherGen;
+    }
+}
+
+technique warpcascade
+{
+    pass p0
+    {
+        CullMode = NONE;
+        AlphaBlendEnable = false;
+        AlphaTestEnable = false;
+        ZEnable = false;
+        ZWriteEnable = false;
+
+        VertexShader = VS_Blit;
+        PixelShader = PS_WarpCascade;
+    }
+}
+
+technique blitshaft
+{
+    pass p0
+    {
+        CullMode = NONE;
+        AlphaBlendEnable = false;
+        AlphaTestEnable = false;
+        ZEnable = false;
+        ZWriteEnable = false;
+
+        VertexShader = VS_Blit;
+        PixelShader = PS_BlitShaft;
+    }
+}
+
+technique sh2mm
+{
+    pass p0
+    {
+        CullMode = NONE;
+        AlphaBlendEnable = false;
+        AlphaTestEnable = false;
+        ZEnable = false;
+        ZWriteEnable = false;
+
+        VertexShader = VS_Blit;
+        PixelShader = PS_Shad2MinMax;
+    }
+}
+
+technique mm2mm
+{
+    pass p0
+    {
+        CullMode = NONE;
+        AlphaBlendEnable = false;
+        AlphaTestEnable = false;
+        ZEnable = false;
+        ZWriteEnable = false;
+
+        VertexShader = VS_Blit;
+        PixelShader = PS_MinMax2MinMax;
+    }
+}
+
+technique mm2mmb
+{
+    pass p0
+    {
+        CullMode = NONE;
+        AlphaBlendEnable = false;
+        AlphaTestEnable = false;
+        ZEnable = false;
+        ZWriteEnable = false;
+
+        VertexShader = VS_Blit;
+        PixelShader = PS_MinMax2MinMaxB;
+    }
+}
+
+technique processfaceted
+{
+    pass p0
+    {
+        CullMode = NONE;
+        AlphaBlendEnable = false;
+        AlphaTestEnable = false;
+        ZEnable = false;
+        ZWriteEnable = false;
+
+        VertexShader = VS_Blit;
+        PixelShader = PS_ProcessFaceted;
+    }
+}
+
+technique stencilmask
+{
+    pass p0
+    {
+        CullMode = NONE;
+        ZEnable = true;
+        ZWriteEnable = false;
+        ZFunc = ALWAYS;
+        AlphaBlendEnable = false;
+        AlphaTestEnable = false;
+
+        VertexShader = VS_Blit;
+        PixelShader = PS_Clearf;
+    }
+}
+

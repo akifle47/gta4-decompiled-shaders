@@ -1,0 +1,968 @@
+//Globals
+shared float4 gAllGlobals[64] : AllGlobals;
+shared float4x4 gWorld : World;
+shared float4x4 gWorldView : WorldView;
+shared float4x4 gWorldViewProj : WorldViewProjection;
+shared float4x4 gViewInverse : ViewInverse;
+shared texture stippletexture;
+shared sampler StippleTexture = 
+sampler_state
+{
+    Texture = <stippletexture>;
+    MinFilter = POINT;
+    MagFilter = POINT;
+    MipFilter = POINT;
+    AddressU = WRAP;
+    AddressV = WRAP;
+};
+shared float4 gDepthFxParams : DepthFxParams = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 gDirectionalLight : DirectionalLight;
+shared float4 gDirectionalColour : DirectionalColour;
+shared float4 gLightPosX : LightPositionX;
+shared float4 gLightPosY : LightPositionY;
+shared float4 gLightPosZ : LightPositionZ;
+shared float4 gLightDirX : LightDirX;
+shared float4 gLightDirY : LightDirY;
+shared float4 gLightDirZ : LightDirZ;
+shared float4 gLightFallOff : LightFallOff;
+shared float4 gLightConeScale : LightConeScale;
+shared float4 gLightConeOffset : LightConeOffset;
+shared float4 gLightColR : LightColR;
+shared float4 gLightColG : LightColG;
+shared float4 gLightColB : LightColB;
+shared float4 gLightPointPosX : LightPointPositionX;
+shared float4 gLightPointPosY : LightPointPositionY;
+shared float4 gLightPointPosZ : LightPointPositionZ;
+shared float4 gLightPointColR : LightPointColR;
+shared float4 gLightPointColG : LightPointColG;
+shared float4 gLightPointColB : LightPointColB;
+shared float4 gLightPointFallOff : LightPointFallOff;
+shared float4 gLightDir2X : LightDir2X;
+shared float4 gLightDir2Y : LightDir2Y;
+shared float4 gLightDir2Z : LightDir2Z;
+shared float4 gLightConeScale2 : LightConeScale2;
+shared float4 gLightConeOffset2 : LightConeOffset2;
+shared float4 gLightAmbient0 : LightAmbientColor0<string UIWidget = "Ambient Light Color 0"; string Space = "material";> = float4(0.000000, 0.000000, 0.000000, 1.000000);
+shared float4 gLightAmbient1 : LightAmbientColor1<string UIWidget = "Ambient Light Color 1"; string Space = "material";> = float4(0.000000, 0.000000, 0.000000, 1.000000);
+shared float4 globalScalars : globalScalars = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 globalScalars2 : globalScalars2 = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 gAspectRatio : gAspectRatio = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 globalScreenSize : globalScreenSize = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 globalFogParams : globalFogParams = float4(1600.000000, 9000000.000000, 0.010000, 1.000000);
+shared float4 globalFogColor : globalFogColor = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 globalFogColorN : globalFogColorN = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 gDayNightEffects : globalDayNightEffects = float4(1.000000, 0.000000, 1.000000, 0.000000);
+shared float gInvColorExpBias : ColorExpBias = 1.000000;
+shared float4 colorize : Colorize = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 stencil : Stencil = float4(0.000000, 255.000000, 0.000000, 0.000000);
+shared float4 gFacetCentre : FacetCentre;
+shared float4 gShadowCommonParam0123 : ShadowCommonParam0123;
+shared float4 gShadowParam14151617 : ShadowParam14151617;
+shared float4 gShadowParam18192021 : ShadowParam18192021;
+shared float4 gShadowParam0123 : ShadowParam0123;
+shared float4 gShadowParam4567 : ShadowParam4567;
+shared float4 gShadowParam891113 : ShadowParam891113;
+shared float4x4 gShadowMatrix : ShadowMatrix;
+shared texture ShadowZTextureDir;
+shared sampler gShadowZSamplerDir = 
+sampler_state
+{
+    Texture = <ShadowZTextureDir>;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+    MipFilter = POINT;
+    MinFilter = POINT;
+    MagFilter = POINT;
+};
+shared texture ShadowZTextureDirVS;
+shared sampler gShadowZSamplerDirVS = 
+sampler_state
+{
+    Texture = <ShadowZTextureDirVS>;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+    MipFilter = POINT;
+    MinFilter = POINT;
+    MagFilter = POINT;
+};
+shared texture ShadowZTextureCache;
+shared sampler gShadowZSamplerCache = 
+sampler_state
+{
+    Texture = <ShadowZTextureCache>;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+    MipFilter = POINT;
+    MinFilter = POINT;
+    MagFilter = POINT;
+};
+shared texture ShadowTextureLUT;
+shared sampler gShadowSamplerLUT = 
+sampler_state
+{
+    Texture = <ShadowTextureLUT>;
+    AddressU = WRAP;
+    AddressV = WRAP;
+    MipFilter = POINT;
+    MinFilter = LINEAR;
+    MagFilter = LINEAR;
+};
+
+//Locals
+texture DiffuseTex;
+sampler TextureSampler<string UIName = "Diffuse Texture";> = 
+sampler_state
+{
+    Texture = <DiffuseTex>;
+    AddressU = WRAP;
+    AddressV = WRAP;
+    AddressW = WRAP;
+    MipFilter = LINEAR;
+    MinFilter = ANISOTROPIC;
+    MagFilter = LINEAR;
+};
+float shadowmap_res : ShadowMapResolution = 1280.000000;
+float2 facetMask[4] : facetMask = 
+{
+    float2(-1.000000, 0.000000), 
+    float2(1.000000, 0.000000), 
+    float2(0.000000, -1.000000), 
+    float2(0.000000, 1.000000)
+};
+float3 LuminanceConstants : LuminanceConstants = float3(0.212500, 0.715400, 0.072100);
+float3 imposterDir[8] : imposterDir = 
+{
+    float3(1.000000, 0.000000, 0.000000), 
+    float3(0.577350, 0.577350, -0.577350), 
+    float3(0.000000, 1.000000, 0.000000), 
+    float3(-0.577350, 0.577350, -0.577350), 
+    float3(-1.000000, 0.000000, 0.000000), 
+    float3(-0.577350, -0.577350, -0.577350), 
+    float3(0.000000, -1.000000, 0.000000), 
+    float3(0.577350, -0.577350, -0.577350)
+};
+float3 normTable[16] : normTable = 
+{
+    float3(0.000000, 0.000000, 0.000000), 
+    float3(0.000000, 0.000000, -1.000000), 
+    float3(0.000000, 0.500000, -0.866025), 
+    float3(0.433013, -0.250000, -0.866025), 
+    float3(-0.433013, -0.250000, -0.866025), 
+    float3(0.000000, 0.939693, 0.342020), 
+    float3(0.813798, 0.469846, -0.342020), 
+    float3(0.813798, -0.469846, 0.342020), 
+    float3(0.000000, -0.939693, -0.342020), 
+    float3(-0.813798, -0.469846, 0.342020), 
+    float3(-0.813798, 0.469846, -0.342020), 
+    float3(-0.433013, 0.250000, 0.866025), 
+    float3(0.433013, 0.250000, 0.866025), 
+    float3(0.000000, -0.500000, -0.866025), 
+    float3(0.000000, 0.000000, 1.000000), 
+    float3(0.000000, 0.000000, 0.000000)
+};
+float altRemap[16] : altRemap = 
+{
+    0.000000, 
+    2.000000, 
+    6.000000, 
+    8.000000, 
+    10.000000, 
+    11.000000, 
+    7.000000, 
+    12.000000, 
+    9.000000, 
+    13.000000, 
+    5.000000, 
+    14.000000, 
+    14.000000, 
+    14.000000, 
+    13.000000, 
+    15.000000
+};
+
+//Vertex shaders
+VertexShader VSPropFoliageDeferred
+<
+    string colorize         = "parameter register(51)";
+    string gDayNightEffects = "parameter register(45)";
+    string gWorld           = "parameter register(0)";
+    string gWorldViewProj   = "parameter register(8)";
+    string globalScalars    = "parameter register(39)";
+    string globalScalars2   = "parameter register(40)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   float4 colorize;
+    //   float4 gDayNightEffects;
+    //   row_major float4x4 gWorld;
+    //   row_major float4x4 gWorldViewProj;
+    //   float4 globalScalars;
+    //   float4 globalScalars2;
+    //
+    //
+    // Registers:
+    //
+    //   Name             Reg   Size
+    //   ---------------- ----- ----
+    //   gWorld           c0       4
+    //   gWorldViewProj   c8       4
+    //   globalScalars    c39      1
+    //   globalScalars2   c40      1
+    //   gDayNightEffects c45      1
+    //   colorize         c51      1
+    //
+    
+        vs_3_0
+        def c4, 0.00499999989, 0.00999999978, 0, 1
+        def c5, 9.99999975e-006, 0.5, 0.0318309888, 0
+        def c6, 6.28318548, -3.14159274, 0, 0
+        dcl_position v0
+        dcl_normal v1
+        dcl_color v2
+        dcl_texcoord v3
+        dcl_position o0
+        dcl_texcoord o1.xy
+        dcl_texcoord1 o2.xyz
+        dcl_texcoord2 o3.xy
+        dcl_texcoord3 o4.xyz
+        mul r0.xyz, c1, v1.y
+        mad r0.xyz, v1.x, c0, r0
+        mad o2.xyz, v1.z, c2, r0
+        mul r0.xyz, c4.zwzw, v0.zxyw
+        mad r0.xyz, v0.yzxw, c4.wzzw, -r0
+        add r0.xyz, r0, c5.x
+        nrm r1.xyz, r0
+        dp3 r0.x, v0, v0
+        rsq r0.x, r0.x
+        rcp r0.x, r0.x
+        mad r0.y, r0.x, c4.x, c4.y
+        mul r0.x, r0.x, c51.w
+        mad r0.x, r0.x, c5.z, c5.y
+        frc r0.x, r0.x
+        mad r0.x, r0.x, c6.x, c6.y
+        sincos r2.xy, r0.x
+        mul r0.xzw, r1.xyyz, r0.y
+        mul r1.xyz, r0.wxzw, v0.yzxw
+        mad r1.xyz, r0.zwxw, v0.zxyw, -r1
+        mad r0.xzw, r0, r2.y, v0.xyyz
+        add r1.xyz, r1, c5.x
+        nrm r3.xyz, r1
+        mul r1.xyz, r0.y, r3
+        mul r1.xyz, r1, c5.y
+        mad r0.xyz, r1, r2.x, r0.xzww
+        mul r1, r0.y, c9
+        mad r1, r0.x, c8, r1
+        mad r0, r0.z, c10, r1
+        add o0, r0, c11
+        mul r0.xyz, c1, v0.y
+        mad r0.xyz, v0.x, c0, r0
+        mad r0.xyz, v0.z, c2, r0
+        add o4.xyz, r0, c3
+        mul r0.xy, c45, v2
+        add r0.x, r0.y, r0.x
+        mov r0.w, c4.w
+        mad r0.x, r0.x, c39.z, -r0.w
+        mad o3.x, c40.z, r0.x, r0.w
+        mul o3.y, c39.x, v2.w
+        mov o1.xy, v3
+    
+    // approximately 51 instruction slots used
+};
+
+VertexShader VSPropFoliage0
+<
+    string gWorldViewProj = "parameter register(8)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   row_major float4x4 gWorldViewProj;
+    //
+    //
+    // Registers:
+    //
+    //   Name           Reg   Size
+    //   -------------- ----- ----
+    //   gWorldViewProj c8       4
+    //
+    
+        vs_3_0
+        def c0, 0, 0, 0, 0
+        dcl_position v0
+        dcl_texcoord v1
+        dcl_position o0
+        dcl_texcoord o1.xy
+        mul r0.xy, c9.zwzw, v0.y
+        mad r0.xy, v0.x, c8.zwzw, r0
+        mad r0.xy, v0.z, c10.zwzw, r0
+        add o0.zw, r0.xyxy, c11
+        mov o0.xy, c0.x
+        mov o1.xy, v1
+    
+    // approximately 6 instruction slots used
+};
+
+VertexShader VSPropFoliageImposter
+<
+    string gDayNightEffects = "parameter register(45)";
+    string gWorld           = "parameter register(0)";
+    string gWorldViewProj   = "parameter register(8)";
+    string globalScalars    = "parameter register(39)";
+    string globalScalars2   = "parameter register(40)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   float4 gDayNightEffects;
+    //   row_major float4x4 gWorld;
+    //   row_major float4x4 gWorldViewProj;
+    //   float4 globalScalars;
+    //   float4 globalScalars2;
+    //
+    //
+    // Registers:
+    //
+    //   Name             Reg   Size
+    //   ---------------- ----- ----
+    //   gWorld           c0       4
+    //   gWorldViewProj   c8       4
+    //   globalScalars    c39      1
+    //   globalScalars2   c40      1
+    //   gDayNightEffects c45      1
+    //
+    
+        vs_3_0
+        def c4, -1, 1, 0, 0
+        dcl_position v0
+        dcl_normal v1
+        dcl_color v2
+        dcl_texcoord v3
+        dcl_position o0
+        dcl_texcoord o1.xy
+        dcl_texcoord1 o2.xyz
+        dcl_texcoord2 o3.xy
+        dcl_texcoord3 o4.xyz
+        mul r0, c9, v0.y
+        mad r0, v0.x, c8, r0
+        mad r0, v0.z, c10, r0
+        add o0, r0, c11
+        mul r0.xyz, c1, v0.y
+        mad r0.xyz, v0.x, c0, r0
+        mad r0.xyz, v0.z, c2, r0
+        add o4.xyz, r0, c3
+        mul r0.xyz, c1, v1.y
+        mad r0.xyz, v1.x, c0, r0
+        mad o2.xyz, v1.z, c2, r0
+        mul r0.xy, c45, v2
+        add r0.x, r0.y, r0.x
+        mov r1.xy, c4
+        mad r0.x, r0.x, c39.z, r1.x
+        mad o3.x, c40.z, r0.x, r1.y
+        mov o1.xy, v3
+        mov o3.y, v2.w
+    
+    // approximately 18 instruction slots used
+};
+
+VertexShader VS_ShadowDepth
+<
+    string gShadowMatrix = "parameter register(60)";
+    string gWorld        = "parameter register(0)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   row_major float4x4 gShadowMatrix;
+    //   row_major float4x4 gWorld;
+    //
+    //
+    // Registers:
+    //
+    //   Name          Reg   Size
+    //   ------------- ----- ----
+    //   gWorld        c0       4
+    //   gShadowMatrix c60      4
+    //
+    
+        vs_3_0
+        def c4, 1, 0, 0, 0
+        dcl_position v0
+        dcl_texcoord v1
+        dcl_position o0
+        dcl_texcoord o1.xyz
+        mul r0.xyz, c1, v0.y
+        mad r0.xyz, v0.x, c0, r0
+        mad r0.xyz, v0.z, c2, r0
+        add r0.xyz, r0, c3
+        mul r1, r0.y, c61
+        mad r1, r0.x, c60, r1
+        mad r0, r0.z, c62, r1
+        add r0, r0, c63
+        min r0.z, r0.z, c4.x
+        add o0.z, -r0.z, c4.x
+        mad o0.xyw, r0.xyzx, c4.xxzy, c4.yyzx
+        mov o1.x, r0.w
+        mov o1.yz, v1.xxyw
+    
+    // approximately 13 instruction slots used
+};
+
+VertexShader VSPropFoliage
+<
+    string gWorldViewProj = "parameter register(8)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   row_major float4x4 gWorldViewProj;
+    //
+    //
+    // Registers:
+    //
+    //   Name           Reg   Size
+    //   -------------- ----- ----
+    //   gWorldViewProj c8       4
+    //
+    
+        vs_3_0
+        dcl_position v0
+        dcl_texcoord v1
+        dcl_position o0
+        dcl_texcoord o1.xy
+        mul r0, c9, v0.y
+        mad r0, v0.x, c8, r0
+        mad r0, v0.z, c10, r0
+        add o0, r0, c11
+        mov o1.xy, v1
+    
+    // approximately 5 instruction slots used
+};
+
+//Pixel shaders
+PixelShader PixelShader0 = NULL;
+
+PixelShader PSPropFoliageDeferred
+<
+    string StippleTexture = "parameter register(10)";
+    string TextureSampler = "parameter register(0)";
+    string globalScalars  = "parameter register(39)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   sampler2D StippleTexture;
+    //   sampler2D TextureSampler;
+    //   float4 globalScalars;
+    //
+    //
+    // Registers:
+    //
+    //   Name           Reg   Size
+    //   -------------- ----- ----
+    //   globalScalars  c39      1
+    //   TextureSampler s0       1
+    //   StippleTexture s10      1
+    //
+    
+        ps_3_0
+        def c0, 3.99600005, 4, 0.125, 0.25
+        def c1, 0, -1, -0, 0.5
+        dcl_texcoord v0.xy
+        dcl_texcoord1 v1.xyz
+        dcl vPos.xy
+        dcl_2d s0
+        dcl_2d s10
+        texld r0, v0, s0
+        mov_sat r1.x, r0.w
+        mul r1.x, r1.x, c0.x
+        frc r1.y, r1.x
+        mul r1.z, r1.y, c0.y
+        frc r1.w, r1.z
+        add r2.xy, r1.zxzw, -r1.wyzw
+        mul r1.xy, c0.z, vPos
+        frc r1.xy, r1_abs
+        cmp r1.xy, vPos, r1, -r1
+        mul r1.xy, r1, c0.w
+        mad r1.xy, r2, c0.w, r1
+        mov r1.zw, c1.x
+        texldl r1, r1, s10
+        cmp r1, -r1.y, c1.y, c1.z
+        texkill r1
+        mul oC0.w, r0.w, c39.x
+        mov oC0.xyz, r0
+        mad oC1, v1.xyzx, c1.wwwx, c1.wwwz
+        mov oC2, c1.xwwx
+        mov oC3, c1.x
+    
+    // approximately 22 instruction slots used (3 texture, 19 arithmetic)
+};
+
+PixelShader PSPropFoliage
+<
+    string TextureSampler = "parameter register(0)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   sampler2D TextureSampler;
+    //
+    //
+    // Registers:
+    //
+    //   Name           Reg   Size
+    //   -------------- ----- ----
+    //   TextureSampler s0       1
+    //
+    
+        ps_3_0
+        dcl_texcoord v0.xy
+        dcl_2d s0
+        texld r0, v0, s0
+        add oC0, r0.w, r0.w
+    
+    // approximately 2 instruction slots used (1 texture, 1 arithmetic)
+};
+
+PixelShader PSPropFoliageImposter
+<
+    string TextureSampler = "parameter register(0)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   sampler2D TextureSampler;
+    //
+    //
+    // Registers:
+    //
+    //   Name           Reg   Size
+    //   -------------- ----- ----
+    //   TextureSampler s0       1
+    //
+    
+        ps_3_0
+        def c0, 1, 0, -0.125, 0
+        dcl_texcoord v0.xy
+        dcl_2d s0
+        mul r0, c0.xxyy, v0.xyxx
+        texldl r0, r0, s0
+        add r1.x, r0.w, c0.z
+        cmp r1, r1.x, -c0.y, -c0.x
+        texkill r1
+        mov oC0, r0
+    
+    // approximately 7 instruction slots used (2 texture, 5 arithmetic)
+};
+
+PixelShader PSPropFoliageDeferredImposter
+<
+    string StippleTexture = "parameter register(10)";
+    string TextureSampler = "parameter register(0)";
+    string altRemap       = "parameter register(88)";
+    string colorize       = "parameter register(51)";
+    string normTable      = "parameter register(72)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   sampler2D StippleTexture;
+    //   sampler2D TextureSampler;
+    //   float altRemap[16];
+    //   float4 colorize;
+    //   float3 normTable[16];
+    //
+    //
+    // Registers:
+    //
+    //   Name           Reg   Size
+    //   -------------- ----- ----
+    //   colorize       c51      1
+    //   normTable      c72     16
+    //   altRemap       c88     16
+    //   TextureSampler s0       1
+    //   StippleTexture s10      1
+    //
+    
+        ps_3_0
+        def c0, 7, 8, 9, 10
+        def c1, 3.99600005, 4, 0.125, 0.25
+        def c2, 0, -1, -0, 9.99999975e-006
+        def c3, 2, 3, 5, 6
+        def c4, 11, 12, 13, 14
+        def c5, 15, 12, 13, 14
+        def c6, -0, -1, -2, -3
+        def c7, -4, -5, -6, -7
+        def c8, -8, -9, -10, -11
+        def c9, -0.5, 16, 0.00392156886, 0
+        def c10, -1, -2, -3, -4
+        dcl_texcoord v0.xy
+        dcl_texcoord1 v1.xyz
+        dcl vPos.xy
+        dcl_2d s0
+        dcl_2d s10
+        texld r0, v0, s0
+        mov_sat r0.x, r0.w
+        mul r0.x, r0.x, c1.x
+        frc r0.y, r0.x
+        mul r0.z, r0.y, c1.y
+        frc r1.x, r0.z
+        add r1.x, r0.z, -r1.x
+        add r1.y, r0.x, -r0.y
+        mul r0.xy, c1.z, vPos
+        frc r0.xy, r0_abs
+        cmp r0.xy, vPos, r0, -r0
+        mul r0.xy, r0, c1.w
+        mad r1.xy, r1, c1.w, r0
+        mov r1.zw, c2.x
+        texldl r1, r1, s10
+        cmp r1, -r1.y, c2.y, c2.z
+        texkill r1
+        add r0.xyz, c2.w, v1
+        nrm r1.xyz, r0
+        dp3 r0.x, r1, c73
+        add r0.y, -r0.x, c2.y
+        cmp r0.y, r0.y, -c2.z, -c2.y
+        max r1.w, c2.y, r0.x
+        dp3 r0.x, r1, c74
+        add r0.z, r1.w, -r0.x
+        cmp r0.y, r0.z, r0.y, c3.x
+        max r2.x, r1.w, r0.x
+        dp3 r0.x, r1, c75
+        add r0.z, r2.x, -r0.x
+        cmp r0.y, r0.z, r0.y, c3.y
+        max r1.w, r2.x, r0.x
+        dp3 r0.x, r1, c76
+        add r0.z, r1.w, -r0.x
+        cmp r0.y, r0.z, r0.y, c1.y
+        max r2.x, r1.w, r0.x
+        dp3 r0.x, r1, c77
+        add r0.z, r2.x, -r0.x
+        cmp r0.y, r0.z, r0.y, c3.z
+        max r1.w, r2.x, r0.x
+        dp3 r0.x, r1, c78
+        add r0.z, r1.w, -r0.x
+        cmp r0.y, r0.z, r0.y, c3.w
+        max r2.x, r1.w, r0.x
+        dp3 r0.x, r1, c79
+        add r0.z, r2.x, -r0.x
+        cmp r0.y, r0.z, r0.y, c0.x
+        max r1.w, r2.x, r0.x
+        dp3 r0.x, r1, c80
+        add r0.z, r1.w, -r0.x
+        cmp r0.y, r0.z, r0.y, c0.y
+        max r2.x, r1.w, r0.x
+        dp3 r0.x, r1, c81
+        add r0.z, r2.x, -r0.x
+        cmp r0.y, r0.z, r0.y, c0.z
+        max r1.w, r2.x, r0.x
+        dp3 r0.x, r1, c82
+        add r0.z, r1.w, -r0.x
+        cmp r0.y, r0.z, r0.y, c0.w
+        max r2.x, r1.w, r0.x
+        dp3 r0.x, r1, c83
+        add r0.z, r2.x, -r0.x
+        cmp r0.y, r0.z, r0.y, c4.x
+        max r1.w, r2.x, r0.x
+        dp3 r0.x, r1, c84
+        add r0.z, r1.w, -r0.x
+        cmp r0.y, r0.z, r0.y, c4.y
+        max r2.x, r1.w, r0.x
+        dp3 r0.x, r1, c85
+        add r0.z, r2.x, -r0.x
+        cmp r0.y, r0.z, r0.y, c4.z
+        max r1.w, r2.x, r0.x
+        dp3 r0.x, r1, c86
+        add r0.z, r1.w, -r0.x
+        cmp r0.y, r0.z, r0.y, c4.w
+        max r2.x, r1.w, r0.x
+        dp3 r0.x, r1, c87
+        add r0.x, r2.x, -r0.x
+        cmp r0.x, r0.x, r0.y, c5.x
+        add r1, r0.x, c6
+        add r2, r0.x, c7
+        add r3, r0.x, c8
+        add r4, r0.x, -c5.yzwx
+        mov r5.x, c2.x
+        cmp r0.y, -r1_abs.x, c88.x, r5.x
+        cmp r0.y, -r1_abs.y, c89.x, r0.y
+        cmp r0.y, -r1_abs.z, c90.x, r0.y
+        cmp r0.y, -r1_abs.w, c91.x, r0.y
+        cmp r0.y, -r2_abs.x, c92.x, r0.y
+        cmp r0.y, -r2_abs.y, c93.x, r0.y
+        cmp r0.y, -r2_abs.z, c94.x, r0.y
+        cmp r0.y, -r2_abs.w, c95.x, r0.y
+        cmp r0.y, -r3_abs.x, c96.x, r0.y
+        cmp r0.y, -r3_abs.y, c97.x, r0.y
+        cmp r0.y, -r3_abs.z, c98.x, r0.y
+        cmp r0.y, -r3_abs.w, c99.x, r0.y
+        cmp r0.y, -r4_abs.x, c100.x, r0.y
+        cmp r0.y, -r4_abs.y, c101.x, r0.y
+        cmp r0.y, -r4_abs.z, c102.x, r0.y
+        cmp r0.y, -r4_abs.w, c103.x, r0.y
+        add r0.z, r0.w, c9.x
+        cmp r0.x, r0.z, r0.x, r0.y
+        abs r0.y, c51.x
+        cmp r0.y, -r0.y, r0.x, c2.x
+        mov r1.x, c51.x
+        add r2, r1.x, c10
+        cmp r0.zw, -r2_abs.xyyw, r0.x, c2.x
+        add r1.xyz, r1.x, c7.yzww
+        cmp r1.y, -r1_abs.y, r0.x, c2.x
+        mul r0.x, r0.x, c9.y
+        cmp r2.xy, -r2_abs.xzzw, r0.x, c2.x
+        add r0.y, r0.y, r2.x
+        mul oC0.x, r0.y, c9.z
+        add r0.y, r0.z, r2.y
+        mul oC0.y, r0.y, c9.z
+        cmp r0.xy, -r1_abs.xzzw, r0.x, c2.x
+        add r0.x, r0.w, r0.x
+        mul oC0.z, r0.x, c9.z
+        add r0.x, r1.y, r0.y
+        mul oC0.w, r0.x, c9.z
+    
+    // approximately 122 instruction slots used (3 texture, 119 arithmetic)
+};
+
+PixelShader PS_ShadowDepthFoliage
+<
+    string StippleTexture = "parameter register(10)";
+    string TextureSampler = "parameter register(0)";
+    string globalScalars  = "parameter register(39)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   sampler2D StippleTexture;
+    //   sampler2D TextureSampler;
+    //   float4 globalScalars;
+    //
+    //
+    // Registers:
+    //
+    //   Name           Reg   Size
+    //   -------------- ----- ----
+    //   globalScalars  c39      1
+    //   TextureSampler s0       1
+    //   StippleTexture s10      1
+    //
+    
+        ps_3_0
+        def c0, 3.99600005, 4, 0.125, 0.25
+        def c1, 0, -1, -0, 0
+        dcl_texcoord v0.xyz
+        dcl vPos.xy
+        dcl_2d s0
+        dcl_2d s10
+        texld r0, v0.yzzw, s0
+        mul r0.x, r0.w, c39.x
+        mov_sat r0.y, r0.x
+        mul r0.y, r0.y, c0.x
+        frc r0.z, r0.y
+        mul r0.w, r0.z, c0.y
+        frc r1.x, r0.w
+        add r1.x, r0.w, -r1.x
+        add r1.y, r0.y, -r0.z
+        mul r0.yz, c0.z, vPos.xxyw
+        frc r0.yz, r0_abs
+        cmp r0.yz, vPos.xxyw, r0, -r0
+        mul r0.yz, r0, c0.w
+        mad r1.xy, r1, c0.w, r0.yzzw
+        mov r1.zw, c1.x
+        texldl r1, r1, s10
+        cmp r1, -r1.y, c1.y, c1.z
+        texkill r1
+        mov oC0.xyz, v0.x
+        mov oC0.w, r0.x
+    
+    // approximately 21 instruction slots used (3 texture, 18 arithmetic)
+};
+
+PixelShader PSPropFoliageImposterShadow
+<
+    string TextureSampler = "parameter register(0)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   sampler2D TextureSampler;
+    //
+    //
+    // Registers:
+    //
+    //   Name           Reg   Size
+    //   -------------- ----- ----
+    //   TextureSampler s0       1
+    //
+    
+        ps_3_0
+        def c0, -0.125, -0, -1, 0
+        dcl_texcoord v0.xy
+        dcl_2d s0
+        texld r0, v0, s0
+        add r0.x, r0.w, c0.x
+        cmp r1, r0.x, c0.y, c0.z
+        texkill r1
+        add oC0, r0.w, r0.w
+    
+    // approximately 5 instruction slots used (1 texture, 4 arithmetic)
+};
+
+technique deferred_draw
+{
+    pass p0
+    {
+        StencilRef = 3;
+        CullMode = CCW;
+        AlphaBlendEnable = false;
+        AlphaTestEnable = false;
+        ColorWriteEnable = RED | GREEN | BLUE;
+        ColorWriteEnable1 = RED | GREEN | BLUE;
+        ColorWriteEnable2 = RED | GREEN | BLUE;
+        ColorWriteEnable3 = RED | GREEN | BLUE | ALPHA;
+
+        VertexShader = VSPropFoliageDeferred;
+        PixelShader = PSPropFoliageDeferred;
+    }
+    pass p1
+    {
+        StencilRef = 3;
+        CullMode = CW;
+        AlphaBlendEnable = false;
+        AlphaTestEnable = false;
+        ColorWriteEnable = RED | GREEN | BLUE;
+        ColorWriteEnable1 = RED | GREEN | BLUE;
+        ColorWriteEnable2 = RED | GREEN | BLUE;
+        ColorWriteEnable3 = RED | GREEN | BLUE | ALPHA;
+
+        VertexShader = VSPropFoliageDeferred;
+        PixelShader = PSPropFoliageDeferred;
+    }
+}
+
+technique deferredalphaclip_draw
+{
+    pass p0
+    {
+        CullMode = NONE;
+        AlphaBlendEnable = false;
+        AlphaTestEnable = false;
+
+        VertexShader = VSPropFoliageDeferred;
+        PixelShader = PSPropFoliageDeferred;
+    }
+}
+
+technique draw
+{
+    pass p0
+    {
+        VertexShader = VSPropFoliage0;
+        PixelShader = PSPropFoliage;
+    }
+}
+
+technique imposter_draw
+{
+    pass p0
+    {
+        AlphaTestEnable = false;
+        AlphaBlendEnable = false;
+        CullMode = NONE;
+
+        VertexShader = VSPropFoliageImposter;
+        PixelShader = PSPropFoliageImposter;
+    }
+}
+
+technique imposterdeferred_draw
+{
+    pass p0
+    {
+        AlphaTestEnable = false;
+        CullMode = NONE;
+
+        VertexShader = VSPropFoliageImposter;
+        PixelShader = PSPropFoliageDeferredImposter;
+    }
+}
+
+technique wd_draw
+{
+    pass p0
+    {
+        CullMode = NONE;
+        AlphaTestEnable = false;
+        AlphaBlendEnable = false;
+
+        VertexShader = VS_ShadowDepth;
+        PixelShader = PS_ShadowDepthFoliage;
+    }
+}
+
+technique wd_masked_draw
+{
+    pass p0
+    {
+        CullMode = NONE;
+        AlphaTestEnable = false;
+        AlphaBlendEnable = false;
+
+        VertexShader = VS_ShadowDepth;
+        PixelShader = PS_ShadowDepthFoliage;
+    }
+}
+
+technique impostershadow_draw
+{
+    pass p0
+    {
+        VertexShader = VSPropFoliage;
+        PixelShader = PSPropFoliageImposterShadow;
+    }
+}
+

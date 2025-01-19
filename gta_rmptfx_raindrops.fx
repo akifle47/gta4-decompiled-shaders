@@ -1,0 +1,865 @@
+//Globals
+shared float4 gAllGlobals[64] : AllGlobals;
+shared float4x4 gWorld : World;
+shared float4x4 gWorldView : WorldView;
+shared float4x4 gWorldViewProj : WorldViewProjection;
+shared float4x4 gViewInverse : ViewInverse;
+shared texture stippletexture;
+shared sampler StippleTexture = 
+sampler_state
+{
+    Texture = <stippletexture>;
+    MinFilter = POINT;
+    MagFilter = POINT;
+    MipFilter = POINT;
+    AddressU = WRAP;
+    AddressV = WRAP;
+};
+shared float4 gDepthFxParams : DepthFxParams = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 gDirectionalLight : DirectionalLight;
+shared float4 gDirectionalColour : DirectionalColour;
+shared float4 gLightPosX : LightPositionX;
+shared float4 gLightPosY : LightPositionY;
+shared float4 gLightPosZ : LightPositionZ;
+shared float4 gLightDirX : LightDirX;
+shared float4 gLightDirY : LightDirY;
+shared float4 gLightDirZ : LightDirZ;
+shared float4 gLightFallOff : LightFallOff;
+shared float4 gLightConeScale : LightConeScale;
+shared float4 gLightConeOffset : LightConeOffset;
+shared float4 gLightColR : LightColR;
+shared float4 gLightColG : LightColG;
+shared float4 gLightColB : LightColB;
+shared float4 gLightPointPosX : LightPointPositionX;
+shared float4 gLightPointPosY : LightPointPositionY;
+shared float4 gLightPointPosZ : LightPointPositionZ;
+shared float4 gLightPointColR : LightPointColR;
+shared float4 gLightPointColG : LightPointColG;
+shared float4 gLightPointColB : LightPointColB;
+shared float4 gLightPointFallOff : LightPointFallOff;
+shared float4 gLightDir2X : LightDir2X;
+shared float4 gLightDir2Y : LightDir2Y;
+shared float4 gLightDir2Z : LightDir2Z;
+shared float4 gLightConeScale2 : LightConeScale2;
+shared float4 gLightConeOffset2 : LightConeOffset2;
+shared float4 gLightAmbient0 : LightAmbientColor0<string UIWidget = "Ambient Light Color 0"; string Space = "material";> = float4(0.000000, 0.000000, 0.000000, 1.000000);
+shared float4 gLightAmbient1 : LightAmbientColor1<string UIWidget = "Ambient Light Color 1"; string Space = "material";> = float4(0.000000, 0.000000, 0.000000, 1.000000);
+shared float4 globalScalars : globalScalars = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 globalScalars2 : globalScalars2 = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 gAspectRatio : gAspectRatio = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 globalScreenSize : globalScreenSize = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 globalFogParams : globalFogParams = float4(1600.000000, 9000000.000000, 0.010000, 1.000000);
+shared float4 globalFogColor : globalFogColor = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 globalFogColorN : globalFogColorN = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 gDayNightEffects : globalDayNightEffects = float4(1.000000, 0.000000, 1.000000, 0.000000);
+shared float gInvColorExpBias : ColorExpBias = 1.000000;
+shared float4 colorize : Colorize = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 stencil : Stencil = float4(0.000000, 255.000000, 0.000000, 0.000000);
+shared float4 gFacetCentre : FacetCentre;
+shared float4 gShadowCommonParam0123 : ShadowCommonParam0123;
+shared float4 gShadowParam14151617 : ShadowParam14151617;
+shared float4 gShadowParam18192021 : ShadowParam18192021;
+shared float4 gShadowParam0123 : ShadowParam0123;
+shared float4 gShadowParam4567 : ShadowParam4567;
+shared float4 gShadowParam891113 : ShadowParam891113;
+shared float4x4 gShadowMatrix : ShadowMatrix;
+shared texture ShadowZTextureDir;
+shared sampler gShadowZSamplerDir = 
+sampler_state
+{
+    Texture = <ShadowZTextureDir>;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+    MipFilter = POINT;
+    MinFilter = POINT;
+    MagFilter = POINT;
+};
+shared texture ShadowZTextureDirVS;
+shared sampler gShadowZSamplerDirVS = 
+sampler_state
+{
+    Texture = <ShadowZTextureDirVS>;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+    MipFilter = POINT;
+    MinFilter = POINT;
+    MagFilter = POINT;
+};
+shared texture ShadowZTextureCache;
+shared sampler gShadowZSamplerCache = 
+sampler_state
+{
+    Texture = <ShadowZTextureCache>;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+    MipFilter = POINT;
+    MinFilter = POINT;
+    MagFilter = POINT;
+};
+shared texture ShadowTextureLUT;
+shared sampler gShadowSamplerLUT = 
+sampler_state
+{
+    Texture = <ShadowTextureLUT>;
+    AddressU = WRAP;
+    AddressV = WRAP;
+    MipFilter = POINT;
+    MinFilter = LINEAR;
+    MagFilter = LINEAR;
+};
+shared float4 NearFarPlane : NearFarPlane;
+shared float4 gInvScreenSize : InvScreenSize;
+shared texture DepthMap;
+shared sampler DepthMapTexSampler = 
+sampler_state
+{
+    Texture = <DepthMap>;
+    MinFilter = POINT;
+    MagFilter = POINT;
+    MipFilter = NONE;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+};
+
+//Locals
+float shadowmap_res : ShadowMapResolution = 1280.000000;
+float2 facetMask[4] : facetMask = 
+{
+    float2(-1.000000, 0.000000), 
+    float2(1.000000, 0.000000), 
+    float2(0.000000, -1.000000), 
+    float2(0.000000, 1.000000)
+};
+float gSoftness : gSoftness<string UIName = "Softness Fade : Controls how much soft particles fade out as objects become close to them ;"; float UIMin = 0.000000; float UIMax = 1000.000000; float UIStep = 0.010000;> = 2.000000;
+float HybridAdd : HybridAdd = 1.000000;
+texture DiffuseTex2;
+sampler DiffuseTexSampler<string UIName = "Texture Map";> = 
+sampler_state
+{
+    Texture = <DiffuseTex2>;
+    MinFilter = ANISOTROPIC;
+    MagFilter = LINEAR;
+    MipFilter = LINEAR;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+};
+float HybridAddRatio : HybridAddRatio<string UIName = "Hybrid Add Ratio"; float UIMin = 0.000000; float UIMax = 1.000000; float UIStep = 0.010000; string UIHint = "Keyframeable";> = 0.000000;
+float HDRIntensityMultiplier : HDRIntensityMultiplier<string UIName = "HDR Intensity Multiplier"; float UIMin = 0.000000; float UIMax = 255.000000; float UIStep = 0.010000; string UIHint = "Keyframeable";> = 1.000000;
+float3 LuminanceConstants : LuminanceConstants = float3(0.212500, 0.715400, 0.072100);
+texture FrameMap;
+sampler FrameMapTexSampler = 
+sampler_state
+{
+    Texture = <FrameMap>;
+    MinFilter = LINEAR;
+    MagFilter = LINEAR;
+    MipFilter = NONE;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+};
+texture NormalMapTex;
+sampler NormalMapTexSampler<string UIName = "Normal Map";> = 
+sampler_state
+{
+    Texture = <NormalMapTex>;
+    MinFilter = LINEAR;
+    MagFilter = LINEAR;
+    MipFilter = NONE;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+};
+float gNormalArc : NormalArc<string UIName = "Normal Arc : Determines how much to bend normals outwards for vertex lighting  ( 0 - bend completely outwards, 4 bend nearly ompletely inwards) "; float UIMin = 0.000000; float UIMax = 1.000000; float UIStep = 0.010000;> = 1.000000;
+float gLightIntensityClamp : LightIntensityClamp<string UIName = "Clamp the max value a dotproduct can be"; float UIMin = 0.000000; float UIMax = 1.000000; float UIStep = 0.010000;> = 1.000000;
+float gDiffuse : Diffuse<string UIName = "Diffuse : Controls the amount of lighting on surface, color also controls this ( 0 - no light, 1- light)"; float UIMin = 0.000000; float UIMax = 2.000000; float UIStep = 0.010000;> = 1.000000;
+float gAmbientAmount : AmbientAmount<string UIName = "Ambient Scale : Controls how much double ambient lighting  to alpy to surface"; float UIMin = 0.000000; float UIMax = 2.000000; float UIStep = 0.010000;> = 1.000000;
+float gSuperAlpha : SuperAlpha<string UIName = "Super Alpha : Boosts the alpha amount by the given value ( 1 - normal alpha,  2 - super alpha) "; float UIMin = 0.000000; float UIMax = 4.000000; float UIStep = 0.010000;> = 2.000000;
+float gBlurAmount : gBlurAmount<string UIName = "Blur Rage"; float UIMin = 0.000000; float UIMax = 100.000000; float UIStep = 0.010000;> = 0.000000;
+float gRefraction : gRefraction<string UIName = "Intensify Normal Map"; float UIMin = -1000.000000; float UIMax = 2000.000000; float UIStep = 0.010000;> = 4.130000;
+float gNormalHeight : gNormalHeight<string UIName = "Scale Z Component of Normal Map"; float UIMin = -1000.000000; float UIMax = 2000.000000; float UIStep = 0.010000;> = 0.000000;
+float SpecularPower : SpecularPower<string UIName = "Specular Falloff"; float UIMin = -1000.000000; float UIMax = 2000.000000; float UIStep = 0.010000;> = 8.290000;
+float gShadowAmount : gShadowAmount<string UIName = "Shadow Scalar"; float UIMin = -2000.000000; float UIMax = 2000.000000; float UIStep = 0.010000;> = 0.000000;
+float2 gHeatHazeRippleRate : gHeatHazeRippleRate<string UIName = "HeatHazeFactor"; float UIMin = -1000.000000; float UIMax = 2000.000000; float UIStep = 0.010000;> = float2(5.000000, 0.000000);
+float2 gHeatHazeRippleLength : gHeatHazeRippleLength<string UIName = "HeatPhaseFactor"; float UIMin = -1000.000000; float UIMax = 2000.000000; float UIStep = 0.010000;> = float2(1.000000, 0.000000);
+
+//Vertex shaders
+VertexShader VS_TransformLitScreenSpaceVS
+<
+    string gAmbientAmount   = "parameter register(64)";
+    string gAspectRatio     = "parameter register(47)";
+    string gDepthFxParams   = "parameter register(16)";
+    string gLightAmbient0   = "parameter register(37)";
+    string gLightAmbient1   = "parameter register(38)";
+    string gSuperAlpha      = "parameter register(65)";
+    string globalFogColor   = "parameter register(42)";
+    string globalFogColorN  = "parameter register(43)";
+    string globalFogParams  = "parameter register(41)";
+    string globalScreenSize = "parameter register(44)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   float gAmbientAmount;
+    //   float4 gAspectRatio;
+    //   float4 gDepthFxParams;
+    //   float4 gLightAmbient0;
+    //   float4 gLightAmbient1;
+    //   float gSuperAlpha;
+    //   float4 globalFogColor;
+    //   float4 globalFogColorN;
+    //   float4 globalFogParams;
+    //   float4 globalScreenSize;
+    //
+    //
+    // Registers:
+    //
+    //   Name             Reg   Size
+    //   ---------------- ----- ----
+    //   gDepthFxParams   c16      1
+    //   gLightAmbient0   c37      1
+    //   gLightAmbient1   c38      1
+    //   globalFogParams  c41      1
+    //   globalFogColor   c42      1
+    //   globalFogColorN  c43      1
+    //   globalScreenSize c44      1
+    //   gAspectRatio     c47      1
+    //   gAmbientAmount   c64      1
+    //   gSuperAlpha      c65      1
+    //
+    
+        vs_3_0
+        def c0, -1, 0.159154937, 0.5, 0
+        def c1, 6.28318548, -3.14159274, 9.99999975e-006, 0
+        def c2, -0.5, 0.5, 0, 0
+        dcl_position v0
+        dcl_normal v1
+        dcl_color v2
+        dcl_texcoord v3
+        dcl_texcoord1 v4
+        dcl_texcoord2 v5
+        dcl_texcoord3 v6
+        dcl_position o0
+        dcl_color o1
+        dcl_texcoord o2
+        dcl_texcoord1 o3
+        dcl_texcoord2 o4
+        dcl_texcoord3 o5
+        dcl_texcoord4 o6
+        mad r0.x, v1.z, c0.y, c0.z
+        frc r0.x, r0.x
+        mad r0.x, r0.x, c1.x, c1.y
+        sincos r1.xy, r0.x
+        mul r0.xyz, r1.yyxw, v1.yxyw
+        mad r1.x, v1.x, r1.x, -r0.x
+        add r1.y, r0.z, r0.y
+        rcp r0.x, c44.y
+        mul r0.y, r0.x, c44.x
+        mov r1.z, c0.w
+        mov r0.xz, -c0.x
+        mad r2.xyz, r1, r0, -v0
+        mul r0.xyz, r1, r0
+        add r0.w, c0.x, v1.w
+        sge r0.w, -r0_abs.w, r0_abs.w
+        mad r1.xyz, r0.w, r2, v0
+        rcp r2.x, c47.x
+        rcp r2.y, c47.y
+        mov r2.z, -c0.x
+        mad r1.xyz, r1, r2, c1.z
+        dp3 r1.x, r1, r1
+        rsq r1.x, r1.x
+        mul r1.x, r1.y, r1.x
+        mad_sat r1.x, r1.x, c2.x, c2.y
+        mov r2.xyz, c38
+        mad r1.xyz, r2, r1.x, c37
+        mul r1.xyz, r1, c64.x
+        mul r1.xyz, r1, v2
+        max r1.xyz, r1, c0.w
+        add o1.xyz, r1, v2
+        mul_sat o1.w, c65.x, v2.w
+        add r1.x, -c16.z, c16.w
+        rcp r1.x, r1.x
+        mov r2.x, c0.x
+        add r1.yzw, r2.x, c16.xwxy
+        mul_sat r1.x, r1.x, r1.y
+        add r1.x, -r1.x, -c0.x
+        mad o3.zw, r1.x, r1, -c0.x
+        add r1.x, -c41.x, c41.y
+        rcp r1.x, r1.x
+        add r1.y, -r2.x, -c41.x
+        mul_sat r1.x, r1.x, r1.y
+        rcp_sat r1.y, c41.x
+        lrp r2.x, c41.w, r1.y, r1.x
+        add o5.w, r2.x, c41.z
+        mov r2.xyz, c43
+        add r1.yzw, -r2.xxyz, c42.xxyz
+        mad o5.xyz, r1.x, r1.yzww, c43
+        mul o4.z, r0.w, v1.z
+        mul r0.xyz, r0, r0.w
+        mad r0.xyz, v0.xyxw, c0_abs.xxww, r0
+        mov o0.xyz, r0
+        mov o4.xy, r0
+        mov o0.w, -c0.x
+        mov o2, v3
+        mov o3.xy, v4
+        mov o4.w, v5.y
+        mov o6, v6
+    
+    // approximately 65 instruction slots used
+};
+
+VertexShader VS_TransformUnLitVS
+<
+    string gAspectRatio    = "parameter register(47)";
+    string gDepthFxParams  = "parameter register(16)";
+    string gSuperAlpha     = "parameter register(64)";
+    string gWorldViewProj  = "parameter register(8)";
+    string globalFogColor  = "parameter register(42)";
+    string globalFogColorN = "parameter register(43)";
+    string globalFogParams = "parameter register(41)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   float4 gAspectRatio;
+    //   float4 gDepthFxParams;
+    //   float gSuperAlpha;
+    //   row_major float4x4 gWorldViewProj;
+    //   float4 globalFogColor;
+    //   float4 globalFogColorN;
+    //   float4 globalFogParams;
+    //
+    //
+    // Registers:
+    //
+    //   Name            Reg   Size
+    //   --------------- ----- ----
+    //   gWorldViewProj  c8       4
+    //   gDepthFxParams  c16      1
+    //   globalFogParams c41      1
+    //   globalFogColor  c42      1
+    //   globalFogColorN c43      1
+    //   gAspectRatio    c47      1
+    //   gSuperAlpha     c64      1
+    //
+    
+        vs_3_0
+        def c0, 0.159154937, 0.5, 6.28318548, -3.14159274
+        def c1, 0, 1, -1, 0
+        dcl_position v0
+        dcl_normal v1
+        dcl_color v2
+        dcl_texcoord v3
+        dcl_texcoord1 v4
+        dcl_texcoord2 v5
+        dcl_texcoord3 v6
+        dcl_position o0
+        dcl_color o1
+        dcl_texcoord o2
+        dcl_texcoord1 o3
+        dcl_texcoord2 o4
+        dcl_texcoord3 o5
+        dcl_texcoord4 o6
+        mul_sat o1.w, c64.x, v2.w
+        mul r0, c9, v0.y
+        mad r0, v0.x, c8, r0
+        mad r0, v0.z, c10, r0
+        add r0, r0, c11
+        mad r1.x, v1.z, c0.x, c0.y
+        frc r1.x, r1.x
+        mad r1.x, r1.x, c0.z, c0.w
+        sincos r2.xy, r1.x
+        mul r1.xyz, r2.yyxw, v1.yxyw
+        mad r2.x, v1.x, r2.x, -r1.x
+        add r2.y, r1.z, r1.y
+        mov r2.zw, c1.x
+        mad r0, r2, c47, r0
+        add r1.x, -r0.w, c16.w
+        add r1.y, -c16.z, c16.w
+        rcp r1.y, r1.y
+        mul_sat r1.x, r1.x, r1.y
+        add r1.x, -r1.x, c1.y
+        mov r1.z, c1.z
+        add r1.yz, r1.z, c16.xxyw
+        mad o3.zw, r1.x, r1.xyyz, c1.y
+        rcp r1.x, c41.x
+        mul_sat r1.x, r0.w, r1.x
+        add r1.y, r0.w, -c41.x
+        add r1.z, -c41.x, c41.y
+        rcp r1.z, r1.z
+        mul_sat r1.y, r1.y, r1.z
+        lrp r2.x, c41.w, r1.x, r1.y
+        add o5.w, r2.x, c41.z
+        mov r2.xyz, c43
+        add r1.xzw, -r2.xyyz, c42.xyyz
+        mad o5.xyz, r1.y, r1.xzww, c43
+        mov o0, r0
+        mov o4.xyz, r0.xyww
+        mov o1.xyz, v2
+        mov o2, v3
+        mov o3.xy, v4
+        mov o4.w, v5.y
+        mov o6, v6
+    
+    // approximately 47 instruction slots used
+};
+
+VertexShader VS_TransformUnLitScreenSpaceVS
+<
+    string gDepthFxParams   = "parameter register(16)";
+    string gSuperAlpha      = "parameter register(64)";
+    string globalFogColor   = "parameter register(42)";
+    string globalFogColorN  = "parameter register(43)";
+    string globalFogParams  = "parameter register(41)";
+    string globalScreenSize = "parameter register(44)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   float4 gDepthFxParams;
+    //   float gSuperAlpha;
+    //   float4 globalFogColor;
+    //   float4 globalFogColorN;
+    //   float4 globalFogParams;
+    //   float4 globalScreenSize;
+    //
+    //
+    // Registers:
+    //
+    //   Name             Reg   Size
+    //   ---------------- ----- ----
+    //   gDepthFxParams   c16      1
+    //   globalFogParams  c41      1
+    //   globalFogColor   c42      1
+    //   globalFogColorN  c43      1
+    //   globalScreenSize c44      1
+    //   gSuperAlpha      c64      1
+    //
+    
+        vs_3_0
+        def c0, -1, 0.159154937, 0.5, 1
+        def c1, 6.28318548, -3.14159274, 0, 1
+        dcl_position v0
+        dcl_normal v1
+        dcl_color v2
+        dcl_texcoord v3
+        dcl_texcoord1 v4
+        dcl_texcoord2 v5
+        dcl_texcoord3 v6
+        dcl_position o0
+        dcl_color o1
+        dcl_texcoord o2
+        dcl_texcoord1 o3
+        dcl_texcoord2 o4
+        dcl_texcoord3 o5
+        dcl_texcoord4 o6
+        mad r0.x, v1.z, c0.y, c0.z
+        frc r0.x, r0.x
+        mad r0.x, r0.x, c1.x, c1.y
+        sincos r1.xy, r0.x
+        mul r0.xyz, r1.yyxw, v1.yxyw
+        mad r1.x, v1.x, r1.x, -r0.x
+        add r1.y, r0.z, r0.y
+        rcp r0.x, c44.y
+        mul r0.y, r0.x, c44.x
+        mov r0.x, c0.w
+        mul r0.xy, r1, r0
+        add r0.z, c0.x, v1.w
+        sge r0.z, -r0_abs.z, r0_abs.z
+        mul r0.xy, r0, r0.z
+        mov r0.z, c1.z
+        mad o0.xyz, v0.xyxw, c1.wwzw, r0
+        mul_sat o1.w, c64.x, v2.w
+        add r0.x, -c16.z, c16.w
+        rcp r0.x, r0.x
+        mov r1.xw, c0
+        add r0.yzw, r1.x, c16.xwxy
+        mul_sat r0.x, r0.x, r0.y
+        add r0.x, -r0.x, c0.w
+        mad o3.zw, r0.x, r0, c0.w
+        add r0.x, -c41.x, c41.y
+        rcp r0.x, r0.x
+        add r0.y, r1.w, -c41.x
+        mul_sat r0.x, r0.x, r0.y
+        rcp_sat r0.y, c41.x
+        lrp r1.x, c41.w, r0.y, r0.x
+        add o5.w, r1.x, c41.z
+        mov r1.xyz, c43
+        add r0.yzw, -r1.xxyz, c42.xxyz
+        mad o5.xyz, r0.x, r0.yzww, c43
+        mov o0.w, c0.w
+        mov o1.xyz, v2
+        mov o2, v3
+        mov o3.xy, v4
+        mul o4, c1.wzzz, v5.z
+        mov o6, v6
+    
+    // approximately 47 instruction slots used
+};
+
+//Pixel shaders
+PixelShader PixelShader0 = NULL;
+
+PixelShader PS_Draw
+<
+    string DiffuseTexSampler = "parameter register(0)";
+    string HybridAdd         = "parameter register(66)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   sampler2D DiffuseTexSampler;
+    //   float HybridAdd;
+    //
+    //
+    // Registers:
+    //
+    //   Name              Reg   Size
+    //   ----------------- ----- ----
+    //   HybridAdd         c66      1
+    //   DiffuseTexSampler s0       1
+    //
+    
+        ps_3_0
+        def c0, 0.5, 0.212500006, 0.715399981, 0.0720999986
+        def c1, -1, 1, 0, 0
+        dcl_color v0
+        dcl_texcoord v1
+        dcl_texcoord1 v2.zw
+        dcl_texcoord3 v3
+        dcl_texcoord4 v4.xy
+        dcl_2d s0
+        texld r0, v1, s0
+        texld r1, v1.zwzw, s0
+        lrp r2, c0.x, r1, r0
+        mul r0, r2, v0
+        mul r1.xyz, r0, v4.y
+        dp3 r1.x, r1, c0.yzww
+        mad r1.yzw, r0.xxyz, v4.y, -r1.x
+        mov_sat r0.w, r0.w
+        mad r1.yzw, v2.z, r1, r1.x
+        add r2.x, c1.x, v2.w
+        pow r3.x, r1_abs.x, r2.x
+        mul r2.xyz, r1.yzww, r3.x
+        mad r1.xyz, r1.yzww, -r3.x, v3
+        mad r0.xyz, v3.w, r1, r2
+        mul r1.xyz, r0.w, r0
+        abs r2.x, c66.x
+        add r2.y, c1.y, -v4.x
+        mul r1.w, r0.w, r2.y
+        cmp r0, -r2.x, r0, r1
+        max oC0, r0, c1.z
+    
+    // approximately 22 instruction slots used (2 texture, 20 arithmetic)
+};
+
+PixelShader PS_DrawRefraction
+<
+    string DiffuseTexSampler    = "parameter register(0)";
+    string FrameMapTexSampler   = "parameter register(1)";
+    string NormalMapTexSampler  = "parameter register(2)";
+    string SpecularPower        = "parameter register(77)";
+    string gBlurAmount          = "parameter register(74)";
+    string gDiffuse             = "parameter register(73)";
+    string gDirectionalColour   = "parameter register(18)";
+    string gDirectionalLight    = "parameter register(17)";
+    string gLightIntensityClamp = "parameter register(72)";
+    string gNormalArc           = "parameter register(66)";
+    string gNormalHeight        = "parameter register(76)";
+    string gRefraction          = "parameter register(75)";
+    string gShadowAmount        = "parameter register(78)";
+    string globalScreenSize     = "parameter register(44)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   sampler2D DiffuseTexSampler;
+    //   sampler2D FrameMapTexSampler;
+    //   sampler2D NormalMapTexSampler;
+    //   float SpecularPower;
+    //   float gBlurAmount;
+    //   float gDiffuse;
+    //   float4 gDirectionalColour;
+    //   float4 gDirectionalLight;
+    //   float gLightIntensityClamp;
+    //   float gNormalArc;
+    //   float gNormalHeight;
+    //   float gRefraction;
+    //   float gShadowAmount;
+    //   float4 globalScreenSize;
+    //
+    //
+    // Registers:
+    //
+    //   Name                 Reg   Size
+    //   -------------------- ----- ----
+    //   gDirectionalLight    c17      1
+    //   gDirectionalColour   c18      1
+    //   globalScreenSize     c44      1
+    //   gNormalArc           c66      1
+    //   gLightIntensityClamp c72      1
+    //   gDiffuse             c73      1
+    //   gBlurAmount          c74      1
+    //   gRefraction          c75      1
+    //   gNormalHeight        c76      1
+    //   SpecularPower        c77      1
+    //   gShadowAmount        c78      1
+    //   DiffuseTexSampler    s0       1
+    //   FrameMapTexSampler   s1       1
+    //   NormalMapTexSampler  s2       1
+    //
+    
+        ps_3_0
+        def c0, 0.5, 2, -1, 0.159154937
+        def c1, 6.28318548, -3.14159274, 0, 10
+        def c2, 9.99999975e-006, 0.125, 0, 0
+        def c3, -0.00326212007, -0.00405809982, -0.00695913984, 0.00457136985
+        def c4, -0.00203344994, 0.00620716019, 0.00962339994, -0.00194982998
+        def c5, 0.00519456016, 0.00767021999, 0.00185461005, -0.00893124007
+        def c6, 0.00896419957, 0.00412457995, -0.00791558996, -0.00597710023
+        dcl_color v0
+        dcl_texcoord v1
+        dcl_texcoord1 v2.xy
+        dcl_texcoord2 v3.xyz
+        dcl_2d s0
+        dcl_2d s1
+        dcl_2d s2
+        mad r0.x, v3.z, c0.w, c0.x
+        frc r0.x, r0.x
+        mad r0.x, r0.x, c1.x, c1.y
+        sincos r1.xy, r0.x
+        texld r0, v2, s2
+        mad r0.xyz, r0, c0.y, c0.z
+        mul r0.w, r1.y, r0.y
+        mad r2.x, r0.x, r1.x, -r0.w
+        dp2add r2.y, r0, r1.yxzw, c1.z
+        mov r0.w, c1.w
+        mul r0.x, r0.w, c75.x
+        mul r0.yw, r2.xxzy, r0.x
+        mul r1.x, r0.z, c76.x
+        mov r2.z, r0.z
+        mul r1.yzw, r2.xxyz, r0.x
+        mov r0.x, c2.x
+        mad r1.yzw, r1, c76.x, r0.x
+        nrm r2.xyz, r1.yzww
+        dp3 r0.x, r2, -c17
+        max r1.y, r0.x, -c72.x
+        min r0.x, c72.x, r1.y
+        mul r0.yz, r0.xyww, r1.x
+        mul r0.y, r0.y, c44.z
+        add r1.xy, -c0.z, v3
+        mad r2.x, r1.x, c0.x, r0.y
+        mad r0.y, r1.y, -c0_abs.x, c0_abs.z
+        mad r2.y, r0.z, c44.w, r0.y
+        mov r1.x, c74.x
+        mad r0.yz, r1.x, c3.xxyw, r2.xxyw
+        texld r3, r0.yzzw, s1
+        texld r4, r2, s1
+        add r0.yzw, r3.xxyz, r4.xxyz
+        mad r1.yz, r1.x, c3.xzww, r2.xxyw
+        texld r3, r1.yzzw, s1
+        add r0.yzw, r0, r3.xxyz
+        mad r1.yz, r1.x, c4.xxyw, r2.xxyw
+        texld r3, r1.yzzw, s1
+        add r0.yzw, r0, r3.xxyz
+        mad r1.yz, r1.x, c4.xzww, r2.xxyw
+        texld r3, r1.yzzw, s1
+        add r0.yzw, r0, r3.xxyz
+        mad r1.yz, r1.x, c5.xxyw, r2.xxyw
+        texld r3, r1.yzzw, s1
+        add r0.yzw, r0, r3.xxyz
+        mad r1.yz, r1.x, c5.xzww, r2.xxyw
+        texld r3, r1.yzzw, s1
+        add r0.yzw, r0, r3.xxyz
+        mad r1.yz, r1.x, c6.xxyw, r2.xxyw
+        mad r1.xw, r1.x, c6.zyzw, r2.xyzy
+        texld r2, r1.xwzw, s1
+        texld r1, r1.yzzw, s1
+        add r0.yzw, r0, r1.xxyz
+        add r0.yzw, r2.xxyz, r0
+        mul r0.yzw, r0, v0.xxyz
+        add r1.x, -r0.x, -c0.z
+        mad r0.x, c66.x, r1.x, r0.x
+        pow r1.x, r0_abs.x, c77.x
+        mul r0.x, r0.x, c18.x
+        mul r0.x, r0.x, c18.w
+        mul r0.x, r0.x, c78.x
+        min r1.y, r0.x, c1.z
+        mul r0.x, r1.x, c18.x
+        mul r0.x, r0.x, c18.w
+        mul r0.x, r0.x, c73.x
+        mad r0.xyz, r0.yzww, c2.y, r0.x
+        add r0.xyz, r1.y, r0
+        texld r1, v1, s0
+        texld r2, v1.zwzw, s0
+        lrp r3.x, c0.x, r2.w, r1.w
+        mul_sat r0.w, r3.x, v0.w
+        max oC0, r0, c1.z
+    
+    // approximately 83 instruction slots used (12 texture, 71 arithmetic)
+};
+
+PixelShader PS_DrawHeatHaze
+<
+    string DiffuseTexSampler     = "parameter register(0)";
+    string FrameMapTexSampler    = "parameter register(1)";
+    string gBlurAmount           = "parameter register(66)";
+    string gHeatHazeRippleLength = "parameter register(74)";
+    string gHeatHazeRippleRate   = "parameter register(73)";
+    string gRefraction           = "parameter register(72)";
+    string globalScreenSize      = "parameter register(44)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   sampler2D DiffuseTexSampler;
+    //   sampler2D FrameMapTexSampler;
+    //   float gBlurAmount;
+    //   float2 gHeatHazeRippleLength;
+    //   float2 gHeatHazeRippleRate;
+    //   float gRefraction;
+    //   float4 globalScreenSize;
+    //
+    //
+    // Registers:
+    //
+    //   Name                  Reg   Size
+    //   --------------------- ----- ----
+    //   globalScreenSize      c44      1
+    //   gBlurAmount           c66      1
+    //   gRefraction           c72      1
+    //   gHeatHazeRippleRate   c73      1
+    //   gHeatHazeRippleLength c74      1
+    //   DiffuseTexSampler     s0       1
+    //   FrameMapTexSampler    s1       1
+    //
+    
+        ps_3_0
+        def c0, 0.5, 1, 1.5915494, 0.125
+        def c1, 6.28318548, -3.14159274, -0.00326212007, -0.00405809982
+        def c2, -0.00791558996, -0.00597710023, 0, 0
+        def c3, -0.00695913984, 0.00457136985, -0.00203344994, 0.00620716019
+        def c4, 0.00962339994, -0.00194982998, 0.00519456016, 0.00767021999
+        def c5, 0.00185461005, -0.00893124007, 0.00896419957, 0.00412457995
+        dcl_color v0
+        dcl_texcoord v1
+        dcl_texcoord2 v2
+        dcl_2d s0
+        dcl_2d s1
+        rcp r0.x, v2.z
+        mad r0.y, v2.x, r0.x, v2.w
+        mul r0.y, r0.y, c73.x
+        mad r0.y, r0.y, c0.z, c0.x
+        frc r0.y, r0.y
+        mad r0.y, r0.y, c1.x, c1.y
+        sincos r1.y, r0.y
+        mul r0.y, r1.y, c74.x
+        mul r0.y, r0.y, c44.z
+        mad r0.zw, v2.xyxy, r0.x, c0.y
+        mad r0.x, v2.y, -r0.x, v2.w
+        mul r0.x, r0.x, c73.y
+        mad r0.x, r0.x, c0.z, c0.x
+        frc r0.x, r0.x
+        mad r0.x, r0.x, c1.x, c1.y
+        sincos r1.x, r0.x
+        mul r0.x, r1.x, c74.y
+        mul r0.x, r0.x, c44.w
+        mul r0.z, r0.z, c0.x
+        mad r0.w, r0.w, -c0.x, c0.y
+        mad r1.y, r0.x, c72.x, r0.w
+        mad r1.x, r0.y, c72.x, r0.z
+        mov r0.x, c66.x
+        mad r0.yz, r0.x, c1.xzww, r1.xxyw
+        texld r2, r0.yzzw, s1
+        texld r3, r1, s1
+        add r0.yzw, r2.xxyz, r3.xxyz
+        mad r1.zw, r0.x, c3.xyxy, r1.xyxy
+        texld r2, r1.zwzw, s1
+        add r0.yzw, r0, r2.xxyz
+        mad r1.zw, r0.x, c3, r1.xyxy
+        texld r2, r1.zwzw, s1
+        add r0.yzw, r0, r2.xxyz
+        mad r1.zw, r0.x, c4.xyxy, r1.xyxy
+        texld r2, r1.zwzw, s1
+        add r0.yzw, r0, r2.xxyz
+        mad r1.zw, r0.x, c4, r1.xyxy
+        texld r2, r1.zwzw, s1
+        add r0.yzw, r0, r2.xxyz
+        mad r1.zw, r0.x, c5.xyxy, r1.xyxy
+        texld r2, r1.zwzw, s1
+        add r0.yzw, r0, r2.xxyz
+        mad r1.zw, r0.x, c5, r1.xyxy
+        mad r1.xy, r0.x, c2, r1
+        texld r2, r1, s1
+        texld r1, r1.zwzw, s1
+        add r0.xyz, r0.yzww, r1
+        add r0.xyz, r2, r0
+        mul r0.xyz, r0, v0
+        mul r0.xyz, r0, c0.w
+        texld r1, v1, s0
+        texld r2, v1.zwzw, s0
+        lrp r3.x, c0.x, r2.w, r1.w
+        mul_sat r0.w, r3.x, v0.w
+        max oC0, r0, c2.z
+    
+    // approximately 69 instruction slots used (11 texture, 58 arithmetic)
+};
+
+technique draw
+{
+    pass p0
+    {
+        VertexShader = VS_TransformLitScreenSpaceVS;
+        PixelShader = PS_Draw;
+    }
+}
+
+technique draw_raindrop
+{
+    pass p0
+    {
+        VertexShader = VS_TransformLitScreenSpaceVS;
+        PixelShader = PS_DrawRefraction;
+    }
+}
+
+technique draw_heathaze
+{
+    pass p0
+    {
+        VertexShader = VS_TransformUnLitVS;
+        PixelShader = PS_DrawHeatHaze;
+    }
+}
+
+technique unlit_draw
+{
+    pass p0
+    {
+        VertexShader = VS_TransformUnLitScreenSpaceVS;
+        PixelShader = PS_Draw;
+    }
+}
+

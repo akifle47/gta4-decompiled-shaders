@@ -1,0 +1,4319 @@
+//Globals
+shared float4 gAllGlobals[64] : AllGlobals;
+shared float4x3 gBoneMtx[48] : WorldMatrixArray;
+shared float4x4 gWorld : World;
+shared float4x4 gWorldView : WorldView;
+shared float4x4 gWorldViewProj : WorldViewProjection;
+shared float4x4 gViewInverse : ViewInverse;
+shared texture stippletexture;
+shared sampler StippleTexture = 
+sampler_state
+{
+    Texture = <stippletexture>;
+    MinFilter = POINT;
+    MagFilter = POINT;
+    MipFilter = POINT;
+    AddressU = WRAP;
+    AddressV = WRAP;
+};
+shared float4 gDepthFxParams : DepthFxParams = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 gDirectionalLight : DirectionalLight;
+shared float4 gDirectionalColour : DirectionalColour;
+shared float4 gLightPosX : LightPositionX;
+shared float4 gLightPosY : LightPositionY;
+shared float4 gLightPosZ : LightPositionZ;
+shared float4 gLightDirX : LightDirX;
+shared float4 gLightDirY : LightDirY;
+shared float4 gLightDirZ : LightDirZ;
+shared float4 gLightFallOff : LightFallOff;
+shared float4 gLightConeScale : LightConeScale;
+shared float4 gLightConeOffset : LightConeOffset;
+shared float4 gLightColR : LightColR;
+shared float4 gLightColG : LightColG;
+shared float4 gLightColB : LightColB;
+shared float4 gLightPointPosX : LightPointPositionX;
+shared float4 gLightPointPosY : LightPointPositionY;
+shared float4 gLightPointPosZ : LightPointPositionZ;
+shared float4 gLightPointColR : LightPointColR;
+shared float4 gLightPointColG : LightPointColG;
+shared float4 gLightPointColB : LightPointColB;
+shared float4 gLightPointFallOff : LightPointFallOff;
+shared float4 gLightDir2X : LightDir2X;
+shared float4 gLightDir2Y : LightDir2Y;
+shared float4 gLightDir2Z : LightDir2Z;
+shared float4 gLightConeScale2 : LightConeScale2;
+shared float4 gLightConeOffset2 : LightConeOffset2;
+shared float4 gLightAmbient0 : LightAmbientColor0<string UIWidget = "Ambient Light Color 0"; string Space = "material";> = float4(0.000000, 0.000000, 0.000000, 1.000000);
+shared float4 gLightAmbient1 : LightAmbientColor1<string UIWidget = "Ambient Light Color 1"; string Space = "material";> = float4(0.000000, 0.000000, 0.000000, 1.000000);
+shared float4 globalScalars : globalScalars = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 globalScalars2 : globalScalars2 = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 gAspectRatio : gAspectRatio = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 globalScreenSize : globalScreenSize = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 globalFogParams : globalFogParams = float4(1600.000000, 9000000.000000, 0.010000, 1.000000);
+shared float4 globalFogColor : globalFogColor = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 globalFogColorN : globalFogColorN = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 gDayNightEffects : globalDayNightEffects = float4(1.000000, 0.000000, 1.000000, 0.000000);
+shared float gInvColorExpBias : ColorExpBias = 1.000000;
+shared float4 colorize : Colorize = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 stencil : Stencil = float4(0.000000, 255.000000, 0.000000, 0.000000);
+
+//Locals
+texture gbufferTexture1;
+sampler GBufferTextureSampler1 = 
+sampler_state
+{
+    Texture = <gbufferTexture1>;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+    MinFilter = POINT;
+    MagFilter = POINT;
+};
+texture gbufferTexture2;
+sampler GBufferTextureSampler2 = 
+sampler_state
+{
+    Texture = <gbufferTexture2>;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+    MinFilter = POINT;
+    MagFilter = POINT;
+};
+texture gbufferTexture3;
+sampler GBufferTextureSampler3 = 
+sampler_state
+{
+    Texture = <gbufferTexture3>;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+    MinFilter = LINEAR;
+    MagFilter = LINEAR;
+};
+texture gbufferStencilTexture;
+sampler GBufferStencilTextureSampler = 
+sampler_state
+{
+    Texture = <gbufferStencilTexture>;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+    MinFilter = POINT;
+    MagFilter = POINT;
+    MipFilter = POINT;
+};
+texture PostFxTexture0;
+sampler HDRSampler = 
+sampler_state
+{
+    Texture = <PostFxTexture0>;
+    MinFilter = LINEAR;
+    MagFilter = LINEAR;
+    MipFilter = LINEAR;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+};
+texture PostFxTexture1;
+sampler BlurSampler = 
+sampler_state
+{
+    Texture = <PostFxTexture1>;
+    MinFilter = LINEAR;
+    MagFilter = LINEAR;
+    MipFilter = NONE;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+};
+texture PostFxTexture2;
+sampler BloomSampler = 
+sampler_state
+{
+    Texture = <PostFxTexture2>;
+    MinFilter = LINEAR;
+    MagFilter = LINEAR;
+    MipFilter = NONE;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+};
+texture PostFxTextureV0;
+sampler CurLumSampler = 
+sampler_state
+{
+    Texture = <PostFxTextureV0>;
+    MinFilter = POINT;
+    MagFilter = POINT;
+    MipFilter = NONE;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+};
+texture PostFxTextureV1;
+sampler AdapLumSampler = 
+sampler_state
+{
+    Texture = <PostFxTextureV1>;
+    MinFilter = POINT;
+    MagFilter = POINT;
+    MipFilter = NONE;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+};
+texture SmokeFxTexture;
+sampler SmokeSampler = 
+sampler_state
+{
+    Texture = <SmokeFxTexture>;
+    MinFilter = LINEAR;
+    MagFilter = LINEAR;
+    MipFilter = NONE;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+};
+float Exposure : Exposure;
+float ElapsedTime : ElapsedTime;
+float AdaptTime : AdaptTime;
+float AdaptedLumMin : AdaptedLumMin;
+float AdaptedLumMax : AdaptedLumMax;
+float4 TexelSize : TexelSize;
+float4 DofBlurWeight : DofBlurWeight = float4(1.000000, 1.000000, 1.000000, 1.000000);
+float4 dofProj : DOF_PROJ;
+float4 dofDist : DOF_PARAMS;
+float4 dofBlur : DOF_BLUR;
+float4 eaaParams2 : EAA_PARAMS2;
+float gDirectionalMotionBlurLength : PPPDirectionalMotionBlurLength;
+texture JitterTexture;
+sampler JitterSampler = 
+sampler_state
+{
+    Texture = <JitterTexture>;
+    MinFilter = POINT;
+    MagFilter = POINT;
+    MipFilter = NONE;
+    AddressU = WRAP;
+    AddressV = WRAP;
+};
+texture StencilCopyTexture;
+sampler StencilCopySampler = 
+sampler_state
+{
+    Texture = <StencilCopyTexture>;
+    MinFilter = POINT;
+    MagFilter = POINT;
+    MipFilter = NONE;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+};
+float4x4 motionBlurMatrix : MB_MATRIX;
+float4 ToneMapParams : ToneMapParams;
+float4 SmokeParams : SmokeParams;
+float4 deSatContrastGamma : deSatContrastGamma;
+float4 ColorCorrect : ColorCorrect;
+float4 ColorShift : ColorShift;
+float4 NoiseParams : NoiseParams;
+float PLAYER_MASK : PLAYER_MASK = 0.501961;
+
+//Vertex shaders
+VertexShader VS_Passthrough
+<
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+        vs_3_0
+        def c0, 1, 0, 0, 0
+        dcl_position v0
+        dcl_texcoord v1
+        dcl_position o0
+        dcl_texcoord o1.xy
+        dcl_texcoord1 o2.xy
+        mad o0, v0.xyzx, c0.xxxy, c0.yyyx
+        mov o1.xy, v1
+        mov o2.xy, c0.y
+    
+    // approximately 3 instruction slots used
+};
+
+VertexShader VS_Lum
+<
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+        vs_3_0
+        def c0, 1, 0, 0, 0
+        dcl_position v0
+        dcl_position o0
+        mad o0, v0.xyzx, c0.xxxy, c0.yyyx
+    
+    // approximately 1 instruction slot used
+};
+
+//Pixel shaders
+PixelShader PixelShader0 = NULL;
+
+PixelShader PS_Copy
+<
+    string HDRSampler = "parameter register(0)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   sampler2D HDRSampler;
+    //
+    //
+    // Registers:
+    //
+    //   Name         Reg   Size
+    //   ------------ ----- ----
+    //   HDRSampler   s0       1
+    //
+    
+        ps_3_0
+        def c0, 0, 1, 0, 0
+        dcl_texcoord v0.xy
+        dcl_2d s0
+        texld r0, v0, s0
+        dp3 r0.w, r0, r0
+        rcp r0.w, r0.w
+        cmp oC0.xyz, -r0_abs.w, c0.x, r0
+        mov oC0.w, c0.y
+    
+    // approximately 5 instruction slots used (1 texture, 4 arithmetic)
+};
+
+PixelShader PS_AverageLum0
+<
+    string HDRSampler = "parameter register(0)";
+    string TexelSize  = "parameter register(66)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   sampler2D HDRSampler;
+    //   float4 TexelSize;
+    //
+    //
+    // Registers:
+    //
+    //   Name         Reg   Size
+    //   ------------ ----- ----
+    //   TexelSize    c66      1
+    //   HDRSampler   s0       1
+    //
+    
+        ps_3_0
+        def c0, -1, 1, -3, 0
+        def c1, 0.212500006, 0.715399981, 0.0720999986, 0
+        def c2, 0.125, 0, 0, 0
+        dcl_texcoord v0.xy
+        dcl_2d s0
+        add r0.xy, -c66, v0
+        texld r0, r0, s0
+        dp3 r0.x, r0, c1
+        rcp r0.y, r0.x
+        cmp r0.x, -r0_abs.y, c1.w, r0.x
+        mov r1.xy, c66
+        mad r0.yz, r1.xxyw, c0.xxyw, v0.xxyw
+        texld r2, r0.yzzw, s0
+        dp3 r0.y, r2, c1
+        rcp r0.z, r0.y
+        cmp r0.y, -r0_abs.z, c1.w, r0.y
+        add r0.x, r0.x, r0.y
+        add r0.yz, c66.xxyw, v0.xxyw
+        texld r2, r0.yzzw, s0
+        dp3 r0.y, r2, c1
+        rcp r0.z, r0.y
+        cmp r0.y, -r0_abs.z, c1.w, r0.y
+        add r0.x, r0.x, r0.y
+        mad r0.yz, r1.xxyw, c0.xyxw, v0.xxyw
+        texld r2, r0.yzzw, s0
+        dp3 r0.y, r2, c1
+        rcp r0.z, r0.y
+        cmp r0.y, -r0_abs.z, c1.w, r0.y
+        add r0.x, r0.x, r0.y
+        mad r0.yz, r1.xxyw, c0.xzww, v0.xxyw
+        texld r2, r0.yzzw, s0
+        dp3 r0.y, r2, c1
+        rcp r0.z, r0.y
+        cmp r0.y, -r0_abs.z, c1.w, r0.y
+        add r0.x, r0.x, r0.y
+        mad r0.yz, r1.xxyw, c0_abs.xzww, v0.xxyw
+        texld r2, r0.yzzw, s0
+        dp3 r0.y, r2, c1
+        rcp r0.z, r0.y
+        cmp r0.y, -r0_abs.z, c1.w, r0.y
+        add r0.x, r0.x, r0.y
+        mad r0.yz, r1.xxyw, c0.xwzw, v0.xxyw
+        texld r2, r0.yzzw, s0
+        dp3 r0.y, r2, c1
+        rcp r0.z, r0.y
+        cmp r0.y, -r0_abs.z, c1.w, r0.y
+        add r0.x, r0.x, r0.y
+        mad r0.yz, r1.xxyw, c0_abs.xwzw, v0.xxyw
+        texld r1, r0.yzzw, s0
+        dp3 r0.y, r1, c1
+        rcp r0.z, r0.y
+        cmp r0.y, -r0_abs.z, c1.w, r0.y
+        add r0.x, r0.x, r0.y
+        mul oC0, r0.x, c2.x
+    
+    // approximately 49 instruction slots used (8 texture, 41 arithmetic)
+};
+
+PixelShader PS_AverageLum1
+<
+    string HDRSampler = "parameter register(0)";
+    string TexelSize  = "parameter register(66)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   sampler2D HDRSampler;
+    //   float4 TexelSize;
+    //
+    //
+    // Registers:
+    //
+    //   Name         Reg   Size
+    //   ------------ ----- ----
+    //   TexelSize    c66      1
+    //   HDRSampler   s0       1
+    //
+    
+        ps_3_0
+        def c0, 1, -1, 0.25, 0
+        dcl_texcoord v0.xy
+        dcl_2d s0
+        add r0.xy, -c66, v0
+        texld r0, r0, s0
+        mov r1.xy, c66
+        mad r0.yz, r1.xxyw, c0.xxyw, v0.xxyw
+        texld r2, r0.yzzw, s0
+        add r0.x, r0.x, r2.x
+        add r0.yz, c66.xxyw, v0.xxyw
+        texld r2, r0.yzzw, s0
+        add r0.x, r0.x, r2.x
+        mad r0.yz, r1.xxyw, c0.xyxw, v0.xxyw
+        texld r1, r0.yzzw, s0
+        add r0.x, r0.x, r1.x
+        mul oC0, r0.x, c0.z
+    
+    // approximately 13 instruction slots used (4 texture, 9 arithmetic)
+};
+
+PixelShader PS_AverageLum2
+<
+    string Exposure   = "parameter register(66)";
+    string HDRSampler = "parameter register(0)";
+    string TexelSize  = "parameter register(72)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   float Exposure;
+    //   sampler2D HDRSampler;
+    //   float4 TexelSize;
+    //
+    //
+    // Registers:
+    //
+    //   Name         Reg   Size
+    //   ------------ ----- ----
+    //   Exposure     c66      1
+    //   TexelSize    c72      1
+    //   HDRSampler   s0       1
+    //
+    
+        ps_3_0
+        def c0, 1, -1, 0.25, 0
+        dcl_texcoord v0.xy
+        dcl_2d s0
+        add r0.xy, -c72, v0
+        texld r0, r0, s0
+        mov r1.xy, c72
+        mad r0.yz, r1.xxyw, c0.xxyw, v0.xxyw
+        texld r2, r0.yzzw, s0
+        add r0.x, r0.x, r2.x
+        add r0.yz, c72.xxyw, v0.xxyw
+        texld r2, r0.yzzw, s0
+        add r0.x, r0.x, r2.x
+        mad r0.yz, r1.xxyw, c0.xyxw, v0.xxyw
+        texld r1, r0.yzzw, s0
+        add r0.x, r0.x, r1.x
+        mul r0.x, r0.x, c66.x
+        mul oC0, r0.x, c0.z
+    
+    // approximately 14 instruction slots used (4 texture, 10 arithmetic)
+};
+
+PixelShader PS_UpdateAdaptedLum
+<
+    string AdapLumSampler = "parameter register(1)";
+    string AdaptTime      = "parameter register(72)";
+    string AdaptedLumMax  = "parameter register(74)";
+    string AdaptedLumMin  = "parameter register(73)";
+    string CurLumSampler  = "parameter register(0)";
+    string ElapsedTime    = "parameter register(66)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   sampler2D AdapLumSampler;
+    //   float AdaptTime;
+    //   float AdaptedLumMax;
+    //   float AdaptedLumMin;
+    //   sampler2D CurLumSampler;
+    //   float ElapsedTime;
+    //
+    //
+    // Registers:
+    //
+    //   Name           Reg   Size
+    //   -------------- ----- ----
+    //   ElapsedTime    c66      1
+    //   AdaptTime      c72      1
+    //   AdaptedLumMin  c73      1
+    //   AdaptedLumMax  c74      1
+    //   CurLumSampler  s0       1
+    //   AdapLumSampler s1       1
+    //
+    
+        ps_3_0
+        def c0, 0, -1, 1, 0
+        dcl_2d s0
+        dcl_2d s1
+        add r0.x, c72.x, c72.x
+        rsq r0.x, r0.x
+        mul r0.x, r0.x, c66.x
+        min r1.x, r0.x, c0.z
+        texld r0, c0.x, s1
+        texld r2, c0.x, s0
+        lrp r3.x, r1.x, r2.x, r0.x
+        max r0.x, r2.x, c73.x
+        min r1.x, c74.x, r0.x
+        max r0.x, r3.x, c73.x
+        min r1.y, c74.x, r0.x
+        mov r0.y, c0.y
+        add r0.x, r0.y, c72.x
+        cmp oC0, r0.x, r1.y, r1.x
+    
+    // approximately 14 instruction slots used (2 texture, 12 arithmetic)
+};
+
+PixelShader PS_Max
+<
+    string HDRSampler = "parameter register(0)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   sampler2D HDRSampler;
+    //
+    //
+    // Registers:
+    //
+    //   Name         Reg   Size
+    //   ------------ ----- ----
+    //   HDRSampler   s0       1
+    //
+    
+        ps_3_0
+        def c0, 0, 1, 0, 0
+        dcl_texcoord v0.xy
+        dcl_2d s0
+        texld r0, v0, s0
+        dp3 r0.w, r0, r0
+        rcp r0.w, r0.w
+        cmp oC0.xyz, -r0_abs.w, c0.x, r0
+        mov oC0.w, c0.y
+    
+    // approximately 5 instruction slots used (1 texture, 4 arithmetic)
+};
+
+PixelShader PS_BlurMaxX
+<
+    string HDRSampler = "parameter register(0)";
+    string TexelSize  = "parameter register(66)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   sampler2D HDRSampler;
+    //   float4 TexelSize;
+    //
+    //
+    // Registers:
+    //
+    //   Name         Reg   Size
+    //   ------------ ----- ----
+    //   TexelSize    c66      1
+    //   HDRSampler   s0       1
+    //
+    
+        ps_3_0
+        def c0, -3, 0, 0.699999988, -2
+        def c1, 0.800000012, -1, 0, 0.899999976
+        def c2, 0.172413796, 0, 0, 0
+        dcl_texcoord v0.xy
+        dcl_2d s0
+        mov r0.xyw, c0
+        mad r1.xy, c66, r0, v0
+        texld r1, r1, s0
+        texld r2, v0, s0
+        add r1.xyz, r1, -r2
+        mul r3.xyz, r1, c0.z
+        cmp r1.xyz, r1, r3, c0.y
+        mad r3.xy, c66, r0.wyzw, v0
+        texld r3, r3, s0
+        add r3.xyz, -r2, r3
+        mul r4.xyz, r3, c1.x
+        cmp r3.xyz, r3, r4, c0.y
+        add r1.xyz, r1, r3
+        mov r3.yz, c1
+        mad r3.xw, c66.xyzy, r3.yyzz, v0.xyzy
+        texld r4, r3.xwzw, s0
+        add r4.xyz, -r2, r4
+        mul r5.xyz, r4, c1.w
+        cmp r4.xyz, r4, r5, c0.y
+        add r1.xyz, r1, r4
+        mad r3.xy, c66, r3_abs.yzzw, v0
+        texld r3, r3, s0
+        add r3.xyz, -r2, r3
+        mul r4.xyz, r3, c1.w
+        cmp r3.xyz, r3, r4, c0.y
+        add r1.xyz, r1, r3
+        mad r0.zw, c66.xyxy, r0_abs.xywy, v0.xyxy
+        texld r3, r0.zwzw, s0
+        add r3.xyz, -r2, r3
+        mul r4.xyz, r3, c1.x
+        cmp r3.xyz, r3, r4, c0.y
+        add r1.xyz, r1, r3
+        mad r0.xy, c66, r0_abs, v0
+        texld r0, r0, s0
+        add r0.xyz, -r2, r0
+        mul r3.xyz, r0, c0.z
+        cmp r0.xyz, r0, r3, c0.y
+        add r0.xyz, r1, r0
+        mad oC0.xyz, r0, c2.x, r2
+        mov oC0.w, -c1.y
+    
+    // approximately 40 instruction slots used (7 texture, 33 arithmetic)
+};
+
+PixelShader PS_BlurMaxY
+<
+    string HDRSampler = "parameter register(0)";
+    string TexelSize  = "parameter register(66)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   sampler2D HDRSampler;
+    //   float4 TexelSize;
+    //
+    //
+    // Registers:
+    //
+    //   Name         Reg   Size
+    //   ------------ ----- ----
+    //   TexelSize    c66      1
+    //   HDRSampler   s0       1
+    //
+    
+        ps_3_0
+        def c0, 0, -3, 0.699999988, -2
+        def c1, 0.800000012, 0, -1, 0.899999976
+        def c2, 0.172413796, 0, 0, 0
+        dcl_texcoord v0.xy
+        dcl_2d s0
+        mov r0.xyw, c0
+        mad r1.xy, c66, r0, v0
+        texld r1, r1, s0
+        texld r2, v0, s0
+        add r1.xyz, r1, -r2
+        mul r3.xyz, r1, c0.z
+        cmp r1.xyz, r1, r3, c0.x
+        mad r3.xy, c66, r0.xwzw, v0
+        texld r3, r3, s0
+        add r3.xyz, -r2, r3
+        mul r4.xyz, r3, c1.x
+        cmp r3.xyz, r3, r4, c0.x
+        add r1.xyz, r1, r3
+        mov r3.yz, c1
+        mad r3.xw, c66.xyzy, r3.yyzz, v0.xyzy
+        texld r4, r3.xwzw, s0
+        add r4.xyz, -r2, r4
+        mul r5.xyz, r4, c1.w
+        cmp r4.xyz, r4, r5, c0.x
+        add r1.xyz, r1, r4
+        mad r3.xy, c66, r3_abs.yzzw, v0
+        texld r3, r3, s0
+        add r3.xyz, -r2, r3
+        mul r4.xyz, r3, c1.w
+        cmp r3.xyz, r3, r4, c0.x
+        add r1.xyz, r1, r3
+        mad r0.zw, c66.xyxy, r0_abs.xyxw, v0.xyxy
+        texld r3, r0.zwzw, s0
+        add r3.xyz, -r2, r3
+        mul r4.xyz, r3, c1.x
+        cmp r3.xyz, r3, r4, c0.x
+        add r1.xyz, r1, r3
+        mad r0.xy, c66, r0_abs, v0
+        texld r0, r0, s0
+        add r0.xyz, -r2, r0
+        mul r3.xyz, r0, c0.z
+        cmp r0.xyz, r0, r3, c0.x
+        add r0.xyz, r1, r0
+        mad oC0.xyz, r0, c2.x, r2
+        mov oC0.w, -c1.z
+    
+    // approximately 40 instruction slots used (7 texture, 33 arithmetic)
+};
+
+PixelShader PS_BlurX
+<
+    string DofBlurWeight = "parameter register(72)";
+    string HDRSampler    = "parameter register(0)";
+    string TexelSize     = "parameter register(66)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   float4 DofBlurWeight;
+    //   sampler2D HDRSampler;
+    //   float4 TexelSize;
+    //
+    //
+    // Registers:
+    //
+    //   Name          Reg   Size
+    //   ------------- ----- ----
+    //   TexelSize     c66      1
+    //   DofBlurWeight c72      1
+    //   HDRSampler    s0       1
+    //
+    
+        ps_3_0
+        def c0, -2, 0, -1.5, -1
+        def c1, -0.5, 0, 0.5, 0
+        dcl_texcoord v0.xy
+        dcl_2d s0
+        mov r0, c0
+        mad r1.xy, c66, r0, v0
+        texld r1, r1, s0
+        texld r2, v0, s0
+        mad r1.xyz, r1, c72.x, r2
+        mad r2.xy, c66, r0.zyzw, v0
+        texld r2, r2, s0
+        mad r1.xyz, r2, c72.y, r1
+        mad r2.xy, c66, r0.wyzw, v0
+        texld r2, r2, s0
+        mad r1.xyz, r2, c72.z, r1
+        mov r2.xy, c66
+        mad r2.zw, r2.xyxy, c1.xyxy, v0.xyxy
+        texld r3, r2.zwzw, s0
+        mad r1.xyz, r3, c72.w, r1
+        mad r2.xy, r2, c1.zyzw, v0
+        texld r2, r2, s0
+        mad r1.xyz, r2, c72.w, r1
+        mad r2.xy, c66, r0_abs.wyzw, v0
+        texld r2, r2, s0
+        mad r1.xyz, r2, c72.z, r1
+        mad r0.zw, c66.xyxy, r0_abs.xyzy, v0.xyxy
+        texld r2, r0.zwzw, s0
+        mad r1.xyz, r2, c72.y, r1
+        mad r0.yz, c66.xxyw, r0_abs.xxyw, v0.xxyw
+        texld r2, r0.yzzw, s0
+        mad r0.yzw, r2.xxyz, c72.x, r1.xxyz
+        dp4 r0.x, -r0.x, c72
+        add r0.x, r0.x, -c0.w
+        rcp r0.x, r0.x
+        mul oC0.xyz, r0.yzww, r0.x
+        mov oC0.w, -c0.w
+    
+    // approximately 32 instruction slots used (9 texture, 23 arithmetic)
+};
+
+PixelShader PS_BlurY
+<
+    string DofBlurWeight = "parameter register(72)";
+    string HDRSampler    = "parameter register(0)";
+    string TexelSize     = "parameter register(66)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   float4 DofBlurWeight;
+    //   sampler2D HDRSampler;
+    //   float4 TexelSize;
+    //
+    //
+    // Registers:
+    //
+    //   Name          Reg   Size
+    //   ------------- ----- ----
+    //   TexelSize     c66      1
+    //   DofBlurWeight c72      1
+    //   HDRSampler    s0       1
+    //
+    
+        ps_3_0
+        def c0, 0, -2, -1.5, -1
+        def c1, 0, -0.5, 0.5, 0
+        dcl_texcoord v0.xy
+        dcl_2d s0
+        mov r0, c0
+        mad r1.xy, c66, r0, v0
+        texld r1, r1, s0
+        texld r2, v0, s0
+        mad r1.xyz, r1, c72.x, r2
+        mad r2.xy, c66, r0.xzzw, v0
+        texld r2, r2, s0
+        mad r1.xyz, r2, c72.y, r1
+        mad r2.xy, c66, r0.xwzw, v0
+        texld r2, r2, s0
+        mad r1.xyz, r2, c72.z, r1
+        mov r2.xy, c66
+        mad r2.zw, r2.xyxy, c1.xyxy, v0.xyxy
+        texld r3, r2.zwzw, s0
+        mad r1.xyz, r3, c72.w, r1
+        mad r2.xy, r2, c1.xzzw, v0
+        texld r2, r2, s0
+        mad r1.xyz, r2, c72.w, r1
+        mad r2.xy, c66, r0_abs.xwzw, v0
+        texld r2, r2, s0
+        mad r1.xyz, r2, c72.z, r1
+        mad r0.zw, c66.xyxy, r0_abs.xyxz, v0.xyxy
+        texld r2, r0.zwzw, s0
+        mad r1.xyz, r2, c72.y, r1
+        mad r0.xz, c66.xyyw, r0_abs.xyyw, v0.xyyw
+        texld r2, r0.xzzw, s0
+        mad r0.xzw, r2.xyyz, c72.x, r1.xyyz
+        dp4 r0.y, -r0.y, c72
+        add r0.y, r0.y, -c0.w
+        rcp r0.y, r0.y
+        mul oC0.xyz, r0.xzww, r0.y
+        mov oC0.w, -c0.w
+    
+    // approximately 32 instruction slots used (9 texture, 23 arithmetic)
+};
+
+PixelShader PS_GTAComposite
+<
+    string AdapLumSampler         = "parameter register(4)";
+    string BloomSampler           = "parameter register(3)";
+    string ColorCorrect           = "parameter register(78)";
+    string ColorShift             = "parameter register(79)";
+    string Exposure               = "parameter register(66)";
+    string GBufferTextureSampler2 = "parameter register(0)";
+    string GBufferTextureSampler3 = "parameter register(1)";
+    string HDRSampler             = "parameter register(2)";
+    string TexelSize              = "parameter register(72)";
+    string ToneMapParams          = "parameter register(76)";
+    string deSatContrastGamma     = "parameter register(77)";
+    string dofBlur                = "parameter register(75)";
+    string dofDist                = "parameter register(74)";
+    string dofProj                = "parameter register(73)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   sampler2D AdapLumSampler;
+    //   sampler2D BloomSampler;
+    //   float4 ColorCorrect;
+    //   float4 ColorShift;
+    //   float Exposure;
+    //   sampler2D GBufferTextureSampler2;
+    //   sampler2D GBufferTextureSampler3;
+    //   sampler2D HDRSampler;
+    //   float4 TexelSize;
+    //   float4 ToneMapParams;
+    //   float4 deSatContrastGamma;
+    //   float4 dofBlur;
+    //   float4 dofDist;
+    //   float4 dofProj;
+    //
+    //
+    // Registers:
+    //
+    //   Name                   Reg   Size
+    //   ---------------------- ----- ----
+    //   Exposure               c66      1
+    //   TexelSize              c72      1
+    //   dofProj                c73      1
+    //   dofDist                c74      1
+    //   dofBlur                c75      1
+    //   ToneMapParams          c76      1
+    //   deSatContrastGamma     c77      1
+    //   ColorCorrect           c78      1
+    //   ColorShift             c79      1
+    //   GBufferTextureSampler2 s0       1
+    //   GBufferTextureSampler3 s1       1
+    //   HDRSampler             s2       1
+    //   BloomSampler           s3       1
+    //   AdapLumSampler         s4       1
+    //
+    
+        ps_3_0
+        def c0, -0.5, -1.5, 1.5, 0.5
+        def c1, 0, 0.212500006, 0.715399981, 0.0720999986
+        def c2, 0.25, 1, 256, 0
+        def c3, 0, 2, 4, 8
+        def c4, 256, 2, 4, 8
+        dcl_texcoord v0.xy
+        dcl_2d s0
+        dcl_2d s1
+        dcl_2d s2
+        dcl_2d s3
+        dcl_2d s4
+        texld r0, v0, s1
+        add r0.y, -c73.x, c73.y
+        rcp r0.y, r0.y
+        mad r0.x, c73.y, -r0.y, r0.x
+        mul r0.y, r0.y, c73.y
+        mul r0.y, r0.y, -c73.x
+        rcp r0.x, r0.x
+        mad r0.x, r0.y, r0.x, -c74.w
+        mov r1, c0
+        mad r0.x, c74.y, -r1.w, r0.x
+        max r2.x, r0.x, c1.x
+        rcp r0.x, c74.z
+        mul r0.x, r2.x, r0.x
+        lrp r2.x, r0.x, c75.z, c75.y
+        min r0.x, c75.z, r2.x
+        mul r0.x, r0.x, r0.x
+        mad r0.yz, c72.xxyw, r1.xxyw, v0.xxyw
+        texld r2, r0.yzzw, s2
+        dp3 r3.x, r2, c1.yzww
+        mad r0.yz, c72.xxyw, r1.xzxw, v0.xxyw
+        texld r4, r0.yzzw, s2
+        dp3 r3.y, r4, c1.yzww
+        mad r0.yz, c72.xxyw, r1.xwzw, v0.xxyw
+        texld r5, r0.yzzw, s2
+        dp3 r3.z, r5, c1.yzww
+        mad r0.yz, c72.xxyw, r1.xyww, v0.xxyw
+        texld r1, r0.yzzw, s2
+        dp3 r3.w, r1, c1.yzww
+        dp4 r0.y, r3, c2.x
+        add r3, r3, -r0.y
+        dp4 r0.z, r3, r3
+        texld r3, v0, s2
+        dp3 r0.w, r3, c1.yzww
+        add r0.y, -r0.y, r0.w
+        mad r0.y, r0.y, r0.y, -r0.z
+        cmp r0.x, r0.y, c2.y, r0.x
+        add r0.y, -r0.x, c2.y
+        mul r0.x, r0.x, c2.x
+        mul r6.xyz, r2, r0.x
+        texld r7, v0, s0
+        mov r7.yz, c2
+        mad r8, r7.w, -r7.z, c3
+        mad r9, r7.w, -c4.x, c4.yzwx
+        cmp r9, r9, -c2.y, -c2.w
+        cmp r8, r8, c2.y, c2.w
+        add r8, r9, r8
+        mul r8, r8, c0.x
+        mul r2.xyz, r2, r8.x
+        mad r2.xyz, r3, c0.w, r2
+        mad r2.xyz, r4, r8.y, r2
+        mad r2.xyz, r5, r8.z, r2
+        mad r2.xyz, r1, r8.w, r2
+        dp4 r0.z, r8, c2.y
+        add r0.z, r0.z, c0.w
+        rcp r0.z, r0.z
+        mul r2.xyz, r2, r0.z
+        mad r0.yzw, r2.xxyz, r0.y, r6.xxyz
+        mad r0.yzw, r4.xxyz, r0.x, r0
+        mad r0.yzw, r5.xxyz, r0.x, r0
+        mad r0.xyz, r1, r0.x, r0.yzww
+        texld r1, v0, s3
+        texld r2, c1.x, s4
+        rcp r0.w, r2.x
+        mul r0.w, r0.w, c76.y
+        rcp r1.w, r0.w
+        mul r1.w, r1.w, c76.x
+        mad r1.xyz, r1, c66.x, -r1.w
+        mul r2.xyz, r1, c76.z
+        mul r2.xyz, r2, c2.x
+        cmp r1.xyz, r1, r2, c1.x
+        mad r0.xyz, r0, c66.x, r1
+        mul r1.xyz, r0.w, r0
+        dp3 r1.x, r1, c1.yzww
+        mad r0.xyz, r0, r0.w, -r1.x
+        mad r0.xyz, c77.x, r0, r1.x
+        mul r0.w, r1.x, c79.w
+        mov_sat r1.x, r1.x
+        mad r0.xyz, c79, -r0.w, r0
+        mul r1.yzw, r0.w, c79.xxyz
+        mov_sat r0.w, r0.w
+        mad r0.xyz, r0.w, r0, r1.yzww
+        mul r0.xyz, r0, c78
+        add r0.xyz, r0, r0
+        add r0.w, -r7.y, c77.z
+        pow r2.x, r1.x, r0.w
+        mul oC0.xyz, r0, r2.x
+        mov oC0.w, c2.y
+    
+    // approximately 89 instruction slots used (9 texture, 80 arithmetic)
+};
+
+PixelShader PS_GTACompositeMB
+<
+    string AdapLumSampler               = "parameter register(4)";
+    string BloomSampler                 = "parameter register(3)";
+    string ColorCorrect                 = "parameter register(83)";
+    string ColorShift                   = "parameter register(84)";
+    string Exposure                     = "parameter register(66)";
+    string GBufferTextureSampler2       = "parameter register(0)";
+    string GBufferTextureSampler3       = "parameter register(1)";
+    string HDRSampler                   = "parameter register(2)";
+    string JitterSampler                = "parameter register(5)";
+    string PLAYER_MASK                  = "parameter register(85)";
+    string StencilCopySampler           = "parameter register(6)";
+    string TexelSize                    = "parameter register(76)";
+    string ToneMapParams                = "parameter register(81)";
+    string deSatContrastGamma           = "parameter register(82)";
+    string dofBlur                      = "parameter register(79)";
+    string dofDist                      = "parameter register(78)";
+    string dofProj                      = "parameter register(77)";
+    string gDirectionalMotionBlurLength = "parameter register(80)";
+    string globalScreenSize             = "parameter register(44)";
+    string motionBlurMatrix             = "parameter register(72)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   sampler2D AdapLumSampler;
+    //   sampler2D BloomSampler;
+    //   float4 ColorCorrect;
+    //   float4 ColorShift;
+    //   float Exposure;
+    //   sampler2D GBufferTextureSampler2;
+    //   sampler2D GBufferTextureSampler3;
+    //   sampler2D HDRSampler;
+    //   sampler2D JitterSampler;
+    //   float PLAYER_MASK;
+    //   sampler2D StencilCopySampler;
+    //   float4 TexelSize;
+    //   float4 ToneMapParams;
+    //   float4 deSatContrastGamma;
+    //   float4 dofBlur;
+    //   float4 dofDist;
+    //   float4 dofProj;
+    //   float gDirectionalMotionBlurLength;
+    //   float4 globalScreenSize;
+    //   row_major float4x4 motionBlurMatrix;
+    //
+    //
+    // Registers:
+    //
+    //   Name                         Reg   Size
+    //   ---------------------------- ----- ----
+    //   globalScreenSize             c44      1
+    //   Exposure                     c66      1
+    //   motionBlurMatrix             c72      4
+    //   TexelSize                    c76      1
+    //   dofProj                      c77      1
+    //   dofDist                      c78      1
+    //   dofBlur                      c79      1
+    //   gDirectionalMotionBlurLength c80      1
+    //   ToneMapParams                c81      1
+    //   deSatContrastGamma           c82      1
+    //   ColorCorrect                 c83      1
+    //   ColorShift                   c84      1
+    //   PLAYER_MASK                  c85      1
+    //   GBufferTextureSampler2       s0       1
+    //   GBufferTextureSampler3       s1       1
+    //   HDRSampler                   s2       1
+    //   BloomSampler                 s3       1
+    //   AdapLumSampler               s4       1
+    //   JitterSampler                s5       1
+    //   StencilCopySampler           s6       1
+    //
+    
+        ps_3_0
+        def c0, 58.1640015, 47.1300011, 0, 0
+        def c1, 0, 0.212500006, 0.715399981, 0.0720999986
+        def c2, 0.25, 1, 256, 0
+        def c3, 0, 2, 4, 8
+        def c4, -0.5, -1.5, 1.5, 0.5
+        def c5, 2, -1, 0.125, 0
+        def c6, 256, 2, 4, 8
+        defi i0, 7, 0, 0, 0
+        dcl_texcoord v0.xy
+        dcl_2d s0
+        dcl_2d s1
+        dcl_2d s2
+        dcl_2d s3
+        dcl_2d s4
+        dcl_2d s5
+        dcl_2d s6
+        texld r0, v0, s1
+        add r0.y, -c77.x, c77.y
+        rcp r0.y, r0.y
+        mul r0.z, r0.y, c77.y
+        mul r0.z, r0.z, -c77.x
+        mad r0.x, c77.y, -r0.y, r0.x
+        rcp r0.x, r0.x
+        mul r0.y, r0.z, r0.x
+        texld r1, v0, s2
+        texld r2, v0, s3
+        abs r0.w, c79.w
+        mov r3, c4
+        mad r4.xy, c76, r3, v0
+        texld r4, r4, s2
+        mad r5.xy, c76, r3.zxzw, v0
+        texld r5, r5, s2
+        mad r3.xz, c76.xyyw, r3.wyzw, v0.xyyw
+        texld r6, r3.xzzw, s2
+        mad r3.xy, c76, r3.ywzw, v0
+        texld r7, r3, s2
+        dp3 r1.w, r4, r4
+        rcp r1.w, r1.w
+        cmp r3.xyz, -r1_abs.w, c1.x, r4
+        dp3 r1.w, r5, r5
+        rcp r1.w, r1.w
+        cmp r4.xyz, -r1_abs.w, c1.x, r5
+        dp3 r1.w, r6, r6
+        rcp r1.w, r1.w
+        cmp r5.xyz, -r1_abs.w, c1.x, r6
+        dp3 r1.w, r7, r7
+        rcp r1.w, r1.w
+        cmp r6.xyz, -r1_abs.w, c1.x, r7
+        dp3 r1.w, r1, r1
+        rcp r1.w, r1.w
+        cmp r7.xyz, -r1_abs.w, c1.x, r1
+        mad r0.x, r0.z, r0.x, -c78.w
+        mad r0.x, c78.y, -r3.w, r0.x
+        max r1.w, r0.x, c1.x
+        rcp r0.x, c78.z
+        mul r0.x, r1.w, r0.x
+        lrp r1.w, r0.x, c79.z, c79.y
+        min r0.x, c79.z, r1.w
+        dp3 r0.z, r7, c1.yzww
+        dp3 r8.x, r3, c1.yzww
+        dp3 r8.y, r4, c1.yzww
+        dp3 r8.z, r5, c1.yzww
+        dp3 r8.w, r6, c1.yzww
+        dp4 r1.w, r8, c2.x
+        add r8, r8, -r1.w
+        dp4 r2.w, r8, r8
+        add r0.z, r0.z, -r1.w
+        mad r0.z, r0.z, r0.z, -r2.w
+        mul r0.x, r0.x, r0.x
+        cmp r0.x, r0.z, c2.y, r0.x
+        texld r8, v0, s0
+        mov r8.yz, c2
+        mad r9, r8.w, -r8.z, c3
+        cmp r9, r9, c2.y, c2.w
+        mad r10, r8.w, -c6.x, c6.yzwx
+        cmp r10, r10, -c2.y, -c2.w
+        add r9, r9, r10
+        mul r9, r9, c4.x
+        dp4 r0.z, r9, c2.y
+        add r0.z, r0.z, c4.w
+        rcp r0.z, r0.z
+        mul r8.xzw, r3.xyyz, r9.x
+        mad r7.xyz, r7, c4.w, r8.xzww
+        mad r7.xyz, r4, r9.y, r7
+        mad r7.xyz, r5, r9.z, r7
+        mad r7.xyz, r6, r9.w, r7
+        mul r7.xyz, r0.z, r7
+        add r0.z, -r0.x, c2.y
+        mul r1.w, r0.x, c2.x
+        mul r3.xyz, r3, r1.w
+        mad r3.xyz, r7, r0.z, r3
+        mad r3.xyz, r4, r1.w, r3
+        mad r3.xyz, r5, r1.w, r3
+        mad r3.xyz, r6, r1.w, r3
+        mad r4.xyz, v0.yxyw, c5.x, c5.y
+        mul r0.z, r4.y, c77.z
+        mul r0.z, r0.y, r0.z
+        mul r1.w, -r4.x, c77.w
+        mul r1.w, r0.y, r1.w
+        mul r5.xyz, r1.w, c73
+        mad r5.xyz, r0.z, c72, r5
+        mad r5.xyz, -r0.y, c74, r5
+        add r5.xyz, r5, c75
+        mul r0.y, -r5.z, c77.z
+        rcp r0.y, r0.y
+        mul r6.x, r5.x, r0.y
+        mul r0.y, r5.z, c77.w
+        rcp r0.y, r0.y
+        mul r6.y, r5.y, r0.y
+        add r0.yz, -r4, r6.xxyw
+        mul r0.yz, r0, c80.x
+        mul r4.xy, r0.yzzw, c5.z
+        texld r5, v0, s6
+        add r1.w, r5.x, -c85.x
+        mul r4.zw, r3.xyxy, c3.w
+        mad r4.zw, v0.xyxy, c0.xyxy, r4
+        texld r5, r4.zwzw, s5
+        add r2.w, r5.x, c4.x
+        mad r4.zw, r4.xyxy, r2.w, v0.xyxy
+        mov r5.xyz, r3
+        mov r2.w, c2.y
+        mov r3.w, c2.y
+        rep i0
+          mad r6.xy, r4, r3.w, r4.zwzw
+          texld r7, r6, s6
+          add r5.w, r7.x, -c85.x
+          cmp r5.w, r5.w, c2.w, c2.y
+          texld r6, r6, s2
+          mad r5.xyz, r6, r5.w, r5
+          add r2.w, r2.w, r5.w
+          add r3.w, r3.w, c2.y
+        endrep
+        rcp r2.w, r2.w
+        mul r0.yz, r0, c44.xxyw
+        dp2add r0.y, r0.yzzw, r0.yzzw, c1.x
+        rsq r0.y, r0.y
+        rcp r0.y, r0.y
+        mul r0.y, r0.y, c4.w
+        add r0.x, r0.x, c2.y
+        rcp r0.x, r0.x
+        mul_sat r0.x, r0.y, r0.x
+        mad r4.xyz, r5, r2.w, -r3
+        mad r0.xyz, r0.x, r4, r3
+        cmp r0.xyz, r1.w, r3, r0
+        cmp r0.xyz, -r0.w, r0, r1
+        texld r1, c1.x, s4
+        rcp r0.w, r1.x
+        mul r0.w, r0.w, c81.y
+        rcp r1.x, r0.w
+        mul r1.x, r1.x, c81.x
+        mad r1.xyz, r2, c66.x, -r1.x
+        mul r2.xyz, r1, c81.z
+        mul r2.xyz, r2, c2.x
+        cmp r1.xyz, r1, r2, c1.x
+        mad r0.xyz, r0, c66.x, r1
+        mul r1.xyz, r0.w, r0
+        dp3 r1.x, r1, c1.yzww
+        mad r0.xyz, r0, r0.w, -r1.x
+        mad r0.xyz, c82.x, r0, r1.x
+        mul r0.w, r1.x, c84.w
+        mul r1.yzw, r0.w, c84.xxyz
+        mov_sat r2.x, r0.w
+        mad r0.xyz, c84, -r0.w, r0
+        mad r0.xyz, r2.x, r0, r1.yzww
+        mul r0.xyz, r0, c83
+        add r0.xyz, r0, r0
+        mov_sat r1.x, r1.x
+        add r0.w, -r8.y, c82.z
+        pow r2.x, r1.x, r0.w
+        mul oC0.xyz, r0, r2.x
+        mov oC0.w, c2.y
+    
+    // approximately 161 instruction slots used (13 texture, 148 arithmetic)
+};
+
+PixelShader PS_GTACompositeHighDOF
+<
+    string AdapLumSampler         = "parameter register(4)";
+    string BloomSampler           = "parameter register(3)";
+    string ColorCorrect           = "parameter register(78)";
+    string ColorShift             = "parameter register(79)";
+    string Exposure               = "parameter register(66)";
+    string GBufferTextureSampler2 = "parameter register(0)";
+    string GBufferTextureSampler3 = "parameter register(1)";
+    string HDRSampler             = "parameter register(2)";
+    string TexelSize              = "parameter register(72)";
+    string ToneMapParams          = "parameter register(76)";
+    string deSatContrastGamma     = "parameter register(77)";
+    string dofBlur                = "parameter register(75)";
+    string dofDist                = "parameter register(74)";
+    string dofProj                = "parameter register(73)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   sampler2D AdapLumSampler;
+    //   sampler2D BloomSampler;
+    //   float4 ColorCorrect;
+    //   float4 ColorShift;
+    //   float Exposure;
+    //   sampler2D GBufferTextureSampler2;
+    //   sampler2D GBufferTextureSampler3;
+    //   sampler2D HDRSampler;
+    //   float4 TexelSize;
+    //   float4 ToneMapParams;
+    //   float4 deSatContrastGamma;
+    //   float4 dofBlur;
+    //   float4 dofDist;
+    //   float4 dofProj;
+    //
+    //
+    // Registers:
+    //
+    //   Name                   Reg   Size
+    //   ---------------------- ----- ----
+    //   Exposure               c66      1
+    //   TexelSize              c72      1
+    //   dofProj                c73      1
+    //   dofDist                c74      1
+    //   dofBlur                c75      1
+    //   ToneMapParams          c76      1
+    //   deSatContrastGamma     c77      1
+    //   ColorCorrect           c78      1
+    //   ColorShift             c79      1
+    //   GBufferTextureSampler2 s0       1
+    //   GBufferTextureSampler3 s1       1
+    //   HDRSampler             s2       1
+    //   BloomSampler           s3       1
+    //   AdapLumSampler         s4       1
+    //
+    
+        ps_3_0
+        def c0, -0.5, -1.5, 1.5, 0.5
+        def c1, 0, 0.212500006, 0.715399981, 0.0720999986
+        def c2, 0, 2, 4, 8
+        def c3, 0.25, 1, 256, 0
+        def c4, 256, 2, 4, 8
+        dcl_texcoord v0.xy
+        dcl_2d s0
+        dcl_2d s1
+        dcl_2d s2
+        dcl_2d s3
+        dcl_2d s4
+        texld r0, v0, s1
+        add r0.y, -c73.x, c73.y
+        rcp r0.y, r0.y
+        mad r0.x, c73.y, -r0.y, r0.x
+        mul r0.y, r0.y, c73.y
+        mul r0.y, r0.y, -c73.x
+        rcp r0.x, r0.x
+        mad r0.z, r0.y, -r0.x, c74.w
+        mad r0.x, r0.y, r0.x, -c74.w
+        mov r1, c0
+        mad r0.x, c74.y, -r1.w, r0.x
+        max r2.x, r0.x, c1.x
+        mad r0.x, c74.y, -r1.w, r0.z
+        max r2.y, r0.x, c1.x
+        rcp r0.x, c74.x
+        mul r0.x, r2.y, r0.x
+        lrp r2.y, r0.x, c75.x, c75.y
+        min r0.x, c75.x, r2.y
+        rcp r0.y, c74.z
+        mul r0.y, r2.x, r0.y
+        lrp r2.x, r0.y, c75.z, c75.y
+        min r0.y, c75.z, r2.x
+        max r2.x, r0.x, r0.y
+        mul r0.x, r2.x, r2.x
+        mad r0.yz, c72.xxyw, r1.xxyw, v0.xxyw
+        texld r2, r0.yzzw, s2
+        dp3 r3.x, r2, c1.yzww
+        mad r0.yz, c72.xxyw, r1.xzxw, v0.xxyw
+        texld r4, r0.yzzw, s2
+        dp3 r3.y, r4, c1.yzww
+        mad r0.yz, c72.xxyw, r1.xwzw, v0.xxyw
+        texld r5, r0.yzzw, s2
+        dp3 r3.z, r5, c1.yzww
+        mad r0.yz, c72.xxyw, r1.xyww, v0.xxyw
+        texld r1, r0.yzzw, s2
+        dp3 r3.w, r1, c1.yzww
+        dp4 r0.y, r3, c3.x
+        add r3, r3, -r0.y
+        dp4 r0.z, r3, r3
+        texld r3, v0, s2
+        dp3 r0.w, r3, c1.yzww
+        add r0.y, -r0.y, r0.w
+        mad r0.y, r0.y, r0.y, -r0.z
+        cmp r0.x, r0.y, c3.y, r0.x
+        add r0.y, -r0.x, c3.y
+        mul r0.x, r0.x, c3.x
+        mul r6.xyz, r2, r0.x
+        texld r7, v0, s0
+        mov r7.yz, c3
+        mad r8, r7.w, -r7.z, c2
+        mad r9, r7.w, -c4.x, c4.yzwx
+        cmp r9, r9, -c3.y, -c3.w
+        cmp r8, r8, c3.y, c3.w
+        add r8, r9, r8
+        mul r8, r8, c0.x
+        mul r2.xyz, r2, r8.x
+        mad r2.xyz, r3, c0.w, r2
+        mad r2.xyz, r4, r8.y, r2
+        mad r2.xyz, r5, r8.z, r2
+        mad r2.xyz, r1, r8.w, r2
+        dp4 r0.z, r8, c3.y
+        add r0.z, r0.z, c0.w
+        rcp r0.z, r0.z
+        mul r2.xyz, r2, r0.z
+        mad r0.yzw, r2.xxyz, r0.y, r6.xxyz
+        mad r0.yzw, r4.xxyz, r0.x, r0
+        mad r0.yzw, r5.xxyz, r0.x, r0
+        mad r0.xyz, r1, r0.x, r0.yzww
+        texld r1, v0, s3
+        texld r2, c1.x, s4
+        rcp r0.w, r2.x
+        mul r0.w, r0.w, c76.y
+        rcp r1.w, r0.w
+        mul r1.w, r1.w, c76.x
+        mad r1.xyz, r1, c66.x, -r1.w
+        mul r2.xyz, r1, c76.z
+        mul r2.xyz, r2, c3.x
+        cmp r1.xyz, r1, r2, c1.x
+        mad r0.xyz, r0, c66.x, r1
+        mul r1.xyz, r0.w, r0
+        dp3 r1.x, r1, c1.yzww
+        mad r0.xyz, r0, r0.w, -r1.x
+        mad r0.xyz, c77.x, r0, r1.x
+        mul r0.w, r1.x, c79.w
+        mov_sat r1.x, r1.x
+        mad r0.xyz, c79, -r0.w, r0
+        mul r1.yzw, r0.w, c79.xxyz
+        mov_sat r0.w, r0.w
+        mad r0.xyz, r0.w, r0, r1.yzww
+        mul r0.xyz, r0, c78
+        add r0.xyz, r0, r0
+        add r0.w, -r7.y, c77.z
+        pow r2.x, r1.x, r0.w
+        mul oC0.xyz, r0, r2.x
+        mov oC0.w, c3.y
+    
+    // approximately 97 instruction slots used (9 texture, 88 arithmetic)
+};
+
+PixelShader PS_GTACompositeMBHighDOF
+<
+    string AdapLumSampler               = "parameter register(4)";
+    string BloomSampler                 = "parameter register(3)";
+    string ColorCorrect                 = "parameter register(83)";
+    string ColorShift                   = "parameter register(84)";
+    string Exposure                     = "parameter register(66)";
+    string GBufferTextureSampler2       = "parameter register(0)";
+    string GBufferTextureSampler3       = "parameter register(1)";
+    string HDRSampler                   = "parameter register(2)";
+    string JitterSampler                = "parameter register(5)";
+    string PLAYER_MASK                  = "parameter register(85)";
+    string StencilCopySampler           = "parameter register(6)";
+    string TexelSize                    = "parameter register(76)";
+    string ToneMapParams                = "parameter register(81)";
+    string deSatContrastGamma           = "parameter register(82)";
+    string dofBlur                      = "parameter register(79)";
+    string dofDist                      = "parameter register(78)";
+    string dofProj                      = "parameter register(77)";
+    string gDirectionalMotionBlurLength = "parameter register(80)";
+    string globalScreenSize             = "parameter register(44)";
+    string motionBlurMatrix             = "parameter register(72)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   sampler2D AdapLumSampler;
+    //   sampler2D BloomSampler;
+    //   float4 ColorCorrect;
+    //   float4 ColorShift;
+    //   float Exposure;
+    //   sampler2D GBufferTextureSampler2;
+    //   sampler2D GBufferTextureSampler3;
+    //   sampler2D HDRSampler;
+    //   sampler2D JitterSampler;
+    //   float PLAYER_MASK;
+    //   sampler2D StencilCopySampler;
+    //   float4 TexelSize;
+    //   float4 ToneMapParams;
+    //   float4 deSatContrastGamma;
+    //   float4 dofBlur;
+    //   float4 dofDist;
+    //   float4 dofProj;
+    //   float gDirectionalMotionBlurLength;
+    //   float4 globalScreenSize;
+    //   row_major float4x4 motionBlurMatrix;
+    //
+    //
+    // Registers:
+    //
+    //   Name                         Reg   Size
+    //   ---------------------------- ----- ----
+    //   globalScreenSize             c44      1
+    //   Exposure                     c66      1
+    //   motionBlurMatrix             c72      4
+    //   TexelSize                    c76      1
+    //   dofProj                      c77      1
+    //   dofDist                      c78      1
+    //   dofBlur                      c79      1
+    //   gDirectionalMotionBlurLength c80      1
+    //   ToneMapParams                c81      1
+    //   deSatContrastGamma           c82      1
+    //   ColorCorrect                 c83      1
+    //   ColorShift                   c84      1
+    //   PLAYER_MASK                  c85      1
+    //   GBufferTextureSampler2       s0       1
+    //   GBufferTextureSampler3       s1       1
+    //   HDRSampler                   s2       1
+    //   BloomSampler                 s3       1
+    //   AdapLumSampler               s4       1
+    //   JitterSampler                s5       1
+    //   StencilCopySampler           s6       1
+    //
+    
+        ps_3_0
+        def c0, 58.1640015, 47.1300011, 0, 0
+        def c1, 0, 0.212500006, 0.715399981, 0.0720999986
+        def c2, 0.25, 1, 256, 0
+        def c3, 0, 2, 4, 8
+        def c4, -0.5, -1.5, 1.5, 0.5
+        def c5, 2, -1, 0.125, 0
+        def c6, 256, 2, 4, 8
+        defi i0, 7, 0, 0, 0
+        dcl_texcoord v0.xy
+        dcl_2d s0
+        dcl_2d s1
+        dcl_2d s2
+        dcl_2d s3
+        dcl_2d s4
+        dcl_2d s5
+        dcl_2d s6
+        texld r0, v0, s1
+        add r0.y, -c77.x, c77.y
+        rcp r0.y, r0.y
+        mul r0.z, r0.y, c77.y
+        mul r0.z, r0.z, -c77.x
+        mad r0.x, c77.y, -r0.y, r0.x
+        rcp r0.x, r0.x
+        mul r0.y, r0.z, r0.x
+        texld r1, v0, s2
+        texld r2, v0, s3
+        abs r0.w, c79.w
+        mov r3, c4
+        mad r4.xy, c76, r3, v0
+        texld r4, r4, s2
+        mad r5.xy, c76, r3.zxzw, v0
+        texld r5, r5, s2
+        mad r3.xz, c76.xyyw, r3.wyzw, v0.xyyw
+        texld r6, r3.xzzw, s2
+        mad r3.xy, c76, r3.ywzw, v0
+        texld r7, r3, s2
+        dp3 r1.w, r4, r4
+        rcp r1.w, r1.w
+        cmp r3.xyz, -r1_abs.w, c1.x, r4
+        dp3 r1.w, r5, r5
+        rcp r1.w, r1.w
+        cmp r4.xyz, -r1_abs.w, c1.x, r5
+        dp3 r1.w, r6, r6
+        rcp r1.w, r1.w
+        cmp r5.xyz, -r1_abs.w, c1.x, r6
+        dp3 r1.w, r7, r7
+        rcp r1.w, r1.w
+        cmp r6.xyz, -r1_abs.w, c1.x, r7
+        dp3 r1.w, r1, r1
+        rcp r1.w, r1.w
+        cmp r7.xyz, -r1_abs.w, c1.x, r1
+        mad r1.w, r0.z, -r0.x, c78.w
+        mad r1.w, c78.y, -r3.w, r1.w
+        max r2.w, r1.w, c1.x
+        mad r0.x, r0.z, r0.x, -c78.w
+        mad r0.x, c78.y, -r3.w, r0.x
+        max r1.w, r0.x, c1.x
+        rcp r0.x, c78.x
+        mul r0.x, r2.w, r0.x
+        lrp r2.w, r0.x, c79.x, c79.y
+        min r0.x, c79.x, r2.w
+        rcp r0.z, c78.z
+        mul r0.z, r1.w, r0.z
+        lrp r1.w, r0.z, c79.z, c79.y
+        min r0.z, c79.z, r1.w
+        max r1.w, r0.x, r0.z
+        dp3 r0.x, r7, c1.yzww
+        dp3 r8.x, r3, c1.yzww
+        dp3 r8.y, r4, c1.yzww
+        dp3 r8.z, r5, c1.yzww
+        dp3 r8.w, r6, c1.yzww
+        dp4 r0.z, r8, c2.x
+        add r8, r8, -r0.z
+        dp4 r2.w, r8, r8
+        add r0.x, r0.x, -r0.z
+        mad r0.x, r0.x, r0.x, -r2.w
+        mul r0.z, r1.w, r1.w
+        cmp r0.x, r0.x, c2.y, r0.z
+        texld r8, v0, s0
+        mov r8.yz, c2
+        mad r9, r8.w, -r8.z, c3
+        cmp r9, r9, c2.y, c2.w
+        mad r10, r8.w, -c6.x, c6.yzwx
+        cmp r10, r10, -c2.y, -c2.w
+        add r9, r9, r10
+        mul r9, r9, c4.x
+        dp4 r0.z, r9, c2.y
+        add r0.z, r0.z, c4.w
+        rcp r0.z, r0.z
+        mul r8.xzw, r3.xyyz, r9.x
+        mad r7.xyz, r7, c4.w, r8.xzww
+        mad r7.xyz, r4, r9.y, r7
+        mad r7.xyz, r5, r9.z, r7
+        mad r7.xyz, r6, r9.w, r7
+        mul r7.xyz, r0.z, r7
+        add r0.z, -r0.x, c2.y
+        mul r1.w, r0.x, c2.x
+        mul r3.xyz, r3, r1.w
+        mad r3.xyz, r7, r0.z, r3
+        mad r3.xyz, r4, r1.w, r3
+        mad r3.xyz, r5, r1.w, r3
+        mad r3.xyz, r6, r1.w, r3
+        mad r4.xyz, v0.yxyw, c5.x, c5.y
+        mul r0.z, r4.y, c77.z
+        mul r0.z, r0.y, r0.z
+        mul r1.w, -r4.x, c77.w
+        mul r1.w, r0.y, r1.w
+        mul r5.xyz, r1.w, c73
+        mad r5.xyz, r0.z, c72, r5
+        mad r5.xyz, -r0.y, c74, r5
+        add r5.xyz, r5, c75
+        mul r0.y, -r5.z, c77.z
+        rcp r0.y, r0.y
+        mul r6.x, r5.x, r0.y
+        mul r0.y, r5.z, c77.w
+        rcp r0.y, r0.y
+        mul r6.y, r5.y, r0.y
+        add r0.yz, -r4, r6.xxyw
+        mul r0.yz, r0, c80.x
+        mul r4.xy, r0.yzzw, c5.z
+        texld r5, v0, s6
+        add r1.w, r5.x, -c85.x
+        mul r4.zw, r3.xyxy, c3.w
+        mad r4.zw, v0.xyxy, c0.xyxy, r4
+        texld r5, r4.zwzw, s5
+        add r2.w, r5.x, c4.x
+        mad r4.zw, r4.xyxy, r2.w, v0.xyxy
+        mov r5.xyz, r3
+        mov r2.w, c2.y
+        mov r3.w, c2.y
+        rep i0
+          mad r6.xy, r4, r3.w, r4.zwzw
+          texld r7, r6, s6
+          add r5.w, r7.x, -c85.x
+          cmp r5.w, r5.w, c2.w, c2.y
+          texld r6, r6, s2
+          mad r5.xyz, r6, r5.w, r5
+          add r2.w, r2.w, r5.w
+          add r3.w, r3.w, c2.y
+        endrep
+        rcp r2.w, r2.w
+        mul r0.yz, r0, c44.xxyw
+        dp2add r0.y, r0.yzzw, r0.yzzw, c1.x
+        rsq r0.y, r0.y
+        rcp r0.y, r0.y
+        mul r0.y, r0.y, c4.w
+        add r0.x, r0.x, c2.y
+        rcp r0.x, r0.x
+        mul_sat r0.x, r0.y, r0.x
+        mad r4.xyz, r5, r2.w, -r3
+        mad r0.xyz, r0.x, r4, r3
+        cmp r0.xyz, r1.w, r3, r0
+        cmp r0.xyz, -r0.w, r0, r1
+        texld r1, c1.x, s4
+        rcp r0.w, r1.x
+        mul r0.w, r0.w, c81.y
+        rcp r1.x, r0.w
+        mul r1.x, r1.x, c81.x
+        mad r1.xyz, r2, c66.x, -r1.x
+        mul r2.xyz, r1, c81.z
+        mul r2.xyz, r2, c2.x
+        cmp r1.xyz, r1, r2, c1.x
+        mad r0.xyz, r0, c66.x, r1
+        mul r1.xyz, r0.w, r0
+        dp3 r1.x, r1, c1.yzww
+        mad r0.xyz, r0, r0.w, -r1.x
+        mad r0.xyz, c82.x, r0, r1.x
+        mul r0.w, r1.x, c84.w
+        mul r1.yzw, r0.w, c84.xxyz
+        mov_sat r2.x, r0.w
+        mad r0.xyz, c84, -r0.w, r0
+        mad r0.xyz, r2.x, r0, r1.yzww
+        mul r0.xyz, r0, c83
+        add r0.xyz, r0, r0
+        mov_sat r1.x, r1.x
+        add r0.w, -r8.y, c82.z
+        pow r2.x, r1.x, r0.w
+        mul oC0.xyz, r0, r2.x
+        mov oC0.w, c2.y
+    
+    // approximately 169 instruction slots used (13 texture, 156 arithmetic)
+};
+
+PixelShader PS_GTACompositeDofDebug
+<
+    string AdapLumSampler         = "parameter register(4)";
+    string BloomSampler           = "parameter register(3)";
+    string ColorCorrect           = "parameter register(78)";
+    string ColorShift             = "parameter register(79)";
+    string Exposure               = "parameter register(66)";
+    string GBufferTextureSampler2 = "parameter register(0)";
+    string GBufferTextureSampler3 = "parameter register(1)";
+    string HDRSampler             = "parameter register(2)";
+    string TexelSize              = "parameter register(72)";
+    string ToneMapParams          = "parameter register(76)";
+    string deSatContrastGamma     = "parameter register(77)";
+    string dofBlur                = "parameter register(75)";
+    string dofDist                = "parameter register(74)";
+    string dofProj                = "parameter register(73)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   sampler2D AdapLumSampler;
+    //   sampler2D BloomSampler;
+    //   float4 ColorCorrect;
+    //   float4 ColorShift;
+    //   float Exposure;
+    //   sampler2D GBufferTextureSampler2;
+    //   sampler2D GBufferTextureSampler3;
+    //   sampler2D HDRSampler;
+    //   float4 TexelSize;
+    //   float4 ToneMapParams;
+    //   float4 deSatContrastGamma;
+    //   float4 dofBlur;
+    //   float4 dofDist;
+    //   float4 dofProj;
+    //
+    //
+    // Registers:
+    //
+    //   Name                   Reg   Size
+    //   ---------------------- ----- ----
+    //   Exposure               c66      1
+    //   TexelSize              c72      1
+    //   dofProj                c73      1
+    //   dofDist                c74      1
+    //   dofBlur                c75      1
+    //   ToneMapParams          c76      1
+    //   deSatContrastGamma     c77      1
+    //   ColorCorrect           c78      1
+    //   ColorShift             c79      1
+    //   GBufferTextureSampler2 s0       1
+    //   GBufferTextureSampler3 s1       1
+    //   HDRSampler             s2       1
+    //   BloomSampler           s3       1
+    //   AdapLumSampler         s4       1
+    //
+    
+        ps_3_0
+        def c0, -0.5, -1.5, 1.5, 0.5
+        def c1, 0, 0.212500006, 0.715399981, 0.0720999986
+        def c2, 0.25, 1, 256, 0
+        def c3, 0, 2, 4, 8
+        def c4, 256, 2, 4, 8
+        dcl_texcoord v0.xy
+        dcl_2d s0
+        dcl_2d s1
+        dcl_2d s2
+        dcl_2d s3
+        dcl_2d s4
+        texld r0, v0, s1
+        add r0.y, -c73.x, c73.y
+        rcp r0.y, r0.y
+        mad r0.x, c73.y, -r0.y, r0.x
+        mul r0.y, r0.y, c73.y
+        mul r0.y, r0.y, -c73.x
+        rcp r0.x, r0.x
+        mad r0.x, r0.y, r0.x, -c74.w
+        mov r1, c0
+        mad r0.x, c74.y, -r1.w, r0.x
+        max r2.x, r0.x, c1.x
+        rcp r0.x, c74.z
+        mul r0.x, r2.x, r0.x
+        lrp r2.x, r0.x, c75.z, c75.y
+        min r0.x, c75.z, r2.x
+        mul r0.x, r0.x, r0.x
+        mad r0.yz, c72.xxyw, r1.xxyw, v0.xxyw
+        texld r2, r0.yzzw, s2
+        dp3 r3.x, r2, c1.yzww
+        mad r0.yz, c72.xxyw, r1.xzxw, v0.xxyw
+        texld r4, r0.yzzw, s2
+        dp3 r3.y, r4, c1.yzww
+        mad r0.yz, c72.xxyw, r1.xwzw, v0.xxyw
+        texld r5, r0.yzzw, s2
+        dp3 r3.z, r5, c1.yzww
+        mad r0.yz, c72.xxyw, r1.xyww, v0.xxyw
+        texld r1, r0.yzzw, s2
+        dp3 r3.w, r1, c1.yzww
+        dp4 r0.y, r3, c2.x
+        add r3, r3, -r0.y
+        dp4 r0.z, r3, r3
+        texld r3, v0, s2
+        dp3 r0.w, r3, c1.yzww
+        add r0.y, -r0.y, r0.w
+        mad r0.y, r0.y, r0.y, -r0.z
+        cmp r0.x, r0.y, c2.y, r0.x
+        add r0.y, -r0.x, c2.y
+        mul r0.z, r0.x, c2.x
+        mul r6.xyz, r2, r0.z
+        texld r7, v0, s0
+        mov r7.yz, c2
+        mad r8, r7.w, -r7.z, c3
+        mad r9, r7.w, -c4.x, c4.yzwx
+        cmp r9, r9, -c2.y, -c2.w
+        cmp r8, r8, c2.y, c2.w
+        add r8, r9, r8
+        mul r8, r8, c0.x
+        mul r2.xyz, r2, r8.x
+        mad r2.xyz, r3, c0.w, r2
+        mad r2.xyz, r4, r8.y, r2
+        mad r2.xyz, r5, r8.z, r2
+        mad r2.xyz, r1, r8.w, r2
+        dp4 r0.w, r8, c2.y
+        add r0.w, r0.w, c0.w
+        rcp r0.w, r0.w
+        mul r2.xyz, r2, r0.w
+        mad r2.xyz, r2, r0.y, r6
+        mad r2.xyz, r4, r0.z, r2
+        mad r2.xyz, r5, r0.z, r2
+        mad r1.yzw, r1.xxyz, r0.z, r2.xxyz
+        mul r1.x, r0.x, r1.y
+        texld r0, v0, s3
+        texld r2, c1.x, s4
+        rcp r0.w, r2.x
+        mul r0.w, r0.w, c76.y
+        rcp r1.y, r0.w
+        mul r1.y, r1.y, c76.x
+        mad r0.xyz, r0, c66.x, -r1.y
+        mul r2.xyz, r0, c76.z
+        mul r2.xyz, r2, c2.x
+        cmp r0.xyz, r0, r2, c1.x
+        mad r0.xyz, r1.xzww, c66.x, r0
+        mul r1.xyz, r0.w, r0
+        dp3 r1.x, r1, c1.yzww
+        mad r0.xyz, r0, r0.w, -r1.x
+        mad r0.xyz, c77.x, r0, r1.x
+        mul r0.w, r1.x, c79.w
+        mov_sat r1.x, r1.x
+        mad r0.xyz, c79, -r0.w, r0
+        mul r1.yzw, r0.w, c79.xxyz
+        mov_sat r0.w, r0.w
+        mad r0.xyz, r0.w, r0, r1.yzww
+        mul r0.xyz, r0, c78
+        add r0.xyz, r0, r0
+        add r0.w, -r7.y, c77.z
+        pow r2.x, r1.x, r0.w
+        mul oC0.xyz, r0, r2.x
+        mov oC0.w, c2.y
+    
+    // approximately 90 instruction slots used (9 texture, 81 arithmetic)
+};
+
+PixelShader PS_GTACompositeMBDofDebug
+<
+    string AdapLumSampler               = "parameter register(4)";
+    string BloomSampler                 = "parameter register(3)";
+    string ColorCorrect                 = "parameter register(83)";
+    string ColorShift                   = "parameter register(84)";
+    string Exposure                     = "parameter register(66)";
+    string GBufferTextureSampler2       = "parameter register(0)";
+    string GBufferTextureSampler3       = "parameter register(1)";
+    string HDRSampler                   = "parameter register(2)";
+    string JitterSampler                = "parameter register(5)";
+    string PLAYER_MASK                  = "parameter register(85)";
+    string StencilCopySampler           = "parameter register(6)";
+    string TexelSize                    = "parameter register(76)";
+    string ToneMapParams                = "parameter register(81)";
+    string deSatContrastGamma           = "parameter register(82)";
+    string dofBlur                      = "parameter register(79)";
+    string dofDist                      = "parameter register(78)";
+    string dofProj                      = "parameter register(77)";
+    string gDirectionalMotionBlurLength = "parameter register(80)";
+    string globalScreenSize             = "parameter register(44)";
+    string motionBlurMatrix             = "parameter register(72)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   sampler2D AdapLumSampler;
+    //   sampler2D BloomSampler;
+    //   float4 ColorCorrect;
+    //   float4 ColorShift;
+    //   float Exposure;
+    //   sampler2D GBufferTextureSampler2;
+    //   sampler2D GBufferTextureSampler3;
+    //   sampler2D HDRSampler;
+    //   sampler2D JitterSampler;
+    //   float PLAYER_MASK;
+    //   sampler2D StencilCopySampler;
+    //   float4 TexelSize;
+    //   float4 ToneMapParams;
+    //   float4 deSatContrastGamma;
+    //   float4 dofBlur;
+    //   float4 dofDist;
+    //   float4 dofProj;
+    //   float gDirectionalMotionBlurLength;
+    //   float4 globalScreenSize;
+    //   row_major float4x4 motionBlurMatrix;
+    //
+    //
+    // Registers:
+    //
+    //   Name                         Reg   Size
+    //   ---------------------------- ----- ----
+    //   globalScreenSize             c44      1
+    //   Exposure                     c66      1
+    //   motionBlurMatrix             c72      4
+    //   TexelSize                    c76      1
+    //   dofProj                      c77      1
+    //   dofDist                      c78      1
+    //   dofBlur                      c79      1
+    //   gDirectionalMotionBlurLength c80      1
+    //   ToneMapParams                c81      1
+    //   deSatContrastGamma           c82      1
+    //   ColorCorrect                 c83      1
+    //   ColorShift                   c84      1
+    //   PLAYER_MASK                  c85      1
+    //   GBufferTextureSampler2       s0       1
+    //   GBufferTextureSampler3       s1       1
+    //   HDRSampler                   s2       1
+    //   BloomSampler                 s3       1
+    //   AdapLumSampler               s4       1
+    //   JitterSampler                s5       1
+    //   StencilCopySampler           s6       1
+    //
+    
+        ps_3_0
+        def c0, 58.1640015, 47.1300011, 0, 0
+        def c1, 0, 0.212500006, 0.715399981, 0.0720999986
+        def c2, 0.25, 1, 256, 0
+        def c3, 0, 2, 4, 8
+        def c4, -0.5, -1.5, 1.5, 0.5
+        def c5, 2, -1, 0.125, 0
+        def c6, 256, 2, 4, 8
+        defi i0, 7, 0, 0, 0
+        dcl_texcoord v0.xy
+        dcl_2d s0
+        dcl_2d s1
+        dcl_2d s2
+        dcl_2d s3
+        dcl_2d s4
+        dcl_2d s5
+        dcl_2d s6
+        texld r0, v0, s1
+        add r0.y, -c77.x, c77.y
+        rcp r0.y, r0.y
+        mul r0.z, r0.y, c77.y
+        mul r0.z, r0.z, -c77.x
+        mad r0.x, c77.y, -r0.y, r0.x
+        rcp r0.x, r0.x
+        mul r0.y, r0.z, r0.x
+        texld r1, v0, s2
+        texld r2, v0, s3
+        abs r0.w, c79.w
+        mov r3, c4
+        mad r4.xy, c76, r3, v0
+        texld r4, r4, s2
+        mad r5.xy, c76, r3.zxzw, v0
+        texld r5, r5, s2
+        mad r3.xz, c76.xyyw, r3.wyzw, v0.xyyw
+        texld r6, r3.xzzw, s2
+        mad r3.xy, c76, r3.ywzw, v0
+        texld r7, r3, s2
+        dp3 r1.w, r4, r4
+        rcp r1.w, r1.w
+        cmp r3.xyz, -r1_abs.w, c1.x, r4
+        dp3 r1.w, r5, r5
+        rcp r1.w, r1.w
+        cmp r4.xyz, -r1_abs.w, c1.x, r5
+        dp3 r1.w, r6, r6
+        rcp r1.w, r1.w
+        cmp r5.xyz, -r1_abs.w, c1.x, r6
+        dp3 r1.w, r7, r7
+        rcp r1.w, r1.w
+        cmp r6.xyz, -r1_abs.w, c1.x, r7
+        dp3 r1.w, r1, r1
+        rcp r1.w, r1.w
+        cmp r7.xyz, -r1_abs.w, c1.x, r1
+        mad r0.x, r0.z, r0.x, -c78.w
+        mad r0.x, c78.y, -r3.w, r0.x
+        max r1.w, r0.x, c1.x
+        rcp r0.x, c78.z
+        mul r0.x, r1.w, r0.x
+        lrp r1.w, r0.x, c79.z, c79.y
+        min r0.x, c79.z, r1.w
+        dp3 r0.z, r7, c1.yzww
+        dp3 r8.x, r3, c1.yzww
+        dp3 r8.y, r4, c1.yzww
+        dp3 r8.z, r5, c1.yzww
+        dp3 r8.w, r6, c1.yzww
+        dp4 r1.w, r8, c2.x
+        add r8, r8, -r1.w
+        dp4 r2.w, r8, r8
+        add r0.z, r0.z, -r1.w
+        mad r0.z, r0.z, r0.z, -r2.w
+        mul r0.x, r0.x, r0.x
+        cmp r0.x, r0.z, c2.y, r0.x
+        texld r8, v0, s0
+        mov r8.yz, c2
+        mad r9, r8.w, -r8.z, c3
+        cmp r9, r9, c2.y, c2.w
+        mad r10, r8.w, -c6.x, c6.yzwx
+        cmp r10, r10, -c2.y, -c2.w
+        add r9, r9, r10
+        mul r9, r9, c4.x
+        dp4 r0.z, r9, c2.y
+        add r0.z, r0.z, c4.w
+        rcp r0.z, r0.z
+        mul r8.xzw, r3.xyyz, r9.x
+        mad r7.xyz, r7, c4.w, r8.xzww
+        mad r7.xyz, r4, r9.y, r7
+        mad r7.xyz, r5, r9.z, r7
+        mad r7.xyz, r6, r9.w, r7
+        mul r7.xyz, r0.z, r7
+        add r0.z, -r0.x, c2.y
+        mul r1.w, r0.x, c2.x
+        mul r3.xyz, r3, r1.w
+        mad r3.xyz, r7, r0.z, r3
+        mad r3.xyz, r4, r1.w, r3
+        mad r3.xyz, r5, r1.w, r3
+        mad r3.yzw, r6.xxyz, r1.w, r3.xxyz
+        mul r3.x, r0.x, r3.y
+        mad r4.xyz, v0.yxyw, c5.x, c5.y
+        mul r0.z, r4.y, c77.z
+        mul r0.z, r0.y, r0.z
+        mul r1.w, -r4.x, c77.w
+        mul r1.w, r0.y, r1.w
+        mul r5.xyz, r1.w, c73
+        mad r5.xyz, r0.z, c72, r5
+        mad r5.xyz, -r0.y, c74, r5
+        add r5.xyz, r5, c75
+        mul r0.y, -r5.z, c77.z
+        rcp r0.y, r0.y
+        mul r6.x, r5.x, r0.y
+        mul r0.y, r5.z, c77.w
+        rcp r0.y, r0.y
+        mul r6.y, r5.y, r0.y
+        add r0.yz, -r4, r6.xxyw
+        mul r0.yz, r0, c80.x
+        mul r4.xy, r0.yzzw, c5.z
+        texld r5, v0, s6
+        add r1.w, r5.x, -c85.x
+        mul r4.zw, r3.xyxz, c3.w
+        mad r4.zw, v0.xyxy, c0.xyxy, r4
+        texld r5, r4.zwzw, s5
+        add r2.w, r5.x, c4.x
+        mad r4.zw, r4.xyxy, r2.w, v0.xyxy
+        mov r5.xyz, r3.xzww
+        mov r2.w, c2.y
+        mov r3.y, c2.y
+        rep i0
+          mad r6.xy, r4, r3.y, r4.zwzw
+          texld r7, r6, s6
+          add r5.w, r7.x, -c85.x
+          cmp r5.w, r5.w, c2.w, c2.y
+          texld r6, r6, s2
+          mad r5.xyz, r6, r5.w, r5
+          add r2.w, r2.w, r5.w
+          add r3.y, r3.y, c2.y
+        endrep
+        rcp r2.w, r2.w
+        mul r0.yz, r0, c44.xxyw
+        dp2add r0.y, r0.yzzw, r0.yzzw, c1.x
+        rsq r0.y, r0.y
+        rcp r0.y, r0.y
+        mul r0.y, r0.y, c4.w
+        add r0.x, r0.x, c2.y
+        rcp r0.x, r0.x
+        mul_sat r0.x, r0.y, r0.x
+        mad r4.xyz, r5, r2.w, -r3.xzww
+        mad r0.xyz, r0.x, r4, r3.xzww
+        cmp r0.xyz, r1.w, r3.xzww, r0
+        cmp r0.xyz, -r0.w, r0, r1
+        texld r1, c1.x, s4
+        rcp r0.w, r1.x
+        mul r0.w, r0.w, c81.y
+        rcp r1.x, r0.w
+        mul r1.x, r1.x, c81.x
+        mad r1.xyz, r2, c66.x, -r1.x
+        mul r2.xyz, r1, c81.z
+        mul r2.xyz, r2, c2.x
+        cmp r1.xyz, r1, r2, c1.x
+        mad r0.xyz, r0, c66.x, r1
+        mul r1.xyz, r0.w, r0
+        dp3 r1.x, r1, c1.yzww
+        mad r0.xyz, r0, r0.w, -r1.x
+        mad r0.xyz, c82.x, r0, r1.x
+        mul r0.w, r1.x, c84.w
+        mul r1.yzw, r0.w, c84.xxyz
+        mov_sat r2.x, r0.w
+        mad r0.xyz, c84, -r0.w, r0
+        mad r0.xyz, r2.x, r0, r1.yzww
+        mul r0.xyz, r0, c83
+        add r0.xyz, r0, r0
+        mov_sat r1.x, r1.x
+        add r0.w, -r8.y, c82.z
+        pow r2.x, r1.x, r0.w
+        mul oC0.xyz, r0, r2.x
+        mov oC0.w, c2.y
+    
+    // approximately 162 instruction slots used (13 texture, 149 arithmetic)
+};
+
+PixelShader PS_GTACompositeHighDOFDofDebug
+<
+    string AdapLumSampler         = "parameter register(4)";
+    string BloomSampler           = "parameter register(3)";
+    string ColorCorrect           = "parameter register(78)";
+    string ColorShift             = "parameter register(79)";
+    string Exposure               = "parameter register(66)";
+    string GBufferTextureSampler2 = "parameter register(0)";
+    string GBufferTextureSampler3 = "parameter register(1)";
+    string HDRSampler             = "parameter register(2)";
+    string TexelSize              = "parameter register(72)";
+    string ToneMapParams          = "parameter register(76)";
+    string deSatContrastGamma     = "parameter register(77)";
+    string dofBlur                = "parameter register(75)";
+    string dofDist                = "parameter register(74)";
+    string dofProj                = "parameter register(73)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   sampler2D AdapLumSampler;
+    //   sampler2D BloomSampler;
+    //   float4 ColorCorrect;
+    //   float4 ColorShift;
+    //   float Exposure;
+    //   sampler2D GBufferTextureSampler2;
+    //   sampler2D GBufferTextureSampler3;
+    //   sampler2D HDRSampler;
+    //   float4 TexelSize;
+    //   float4 ToneMapParams;
+    //   float4 deSatContrastGamma;
+    //   float4 dofBlur;
+    //   float4 dofDist;
+    //   float4 dofProj;
+    //
+    //
+    // Registers:
+    //
+    //   Name                   Reg   Size
+    //   ---------------------- ----- ----
+    //   Exposure               c66      1
+    //   TexelSize              c72      1
+    //   dofProj                c73      1
+    //   dofDist                c74      1
+    //   dofBlur                c75      1
+    //   ToneMapParams          c76      1
+    //   deSatContrastGamma     c77      1
+    //   ColorCorrect           c78      1
+    //   ColorShift             c79      1
+    //   GBufferTextureSampler2 s0       1
+    //   GBufferTextureSampler3 s1       1
+    //   HDRSampler             s2       1
+    //   BloomSampler           s3       1
+    //   AdapLumSampler         s4       1
+    //
+    
+        ps_3_0
+        def c0, -0.5, -1.5, 1.5, 0.5
+        def c1, 0, 0.212500006, 0.715399981, 0.0720999986
+        def c2, 0, 2, 4, 8
+        def c3, 0.25, 1, 256, 0
+        def c4, 256, 2, 4, 8
+        dcl_texcoord v0.xy
+        dcl_2d s0
+        dcl_2d s1
+        dcl_2d s2
+        dcl_2d s3
+        dcl_2d s4
+        texld r0, v0, s1
+        add r0.y, -c73.x, c73.y
+        rcp r0.y, r0.y
+        mad r0.x, c73.y, -r0.y, r0.x
+        mul r0.y, r0.y, c73.y
+        mul r0.y, r0.y, -c73.x
+        rcp r0.x, r0.x
+        mad r0.z, r0.y, -r0.x, c74.w
+        mad r0.x, r0.y, r0.x, -c74.w
+        mov r1, c0
+        mad r0.x, c74.y, -r1.w, r0.x
+        max r2.x, r0.x, c1.x
+        mad r0.x, c74.y, -r1.w, r0.z
+        max r2.y, r0.x, c1.x
+        rcp r0.x, c74.x
+        mul r0.x, r2.y, r0.x
+        lrp r2.y, r0.x, c75.x, c75.y
+        min r0.x, c75.x, r2.y
+        rcp r0.y, c74.z
+        mul r0.y, r2.x, r0.y
+        lrp r2.x, r0.y, c75.z, c75.y
+        min r0.y, c75.z, r2.x
+        max r2.x, r0.x, r0.y
+        mul r0.x, r2.x, r2.x
+        mad r0.yz, c72.xxyw, r1.xxyw, v0.xxyw
+        texld r2, r0.yzzw, s2
+        dp3 r3.x, r2, c1.yzww
+        mad r0.yz, c72.xxyw, r1.xzxw, v0.xxyw
+        texld r4, r0.yzzw, s2
+        dp3 r3.y, r4, c1.yzww
+        mad r0.yz, c72.xxyw, r1.xwzw, v0.xxyw
+        texld r5, r0.yzzw, s2
+        dp3 r3.z, r5, c1.yzww
+        mad r0.yz, c72.xxyw, r1.xyww, v0.xxyw
+        texld r1, r0.yzzw, s2
+        dp3 r3.w, r1, c1.yzww
+        dp4 r0.y, r3, c3.x
+        add r3, r3, -r0.y
+        dp4 r0.z, r3, r3
+        texld r3, v0, s2
+        dp3 r0.w, r3, c1.yzww
+        add r0.y, -r0.y, r0.w
+        mad r0.y, r0.y, r0.y, -r0.z
+        cmp r0.x, r0.y, c3.y, r0.x
+        add r0.y, -r0.x, c3.y
+        mul r0.z, r0.x, c3.x
+        mul r6.xyz, r2, r0.z
+        texld r7, v0, s0
+        mov r7.yz, c3
+        mad r8, r7.w, -r7.z, c2
+        mad r9, r7.w, -c4.x, c4.yzwx
+        cmp r9, r9, -c3.y, -c3.w
+        cmp r8, r8, c3.y, c3.w
+        add r8, r9, r8
+        mul r8, r8, c0.x
+        mul r2.xyz, r2, r8.x
+        mad r2.xyz, r3, c0.w, r2
+        mad r2.xyz, r4, r8.y, r2
+        mad r2.xyz, r5, r8.z, r2
+        mad r2.xyz, r1, r8.w, r2
+        dp4 r0.w, r8, c3.y
+        add r0.w, r0.w, c0.w
+        rcp r0.w, r0.w
+        mul r2.xyz, r2, r0.w
+        mad r2.xyz, r2, r0.y, r6
+        mad r2.xyz, r4, r0.z, r2
+        mad r2.xyz, r5, r0.z, r2
+        mad r1.yzw, r1.xxyz, r0.z, r2.xxyz
+        mul r1.x, r0.x, r1.y
+        texld r0, v0, s3
+        texld r2, c1.x, s4
+        rcp r0.w, r2.x
+        mul r0.w, r0.w, c76.y
+        rcp r1.y, r0.w
+        mul r1.y, r1.y, c76.x
+        mad r0.xyz, r0, c66.x, -r1.y
+        mul r2.xyz, r0, c76.z
+        mul r2.xyz, r2, c3.x
+        cmp r0.xyz, r0, r2, c1.x
+        mad r0.xyz, r1.xzww, c66.x, r0
+        mul r1.xyz, r0.w, r0
+        dp3 r1.x, r1, c1.yzww
+        mad r0.xyz, r0, r0.w, -r1.x
+        mad r0.xyz, c77.x, r0, r1.x
+        mul r0.w, r1.x, c79.w
+        mov_sat r1.x, r1.x
+        mad r0.xyz, c79, -r0.w, r0
+        mul r1.yzw, r0.w, c79.xxyz
+        mov_sat r0.w, r0.w
+        mad r0.xyz, r0.w, r0, r1.yzww
+        mul r0.xyz, r0, c78
+        add r0.xyz, r0, r0
+        add r0.w, -r7.y, c77.z
+        pow r2.x, r1.x, r0.w
+        mul oC0.xyz, r0, r2.x
+        mov oC0.w, c3.y
+    
+    // approximately 98 instruction slots used (9 texture, 89 arithmetic)
+};
+
+PixelShader PS_GTACompositeMBHighDOFDofDebug
+<
+    string AdapLumSampler               = "parameter register(4)";
+    string BloomSampler                 = "parameter register(3)";
+    string ColorCorrect                 = "parameter register(83)";
+    string ColorShift                   = "parameter register(84)";
+    string Exposure                     = "parameter register(66)";
+    string GBufferTextureSampler2       = "parameter register(0)";
+    string GBufferTextureSampler3       = "parameter register(1)";
+    string HDRSampler                   = "parameter register(2)";
+    string JitterSampler                = "parameter register(5)";
+    string PLAYER_MASK                  = "parameter register(85)";
+    string StencilCopySampler           = "parameter register(6)";
+    string TexelSize                    = "parameter register(76)";
+    string ToneMapParams                = "parameter register(81)";
+    string deSatContrastGamma           = "parameter register(82)";
+    string dofBlur                      = "parameter register(79)";
+    string dofDist                      = "parameter register(78)";
+    string dofProj                      = "parameter register(77)";
+    string gDirectionalMotionBlurLength = "parameter register(80)";
+    string globalScreenSize             = "parameter register(44)";
+    string motionBlurMatrix             = "parameter register(72)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   sampler2D AdapLumSampler;
+    //   sampler2D BloomSampler;
+    //   float4 ColorCorrect;
+    //   float4 ColorShift;
+    //   float Exposure;
+    //   sampler2D GBufferTextureSampler2;
+    //   sampler2D GBufferTextureSampler3;
+    //   sampler2D HDRSampler;
+    //   sampler2D JitterSampler;
+    //   float PLAYER_MASK;
+    //   sampler2D StencilCopySampler;
+    //   float4 TexelSize;
+    //   float4 ToneMapParams;
+    //   float4 deSatContrastGamma;
+    //   float4 dofBlur;
+    //   float4 dofDist;
+    //   float4 dofProj;
+    //   float gDirectionalMotionBlurLength;
+    //   float4 globalScreenSize;
+    //   row_major float4x4 motionBlurMatrix;
+    //
+    //
+    // Registers:
+    //
+    //   Name                         Reg   Size
+    //   ---------------------------- ----- ----
+    //   globalScreenSize             c44      1
+    //   Exposure                     c66      1
+    //   motionBlurMatrix             c72      4
+    //   TexelSize                    c76      1
+    //   dofProj                      c77      1
+    //   dofDist                      c78      1
+    //   dofBlur                      c79      1
+    //   gDirectionalMotionBlurLength c80      1
+    //   ToneMapParams                c81      1
+    //   deSatContrastGamma           c82      1
+    //   ColorCorrect                 c83      1
+    //   ColorShift                   c84      1
+    //   PLAYER_MASK                  c85      1
+    //   GBufferTextureSampler2       s0       1
+    //   GBufferTextureSampler3       s1       1
+    //   HDRSampler                   s2       1
+    //   BloomSampler                 s3       1
+    //   AdapLumSampler               s4       1
+    //   JitterSampler                s5       1
+    //   StencilCopySampler           s6       1
+    //
+    
+        ps_3_0
+        def c0, 58.1640015, 47.1300011, 0, 0
+        def c1, 0, 0.212500006, 0.715399981, 0.0720999986
+        def c2, 0.25, 1, 256, 0
+        def c3, 0, 2, 4, 8
+        def c4, -0.5, -1.5, 1.5, 0.5
+        def c5, 2, -1, 0.125, 0
+        def c6, 256, 2, 4, 8
+        defi i0, 7, 0, 0, 0
+        dcl_texcoord v0.xy
+        dcl_2d s0
+        dcl_2d s1
+        dcl_2d s2
+        dcl_2d s3
+        dcl_2d s4
+        dcl_2d s5
+        dcl_2d s6
+        texld r0, v0, s1
+        add r0.y, -c77.x, c77.y
+        rcp r0.y, r0.y
+        mul r0.z, r0.y, c77.y
+        mul r0.z, r0.z, -c77.x
+        mad r0.x, c77.y, -r0.y, r0.x
+        rcp r0.x, r0.x
+        mul r0.y, r0.z, r0.x
+        texld r1, v0, s2
+        texld r2, v0, s3
+        abs r0.w, c79.w
+        mov r3, c4
+        mad r4.xy, c76, r3, v0
+        texld r4, r4, s2
+        mad r5.xy, c76, r3.zxzw, v0
+        texld r5, r5, s2
+        mad r3.xz, c76.xyyw, r3.wyzw, v0.xyyw
+        texld r6, r3.xzzw, s2
+        mad r3.xy, c76, r3.ywzw, v0
+        texld r7, r3, s2
+        dp3 r1.w, r4, r4
+        rcp r1.w, r1.w
+        cmp r3.xyz, -r1_abs.w, c1.x, r4
+        dp3 r1.w, r5, r5
+        rcp r1.w, r1.w
+        cmp r4.xyz, -r1_abs.w, c1.x, r5
+        dp3 r1.w, r6, r6
+        rcp r1.w, r1.w
+        cmp r5.xyz, -r1_abs.w, c1.x, r6
+        dp3 r1.w, r7, r7
+        rcp r1.w, r1.w
+        cmp r6.xyz, -r1_abs.w, c1.x, r7
+        dp3 r1.w, r1, r1
+        rcp r1.w, r1.w
+        cmp r7.xyz, -r1_abs.w, c1.x, r1
+        mad r1.w, r0.z, -r0.x, c78.w
+        mad r1.w, c78.y, -r3.w, r1.w
+        max r2.w, r1.w, c1.x
+        mad r0.x, r0.z, r0.x, -c78.w
+        mad r0.x, c78.y, -r3.w, r0.x
+        max r1.w, r0.x, c1.x
+        rcp r0.x, c78.x
+        mul r0.x, r2.w, r0.x
+        lrp r2.w, r0.x, c79.x, c79.y
+        min r0.x, c79.x, r2.w
+        rcp r0.z, c78.z
+        mul r0.z, r1.w, r0.z
+        lrp r1.w, r0.z, c79.z, c79.y
+        min r0.z, c79.z, r1.w
+        max r1.w, r0.x, r0.z
+        dp3 r0.x, r7, c1.yzww
+        dp3 r8.x, r3, c1.yzww
+        dp3 r8.y, r4, c1.yzww
+        dp3 r8.z, r5, c1.yzww
+        dp3 r8.w, r6, c1.yzww
+        dp4 r0.z, r8, c2.x
+        add r8, r8, -r0.z
+        dp4 r2.w, r8, r8
+        add r0.x, r0.x, -r0.z
+        mad r0.x, r0.x, r0.x, -r2.w
+        mul r0.z, r1.w, r1.w
+        cmp r0.x, r0.x, c2.y, r0.z
+        texld r8, v0, s0
+        mov r8.yz, c2
+        mad r9, r8.w, -r8.z, c3
+        cmp r9, r9, c2.y, c2.w
+        mad r10, r8.w, -c6.x, c6.yzwx
+        cmp r10, r10, -c2.y, -c2.w
+        add r9, r9, r10
+        mul r9, r9, c4.x
+        dp4 r0.z, r9, c2.y
+        add r0.z, r0.z, c4.w
+        rcp r0.z, r0.z
+        mul r8.xzw, r3.xyyz, r9.x
+        mad r7.xyz, r7, c4.w, r8.xzww
+        mad r7.xyz, r4, r9.y, r7
+        mad r7.xyz, r5, r9.z, r7
+        mad r7.xyz, r6, r9.w, r7
+        mul r7.xyz, r0.z, r7
+        add r0.z, -r0.x, c2.y
+        mul r1.w, r0.x, c2.x
+        mul r3.xyz, r3, r1.w
+        mad r3.xyz, r7, r0.z, r3
+        mad r3.xyz, r4, r1.w, r3
+        mad r3.xyz, r5, r1.w, r3
+        mad r3.yzw, r6.xxyz, r1.w, r3.xxyz
+        mul r3.x, r0.x, r3.y
+        mad r4.xyz, v0.yxyw, c5.x, c5.y
+        mul r0.z, r4.y, c77.z
+        mul r0.z, r0.y, r0.z
+        mul r1.w, -r4.x, c77.w
+        mul r1.w, r0.y, r1.w
+        mul r5.xyz, r1.w, c73
+        mad r5.xyz, r0.z, c72, r5
+        mad r5.xyz, -r0.y, c74, r5
+        add r5.xyz, r5, c75
+        mul r0.y, -r5.z, c77.z
+        rcp r0.y, r0.y
+        mul r6.x, r5.x, r0.y
+        mul r0.y, r5.z, c77.w
+        rcp r0.y, r0.y
+        mul r6.y, r5.y, r0.y
+        add r0.yz, -r4, r6.xxyw
+        mul r0.yz, r0, c80.x
+        mul r4.xy, r0.yzzw, c5.z
+        texld r5, v0, s6
+        add r1.w, r5.x, -c85.x
+        mul r4.zw, r3.xyxz, c3.w
+        mad r4.zw, v0.xyxy, c0.xyxy, r4
+        texld r5, r4.zwzw, s5
+        add r2.w, r5.x, c4.x
+        mad r4.zw, r4.xyxy, r2.w, v0.xyxy
+        mov r5.xyz, r3.xzww
+        mov r2.w, c2.y
+        mov r3.y, c2.y
+        rep i0
+          mad r6.xy, r4, r3.y, r4.zwzw
+          texld r7, r6, s6
+          add r5.w, r7.x, -c85.x
+          cmp r5.w, r5.w, c2.w, c2.y
+          texld r6, r6, s2
+          mad r5.xyz, r6, r5.w, r5
+          add r2.w, r2.w, r5.w
+          add r3.y, r3.y, c2.y
+        endrep
+        rcp r2.w, r2.w
+        mul r0.yz, r0, c44.xxyw
+        dp2add r0.y, r0.yzzw, r0.yzzw, c1.x
+        rsq r0.y, r0.y
+        rcp r0.y, r0.y
+        mul r0.y, r0.y, c4.w
+        add r0.x, r0.x, c2.y
+        rcp r0.x, r0.x
+        mul_sat r0.x, r0.y, r0.x
+        mad r4.xyz, r5, r2.w, -r3.xzww
+        mad r0.xyz, r0.x, r4, r3.xzww
+        cmp r0.xyz, r1.w, r3.xzww, r0
+        cmp r0.xyz, -r0.w, r0, r1
+        texld r1, c1.x, s4
+        rcp r0.w, r1.x
+        mul r0.w, r0.w, c81.y
+        rcp r1.x, r0.w
+        mul r1.x, r1.x, c81.x
+        mad r1.xyz, r2, c66.x, -r1.x
+        mul r2.xyz, r1, c81.z
+        mul r2.xyz, r2, c2.x
+        cmp r1.xyz, r1, r2, c1.x
+        mad r0.xyz, r0, c66.x, r1
+        mul r1.xyz, r0.w, r0
+        dp3 r1.x, r1, c1.yzww
+        mad r0.xyz, r0, r0.w, -r1.x
+        mad r0.xyz, c82.x, r0, r1.x
+        mul r0.w, r1.x, c84.w
+        mul r1.yzw, r0.w, c84.xxyz
+        mov_sat r2.x, r0.w
+        mad r0.xyz, c84, -r0.w, r0
+        mad r0.xyz, r2.x, r0, r1.yzww
+        mul r0.xyz, r0, c83
+        add r0.xyz, r0, r0
+        mov_sat r1.x, r1.x
+        add r0.w, -r8.y, c82.z
+        pow r2.x, r1.x, r0.w
+        mul oC0.xyz, r0, r2.x
+        mov oC0.w, c2.y
+    
+    // approximately 170 instruction slots used (13 texture, 157 arithmetic)
+};
+
+PixelShader PS_GTADepthEffectsSmoke
+<
+    string GBufferStencilTextureSampler = "parameter register(1)";
+    string GBufferTextureSampler3       = "parameter register(0)";
+    string HDRSampler                   = "parameter register(2)";
+    string SmokeParams                  = "parameter register(72)";
+    string SmokeSampler                 = "parameter register(3)";
+    string dofProj                      = "parameter register(66)";
+    string gDepthFxParams               = "parameter register(16)";
+    string globalFogColor               = "parameter register(42)";
+    string globalFogColorN              = "parameter register(43)";
+    string globalFogParams              = "parameter register(41)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   sampler2D GBufferStencilTextureSampler;
+    //   sampler2D GBufferTextureSampler3;
+    //   sampler2D HDRSampler;
+    //   float4 SmokeParams;
+    //   sampler2D SmokeSampler;
+    //   float4 dofProj;
+    //   float4 gDepthFxParams;
+    //   float4 globalFogColor;
+    //   float4 globalFogColorN;
+    //   float4 globalFogParams;
+    //
+    //
+    // Registers:
+    //
+    //   Name                         Reg   Size
+    //   ---------------------------- ----- ----
+    //   gDepthFxParams               c16      1
+    //   globalFogParams              c41      1
+    //   globalFogColor               c42      1
+    //   globalFogColorN              c43      1
+    //   dofProj                      c66      1
+    //   SmokeParams                  c72      1
+    //   GBufferTextureSampler3       s0       1
+    //   GBufferStencilTextureSampler s1       1
+    //   HDRSampler                   s2       1
+    //   SmokeSampler                 s3       1
+    //
+    
+        ps_3_0
+        def c0, -0.0196078438, 0.0313725509, 1, 0
+        def c1, 0.212500006, 0.715399981, 0.0720999986, 1.00000001e-007
+        def c2, 0.100000001, 0.0909089968, 0, 0
+        dcl_texcoord v0.xy
+        dcl_2d s0
+        dcl_2d s1
+        dcl_2d s2
+        dcl_2d s3
+        texld r0, v0, s1
+        add r0.y, -r0.x, c0.y
+        add r0.x, r0.x, c0.x
+        cmp r0.y, r0.y, c0.z, c0.w
+        cmp r0.x, r0.x, r0.y, c0.w
+        mul r0.y, r0.x, c41.w
+        add r0.x, -r0.x, c0.z
+        add r0.z, -c16.z, c16.w
+        rcp r0.z, r0.z
+        texld r1, v0, s0
+        add r0.w, -c66.x, c66.y
+        rcp r0.w, r0.w
+        mad r1.x, c66.y, -r0.w, r1.x
+        mul r0.w, r0.w, c66.y
+        mul r0.w, r0.w, -c66.x
+        rcp r1.x, r1.x
+        mad r1.y, r0.w, -r1.x, c16.w
+        mul_sat r0.z, r0.z, r1.y
+        add r0.z, -r0.z, c0.z
+        mul r0.z, r0.x, r0.z
+        mov r1.z, c0.z
+        add r1.yz, -r1.z, c16.xxyw
+        mad r1.y, r0.z, r1.y, c0.z
+        mul r0.z, r0.z, r1.z
+        texld r2, v0, s2
+        dp3 r1.z, r2, c1
+        lrp r3.xyz, r1.y, r2, r1.z
+        add r1.y, r1.z, c1.w
+        pow r2.x, r1_abs.y, r0.z
+        mul r1.yzw, r3.xxyz, r2.x
+        mad r2.xyz, r3, -r2.x, c43
+        mad r1.yzw, r0.y, r2.xxyz, r1
+        mad r0.y, r0.w, r1.x, -c41.x
+        mul r0.z, r0.w, r1.x
+        add r0.w, -c41.x, c41.y
+        rcp r0.w, r0.w
+        mul_sat r0.y, r0.y, r0.w
+        rcp r0.w, c41.x
+        mul_sat r0.w, r0.z, r0.w
+        lrp r1.x, c41.w, r0.w, r0.y
+        add r0.w, r1.x, c41.z
+        mul r0.x, r0.x, r0.w
+        mov r2.xyz, c43
+        add r2.xyz, -r2, c42
+        mad r2.xyz, r0.y, r2, c43
+        lrp r3.xyz, r0.x, r2, r1.yzww
+        add r0.xyw, -r3.xyzz, c43.xyzz
+        texld r1, v0, s3
+        mad r1.x, r1.x, c72.x, c72.y
+        min r2.x, r1.x, r0.z
+        add r0.z, r2.x, -c72.y
+        max r1.x, r0.z, c0.w
+        min r0.z, r2.x, r1.x
+        mov r1.w, c72.w
+        mad r0.z, r0.z, r1.w, c2.x
+        mul_sat r0.z, r0.z, c2.y
+        mad oC0.xyz, r0.z, r0.xyww, r3
+        mov oC0.w, c0.z
+    
+    // approximately 60 instruction slots used (4 texture, 56 arithmetic)
+};
+
+PixelShader PS_GTADepthEffects
+<
+    string GBufferTextureSampler3 = "parameter register(0)";
+    string HDRSampler             = "parameter register(1)";
+    string dofProj                = "parameter register(66)";
+    string gDepthFxParams         = "parameter register(16)";
+    string globalFogColor         = "parameter register(42)";
+    string globalFogColorN        = "parameter register(43)";
+    string globalFogParams        = "parameter register(41)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   sampler2D GBufferTextureSampler3;
+    //   sampler2D HDRSampler;
+    //   float4 dofProj;
+    //   float4 gDepthFxParams;
+    //   float4 globalFogColor;
+    //   float4 globalFogColorN;
+    //   float4 globalFogParams;
+    //
+    //
+    // Registers:
+    //
+    //   Name                   Reg   Size
+    //   ---------------------- ----- ----
+    //   gDepthFxParams         c16      1
+    //   globalFogParams        c41      1
+    //   globalFogColor         c42      1
+    //   globalFogColorN        c43      1
+    //   dofProj                c66      1
+    //   GBufferTextureSampler3 s0       1
+    //   HDRSampler             s1       1
+    //
+    
+        ps_3_0
+        def c0, 0.212500006, 0.715399981, 0.0720999986, 0
+        def c1, -1, 1, 0, 1.00000001e-007
+        dcl_texcoord v0.xy
+        dcl_2d s0
+        dcl_2d s1
+        add r0.x, -c16.z, c16.w
+        rcp r0.x, r0.x
+        add r0.y, -c66.x, c66.y
+        rcp r0.y, r0.y
+        mul r0.z, r0.y, c66.y
+        mul r0.z, r0.z, -c66.x
+        texld r1, v0, s0
+        mad r0.y, c66.y, -r0.y, r1.x
+        add r0.w, r1.x, c1.x
+        rcp r0.y, r0.y
+        mad r1.x, r0.z, -r0.y, c16.w
+        mul_sat r0.x, r0.x, r1.x
+        add r0.x, -r0.x, c1.y
+        cmp r1.x, r0.w, c1.z, c1.y
+        mov r2.xz, c1
+        cmp r0.w, r0.w, c41.w, r2.z
+        mul r0.x, r0.x, r1.x
+        add r1.yz, r2.x, c16.xxyw
+        mad r1.y, r0.x, r1.y, c1.y
+        mul r0.x, r0.x, r1.z
+        texld r2, v0, s1
+        dp3 r1.z, r2, c0
+        lrp r3.xyz, r1.y, r2, r1.z
+        add r1.y, r1.z, c1.w
+        pow r2.x, r1_abs.y, r0.x
+        mul r1.yzw, r3.xxyz, r2.x
+        mad r2.xyz, r3, -r2.x, c43
+        mad r1.yzw, r0.w, r2.xxyz, r1
+        mad r0.x, r0.z, r0.y, -c41.x
+        mul r0.y, r0.z, r0.y
+        add r0.z, -c41.x, c41.y
+        rcp r0.z, r0.z
+        mul_sat r0.x, r0.x, r0.z
+        mov r2.xyz, c43
+        add r2.xyz, -r2, c42
+        mad r2.xyz, r0.x, r2, c43
+        add r2.xyz, -r1.yzww, r2
+        rcp r0.z, c41.x
+        mul_sat r0.y, r0.y, r0.z
+        lrp r2.w, c41.w, r0.y, r0.x
+        add r0.x, r2.w, c41.z
+        mul r0.x, r1.x, r0.x
+        mad oC0.xyz, r0.x, r2, r1.yzww
+        mov oC0.w, c1.y
+    
+    // approximately 46 instruction slots used (2 texture, 44 arithmetic)
+};
+
+PixelShader PS_Simple
+<
+    string AdapLumSampler = "parameter register(1)";
+    string Exposure       = "parameter register(66)";
+    string HDRSampler     = "parameter register(0)";
+    string ToneMapParams  = "parameter register(72)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   sampler2D AdapLumSampler;
+    //   float Exposure;
+    //   sampler2D HDRSampler;
+    //   float4 ToneMapParams;
+    //
+    //
+    // Registers:
+    //
+    //   Name           Reg   Size
+    //   -------------- ----- ----
+    //   Exposure       c66      1
+    //   ToneMapParams  c72      1
+    //   HDRSampler     s0       1
+    //   AdapLumSampler s1       1
+    //
+    
+        ps_3_0
+        def c0, 0, 1, 0, 0
+        dcl_texcoord v0.xy
+        dcl_2d s0
+        dcl_2d s1
+        texld r0, c0.x, s1
+        rcp r0.x, r0.x
+        mul r0.x, r0.x, c72.y
+        texld r1, v0, s0
+        mul r0.yzw, r1.xxyz, c66.x
+        mul oC0.xyz, r0.x, r0.yzww
+        mov oC0.w, c0.y
+    
+    // approximately 7 instruction slots used (2 texture, 5 arithmetic)
+};
+
+PixelShader PS_CopyStencil
+<
+    string StencilCopySampler = "parameter register(0)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   sampler2D StencilCopySampler;
+    //
+    //
+    // Registers:
+    //
+    //   Name               Reg   Size
+    //   ------------------ ----- ----
+    //   StencilCopySampler s0       1
+    //
+    
+        ps_3_0
+        dcl_texcoord v0.xy
+        dcl_2d s0
+        texld r0, v0, s0
+        mov oC0, r0.x
+    
+    // approximately 2 instruction slots used (1 texture, 1 arithmetic)
+};
+
+PixelShader PS_GTADepthEffects_01
+<
+    string AdapLumSampler         = "parameter register(5)";
+    string BloomSampler           = "parameter register(4)";
+    string BlurSampler            = "parameter register(3)";
+    string ColorCorrect           = "parameter register(78)";
+    string ColorShift             = "parameter register(79)";
+    string Exposure               = "parameter register(66)";
+    string GBufferTextureSampler2 = "parameter register(0)";
+    string GBufferTextureSampler3 = "parameter register(1)";
+    string HDRSampler             = "parameter register(2)";
+    string NoiseParams            = "parameter register(80)";
+    string TexelSize              = "parameter register(72)";
+    string ToneMapParams          = "parameter register(76)";
+    string deSatContrastGamma     = "parameter register(77)";
+    string dofBlur                = "parameter register(75)";
+    string dofDist                = "parameter register(74)";
+    string dofProj                = "parameter register(73)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   sampler2D AdapLumSampler;
+    //   sampler2D BloomSampler;
+    //   sampler2D BlurSampler;
+    //   float4 ColorCorrect;
+    //   float4 ColorShift;
+    //   float Exposure;
+    //   sampler2D GBufferTextureSampler2;
+    //   sampler2D GBufferTextureSampler3;
+    //   sampler2D HDRSampler;
+    //   float4 NoiseParams;
+    //   float4 TexelSize;
+    //   float4 ToneMapParams;
+    //   float4 deSatContrastGamma;
+    //   float4 dofBlur;
+    //   float4 dofDist;
+    //   float4 dofProj;
+    //
+    //
+    // Registers:
+    //
+    //   Name                   Reg   Size
+    //   ---------------------- ----- ----
+    //   Exposure               c66      1
+    //   TexelSize              c72      1
+    //   dofProj                c73      1
+    //   dofDist                c74      1
+    //   dofBlur                c75      1
+    //   ToneMapParams          c76      1
+    //   deSatContrastGamma     c77      1
+    //   ColorCorrect           c78      1
+    //   ColorShift             c79      1
+    //   NoiseParams            c80      1
+    //   GBufferTextureSampler2 s0       1
+    //   GBufferTextureSampler3 s1       1
+    //   HDRSampler             s2       1
+    //   BlurSampler            s3       1
+    //   BloomSampler           s4       1
+    //   AdapLumSampler         s5       1
+    //
+    
+        ps_3_0
+        def c0, -0.5, -1.5, 1.5, 0.5
+        def c1, 0, 0.212500006, 0.715399981, 0.0720999986
+        def c2, 0.25, 1, 256, 0
+        def c3, 0, 2, 4, 8
+        def c4, 3.20000005, 1.79999995, 1.10000002, 0
+        def c5, 256, 2, 4, 8
+        dcl_texcoord v0.xy
+        dcl_2d s0
+        dcl_2d s1
+        dcl_2d s2
+        dcl_2d s3
+        dcl_2d s4
+        dcl_2d s5
+        texld r0, v0, s1
+        add r0.y, -c73.x, c73.y
+        rcp r0.y, r0.y
+        mad r0.x, c73.y, -r0.y, r0.x
+        mul r0.y, r0.y, c73.y
+        mul r0.y, r0.y, -c73.x
+        rcp r0.x, r0.x
+        mad r0.x, r0.y, r0.x, -c74.w
+        mov r1, c0
+        mad r0.x, c74.y, -r1.w, r0.x
+        max r2.x, r0.x, c1.x
+        rcp r0.x, c74.z
+        mul r0.x, r2.x, r0.x
+        lrp r2.x, r0.x, c75.z, c75.y
+        min r0.x, c75.z, r2.x
+        mul r0.x, r0.x, r0.x
+        mad r0.yz, c72.xxyw, r1.xxyw, v0.xxyw
+        texld r2, r0.yzzw, s2
+        dp3 r3.x, r2, c1.yzww
+        mad r0.yz, c72.xxyw, r1.xzxw, v0.xxyw
+        texld r4, r0.yzzw, s2
+        dp3 r3.y, r4, c1.yzww
+        mad r0.yz, c72.xxyw, r1.xwzw, v0.xxyw
+        texld r5, r0.yzzw, s2
+        dp3 r3.z, r5, c1.yzww
+        mad r0.yz, c72.xxyw, r1.xyww, v0.xxyw
+        texld r1, r0.yzzw, s2
+        dp3 r3.w, r1, c1.yzww
+        dp4 r0.y, r3, c2.x
+        add r3, r3, -r0.y
+        dp4 r0.z, r3, r3
+        texld r3, v0, s2
+        dp3 r0.w, r3, c1.yzww
+        add r0.y, -r0.y, r0.w
+        mad r0.y, r0.y, r0.y, -r0.z
+        cmp r0.x, r0.y, c2.y, r0.x
+        add r0.y, -r0.x, c2.y
+        mul r0.x, r0.x, c2.x
+        mul r6.xyz, r2, r0.x
+        texld r7, v0, s0
+        mov r7.yz, c2
+        mad r8, r7.w, -r7.z, c3
+        mad r9, r7.w, -c5.x, c5.yzwx
+        cmp r9, r9, -c2.y, -c2.w
+        cmp r8, r8, c2.y, c2.w
+        add r8, r9, r8
+        mul r8, r8, c0.x
+        mul r2.xyz, r2, r8.x
+        mad r2.xyz, r3, c0.w, r2
+        mad r2.xyz, r4, r8.y, r2
+        mad r2.xyz, r5, r8.z, r2
+        mad r2.xyz, r1, r8.w, r2
+        dp4 r0.z, r8, c2.y
+        add r0.z, r0.z, c0.w
+        rcp r0.z, r0.z
+        mul r2.xyz, r2, r0.z
+        mad r0.yzw, r2.xxyz, r0.y, r6.xxyz
+        mad r0.yzw, r4.xxyz, r0.x, r0
+        mad r0.yzw, r5.xxyz, r0.x, r0
+        mad r0.xyz, r1, r0.x, r0.yzww
+        mov r1.xy, c4
+        mad r1.xy, v0, r1, c80
+        frc r1.xy, r1
+        texld r1, r1, s3
+        add r0.w, r1.z, c0.x
+        mul r0.w, r0.w, c80.z
+        mad r0.xyz, r0.w, c4.z, r0
+        texld r1, v0, s4
+        texld r2, c1.x, s5
+        rcp r0.w, r2.x
+        mul r0.w, r0.w, c76.y
+        rcp r1.w, r0.w
+        mul r1.w, r1.w, c76.x
+        mad r1.xyz, r1, c66.x, -r1.w
+        mul r2.xyz, r1, c76.z
+        mul r2.xyz, r2, c2.x
+        cmp r1.xyz, r1, r2, c1.x
+        mad r0.xyz, r0, c66.x, r1
+        mul r1.xyz, r0.w, r0
+        dp3 r1.x, r1, c1.yzww
+        mad r0.xyz, r0, r0.w, -r1.x
+        mad r0.xyz, c77.x, r0, r1.x
+        mul r0.w, r1.x, c79.w
+        mov_sat r1.x, r1.x
+        mad r0.xyz, c79, -r0.w, r0
+        mul r1.yzw, r0.w, c79.xxyz
+        mov_sat r0.w, r0.w
+        mad r0.xyz, r0.w, r0, r1.yzww
+        mul r0.xyz, r0, c78
+        add r0.xyz, r0, r0
+        add r0.w, -r7.y, c77.z
+        pow r2.x, r1.x, r0.w
+        mul oC0.xyz, r0, r2.x
+        mov oC0.w, c2.y
+    
+    // approximately 96 instruction slots used (10 texture, 86 arithmetic)
+};
+
+PixelShader PS_GTADepthEffects_10
+<
+    string AdapLumSampler               = "parameter register(5)";
+    string BloomSampler                 = "parameter register(4)";
+    string BlurSampler                  = "parameter register(3)";
+    string ColorCorrect                 = "parameter register(83)";
+    string ColorShift                   = "parameter register(84)";
+    string Exposure                     = "parameter register(66)";
+    string GBufferTextureSampler2       = "parameter register(0)";
+    string GBufferTextureSampler3       = "parameter register(1)";
+    string HDRSampler                   = "parameter register(2)";
+    string JitterSampler                = "parameter register(6)";
+    string NoiseParams                  = "parameter register(85)";
+    string PLAYER_MASK                  = "parameter register(86)";
+    string StencilCopySampler           = "parameter register(7)";
+    string TexelSize                    = "parameter register(76)";
+    string ToneMapParams                = "parameter register(81)";
+    string deSatContrastGamma           = "parameter register(82)";
+    string dofBlur                      = "parameter register(79)";
+    string dofDist                      = "parameter register(78)";
+    string dofProj                      = "parameter register(77)";
+    string gDirectionalMotionBlurLength = "parameter register(80)";
+    string globalScreenSize             = "parameter register(44)";
+    string motionBlurMatrix             = "parameter register(72)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   sampler2D AdapLumSampler;
+    //   sampler2D BloomSampler;
+    //   sampler2D BlurSampler;
+    //   float4 ColorCorrect;
+    //   float4 ColorShift;
+    //   float Exposure;
+    //   sampler2D GBufferTextureSampler2;
+    //   sampler2D GBufferTextureSampler3;
+    //   sampler2D HDRSampler;
+    //   sampler2D JitterSampler;
+    //   float4 NoiseParams;
+    //   float PLAYER_MASK;
+    //   sampler2D StencilCopySampler;
+    //   float4 TexelSize;
+    //   float4 ToneMapParams;
+    //   float4 deSatContrastGamma;
+    //   float4 dofBlur;
+    //   float4 dofDist;
+    //   float4 dofProj;
+    //   float gDirectionalMotionBlurLength;
+    //   float4 globalScreenSize;
+    //   row_major float4x4 motionBlurMatrix;
+    //
+    //
+    // Registers:
+    //
+    //   Name                         Reg   Size
+    //   ---------------------------- ----- ----
+    //   globalScreenSize             c44      1
+    //   Exposure                     c66      1
+    //   motionBlurMatrix             c72      4
+    //   TexelSize                    c76      1
+    //   dofProj                      c77      1
+    //   dofDist                      c78      1
+    //   dofBlur                      c79      1
+    //   gDirectionalMotionBlurLength c80      1
+    //   ToneMapParams                c81      1
+    //   deSatContrastGamma           c82      1
+    //   ColorCorrect                 c83      1
+    //   ColorShift                   c84      1
+    //   NoiseParams                  c85      1
+    //   PLAYER_MASK                  c86      1
+    //   GBufferTextureSampler2       s0       1
+    //   GBufferTextureSampler3       s1       1
+    //   HDRSampler                   s2       1
+    //   BlurSampler                  s3       1
+    //   BloomSampler                 s4       1
+    //   AdapLumSampler               s5       1
+    //   JitterSampler                s6       1
+    //   StencilCopySampler           s7       1
+    //
+    
+        ps_3_0
+        def c0, 58.1640015, 47.1300011, 3.20000005, 1.79999995
+        def c1, 0, 0.212500006, 0.715399981, 0.0720999986
+        def c2, 0.25, 1, 256, 0
+        def c3, 0, 2, 4, 8
+        def c4, -0.5, -1.5, 1.5, 0.5
+        def c5, 2, -1, 0.125, 0
+        def c6, 1.10000002, 0, 0, 0
+        def c7, 256, 2, 4, 8
+        defi i0, 7, 0, 0, 0
+        dcl_texcoord v0.xy
+        dcl_2d s0
+        dcl_2d s1
+        dcl_2d s2
+        dcl_2d s3
+        dcl_2d s4
+        dcl_2d s5
+        dcl_2d s6
+        dcl_2d s7
+        texld r0, v0, s1
+        add r0.y, -c77.x, c77.y
+        rcp r0.y, r0.y
+        mul r0.z, r0.y, c77.y
+        mul r0.z, r0.z, -c77.x
+        mad r0.x, c77.y, -r0.y, r0.x
+        rcp r0.x, r0.x
+        mul r0.y, r0.z, r0.x
+        texld r1, v0, s2
+        texld r2, v0, s4
+        abs r0.w, c79.w
+        mov r3, c4
+        mad r4.xy, c76, r3, v0
+        texld r4, r4, s2
+        mad r5.xy, c76, r3.zxzw, v0
+        texld r5, r5, s2
+        mad r3.xz, c76.xyyw, r3.wyzw, v0.xyyw
+        texld r6, r3.xzzw, s2
+        mad r3.xy, c76, r3.ywzw, v0
+        texld r7, r3, s2
+        dp3 r1.w, r4, r4
+        rcp r1.w, r1.w
+        cmp r3.xyz, -r1_abs.w, c1.x, r4
+        dp3 r1.w, r5, r5
+        rcp r1.w, r1.w
+        cmp r4.xyz, -r1_abs.w, c1.x, r5
+        dp3 r1.w, r6, r6
+        rcp r1.w, r1.w
+        cmp r5.xyz, -r1_abs.w, c1.x, r6
+        dp3 r1.w, r7, r7
+        rcp r1.w, r1.w
+        cmp r6.xyz, -r1_abs.w, c1.x, r7
+        dp3 r1.w, r1, r1
+        rcp r1.w, r1.w
+        cmp r7.xyz, -r1_abs.w, c1.x, r1
+        mad r0.x, r0.z, r0.x, -c78.w
+        mad r0.x, c78.y, -r3.w, r0.x
+        max r1.w, r0.x, c1.x
+        rcp r0.x, c78.z
+        mul r0.x, r1.w, r0.x
+        lrp r1.w, r0.x, c79.z, c79.y
+        min r0.x, c79.z, r1.w
+        dp3 r0.z, r7, c1.yzww
+        dp3 r8.x, r3, c1.yzww
+        dp3 r8.y, r4, c1.yzww
+        dp3 r8.z, r5, c1.yzww
+        dp3 r8.w, r6, c1.yzww
+        dp4 r1.w, r8, c2.x
+        add r8, r8, -r1.w
+        dp4 r2.w, r8, r8
+        add r0.z, r0.z, -r1.w
+        mad r0.z, r0.z, r0.z, -r2.w
+        mul r0.x, r0.x, r0.x
+        cmp r0.x, r0.z, c2.y, r0.x
+        texld r8, v0, s0
+        mov r8.yz, c2
+        mad r9, r8.w, -r8.z, c3
+        cmp r9, r9, c2.y, c2.w
+        mad r10, r8.w, -c7.x, c7.yzwx
+        cmp r10, r10, -c2.y, -c2.w
+        add r9, r9, r10
+        mul r9, r9, c4.x
+        dp4 r0.z, r9, c2.y
+        add r0.z, r0.z, c4.w
+        rcp r0.z, r0.z
+        mul r8.xzw, r3.xyyz, r9.x
+        mad r7.xyz, r7, c4.w, r8.xzww
+        mad r7.xyz, r4, r9.y, r7
+        mad r7.xyz, r5, r9.z, r7
+        mad r7.xyz, r6, r9.w, r7
+        mul r7.xyz, r0.z, r7
+        add r0.z, -r0.x, c2.y
+        mul r1.w, r0.x, c2.x
+        mul r3.xyz, r3, r1.w
+        mad r3.xyz, r7, r0.z, r3
+        mad r3.xyz, r4, r1.w, r3
+        mad r3.xyz, r5, r1.w, r3
+        mad r3.xyz, r6, r1.w, r3
+        mad r4.xyz, v0.yxyw, c5.x, c5.y
+        mul r0.z, r4.y, c77.z
+        mul r0.z, r0.y, r0.z
+        mul r1.w, -r4.x, c77.w
+        mul r1.w, r0.y, r1.w
+        mul r5.xyz, r1.w, c73
+        mad r5.xyz, r0.z, c72, r5
+        mad r5.xyz, -r0.y, c74, r5
+        add r5.xyz, r5, c75
+        mul r0.y, -r5.z, c77.z
+        rcp r0.y, r0.y
+        mul r6.x, r5.x, r0.y
+        mul r0.y, r5.z, c77.w
+        rcp r0.y, r0.y
+        mul r6.y, r5.y, r0.y
+        add r0.yz, -r4, r6.xxyw
+        mul r0.yz, r0, c80.x
+        mul r4.xy, r0.yzzw, c5.z
+        texld r5, v0, s7
+        add r1.w, r5.x, -c86.x
+        mul r4.zw, c0.xyxy, v0.xyxy
+        mad r4.zw, r3.xyxy, c3.w, r4
+        texld r5, r4.zwzw, s6
+        add r2.w, r5.x, c4.x
+        mad r4.zw, r4.xyxy, r2.w, v0.xyxy
+        mov r5.xyz, r3
+        mov r2.w, c2.y
+        mov r3.w, c2.y
+        rep i0
+          mad r6.xy, r4, r3.w, r4.zwzw
+          texld r7, r6, s7
+          add r5.w, r7.x, -c86.x
+          cmp r5.w, r5.w, c2.w, c2.y
+          texld r6, r6, s2
+          mad r5.xyz, r6, r5.w, r5
+          add r2.w, r2.w, r5.w
+          add r3.w, r3.w, c2.y
+        endrep
+        rcp r2.w, r2.w
+        mul r0.yz, r0, c44.xxyw
+        dp2add r0.y, r0.yzzw, r0.yzzw, c1.x
+        rsq r0.y, r0.y
+        rcp r0.y, r0.y
+        mul r0.y, r0.y, c4.w
+        add r0.x, r0.x, c2.y
+        rcp r0.x, r0.x
+        mul_sat r0.x, r0.y, r0.x
+        mad r4.xyz, r5, r2.w, -r3
+        mad r0.xyz, r0.x, r4, r3
+        cmp r0.xyz, r1.w, r3, r0
+        cmp r0.xyz, -r0.w, r0, r1
+        mov r1.zw, c0
+        mad r1.xy, v0, r1.zwzw, c85
+        frc r1.xy, r1
+        texld r1, r1, s3
+        add r0.w, r1.z, c4.x
+        mul r0.w, r0.w, c85.z
+        mad r0.xyz, r0.w, c6.x, r0
+        texld r1, c1.x, s5
+        rcp r0.w, r1.x
+        mul r0.w, r0.w, c81.y
+        rcp r1.x, r0.w
+        mul r1.x, r1.x, c81.x
+        mad r1.xyz, r2, c66.x, -r1.x
+        mul r2.xyz, r1, c81.z
+        mul r2.xyz, r2, c2.x
+        cmp r1.xyz, r1, r2, c1.x
+        mad r0.xyz, r0, c66.x, r1
+        mul r1.xyz, r0.w, r0
+        dp3 r1.x, r1, c1.yzww
+        mad r0.xyz, r0, r0.w, -r1.x
+        mad r0.xyz, c82.x, r0, r1.x
+        mul r0.w, r1.x, c84.w
+        mul r1.yzw, r0.w, c84.xxyz
+        mov_sat r2.x, r0.w
+        mad r0.xyz, c84, -r0.w, r0
+        mad r0.xyz, r2.x, r0, r1.yzww
+        mul r0.xyz, r0, c83
+        add r0.xyz, r0, r0
+        mov_sat r1.x, r1.x
+        add r0.w, -r8.y, c82.z
+        pow r2.x, r1.x, r0.w
+        mul oC0.xyz, r0, r2.x
+        mov oC0.w, c2.y
+    
+    // approximately 168 instruction slots used (14 texture, 154 arithmetic)
+};
+
+PixelShader PS_25
+<
+    string AdapLumSampler         = "parameter register(5)";
+    string BloomSampler           = "parameter register(4)";
+    string BlurSampler            = "parameter register(3)";
+    string ColorCorrect           = "parameter register(78)";
+    string ColorShift             = "parameter register(79)";
+    string Exposure               = "parameter register(66)";
+    string GBufferTextureSampler2 = "parameter register(0)";
+    string GBufferTextureSampler3 = "parameter register(1)";
+    string HDRSampler             = "parameter register(2)";
+    string NoiseParams            = "parameter register(80)";
+    string TexelSize              = "parameter register(72)";
+    string ToneMapParams          = "parameter register(76)";
+    string deSatContrastGamma     = "parameter register(77)";
+    string dofBlur                = "parameter register(75)";
+    string dofDist                = "parameter register(74)";
+    string dofProj                = "parameter register(73)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   sampler2D AdapLumSampler;
+    //   sampler2D BloomSampler;
+    //   sampler2D BlurSampler;
+    //   float4 ColorCorrect;
+    //   float4 ColorShift;
+    //   float Exposure;
+    //   sampler2D GBufferTextureSampler2;
+    //   sampler2D GBufferTextureSampler3;
+    //   sampler2D HDRSampler;
+    //   float4 NoiseParams;
+    //   float4 TexelSize;
+    //   float4 ToneMapParams;
+    //   float4 deSatContrastGamma;
+    //   float4 dofBlur;
+    //   float4 dofDist;
+    //   float4 dofProj;
+    //
+    //
+    // Registers:
+    //
+    //   Name                   Reg   Size
+    //   ---------------------- ----- ----
+    //   Exposure               c66      1
+    //   TexelSize              c72      1
+    //   dofProj                c73      1
+    //   dofDist                c74      1
+    //   dofBlur                c75      1
+    //   ToneMapParams          c76      1
+    //   deSatContrastGamma     c77      1
+    //   ColorCorrect           c78      1
+    //   ColorShift             c79      1
+    //   NoiseParams            c80      1
+    //   GBufferTextureSampler2 s0       1
+    //   GBufferTextureSampler3 s1       1
+    //   HDRSampler             s2       1
+    //   BlurSampler            s3       1
+    //   BloomSampler           s4       1
+    //   AdapLumSampler         s5       1
+    //
+    
+        ps_3_0
+        def c0, -0.5, -1.5, 1.5, 0.5
+        def c1, 0, 0.212500006, 0.715399981, 0.0720999986
+        def c2, 0, 2, 4, 8
+        def c3, 0.25, 1, 256, 0
+        def c4, 3.20000005, 1.79999995, 1.10000002, 0
+        def c5, 256, 2, 4, 8
+        dcl_texcoord v0.xy
+        dcl_2d s0
+        dcl_2d s1
+        dcl_2d s2
+        dcl_2d s3
+        dcl_2d s4
+        dcl_2d s5
+        texld r0, v0, s1
+        add r0.y, -c73.x, c73.y
+        rcp r0.y, r0.y
+        mad r0.x, c73.y, -r0.y, r0.x
+        mul r0.y, r0.y, c73.y
+        mul r0.y, r0.y, -c73.x
+        rcp r0.x, r0.x
+        mad r0.z, r0.y, -r0.x, c74.w
+        mad r0.x, r0.y, r0.x, -c74.w
+        mov r1, c0
+        mad r0.x, c74.y, -r1.w, r0.x
+        max r2.x, r0.x, c1.x
+        mad r0.x, c74.y, -r1.w, r0.z
+        max r2.y, r0.x, c1.x
+        rcp r0.x, c74.x
+        mul r0.x, r2.y, r0.x
+        lrp r2.y, r0.x, c75.x, c75.y
+        min r0.x, c75.x, r2.y
+        rcp r0.y, c74.z
+        mul r0.y, r2.x, r0.y
+        lrp r2.x, r0.y, c75.z, c75.y
+        min r0.y, c75.z, r2.x
+        max r2.x, r0.x, r0.y
+        mul r0.x, r2.x, r2.x
+        mad r0.yz, c72.xxyw, r1.xxyw, v0.xxyw
+        texld r2, r0.yzzw, s2
+        dp3 r3.x, r2, c1.yzww
+        mad r0.yz, c72.xxyw, r1.xzxw, v0.xxyw
+        texld r4, r0.yzzw, s2
+        dp3 r3.y, r4, c1.yzww
+        mad r0.yz, c72.xxyw, r1.xwzw, v0.xxyw
+        texld r5, r0.yzzw, s2
+        dp3 r3.z, r5, c1.yzww
+        mad r0.yz, c72.xxyw, r1.xyww, v0.xxyw
+        texld r1, r0.yzzw, s2
+        dp3 r3.w, r1, c1.yzww
+        dp4 r0.y, r3, c3.x
+        add r3, r3, -r0.y
+        dp4 r0.z, r3, r3
+        texld r3, v0, s2
+        dp3 r0.w, r3, c1.yzww
+        add r0.y, -r0.y, r0.w
+        mad r0.y, r0.y, r0.y, -r0.z
+        cmp r0.x, r0.y, c3.y, r0.x
+        add r0.y, -r0.x, c3.y
+        mul r0.x, r0.x, c3.x
+        mul r6.xyz, r2, r0.x
+        texld r7, v0, s0
+        mov r7.yz, c3
+        mad r8, r7.w, -r7.z, c2
+        mad r9, r7.w, -c5.x, c5.yzwx
+        cmp r9, r9, -c3.y, -c3.w
+        cmp r8, r8, c3.y, c3.w
+        add r8, r9, r8
+        mul r8, r8, c0.x
+        mul r2.xyz, r2, r8.x
+        mad r2.xyz, r3, c0.w, r2
+        mad r2.xyz, r4, r8.y, r2
+        mad r2.xyz, r5, r8.z, r2
+        mad r2.xyz, r1, r8.w, r2
+        dp4 r0.z, r8, c3.y
+        add r0.z, r0.z, c0.w
+        rcp r0.z, r0.z
+        mul r2.xyz, r2, r0.z
+        mad r0.yzw, r2.xxyz, r0.y, r6.xxyz
+        mad r0.yzw, r4.xxyz, r0.x, r0
+        mad r0.yzw, r5.xxyz, r0.x, r0
+        mad r0.xyz, r1, r0.x, r0.yzww
+        mov r1.xy, c4
+        mad r1.xy, v0, r1, c80
+        frc r1.xy, r1
+        texld r1, r1, s3
+        add r0.w, r1.z, c0.x
+        mul r0.w, r0.w, c80.z
+        mad r0.xyz, r0.w, c4.z, r0
+        texld r1, v0, s4
+        texld r2, c1.x, s5
+        rcp r0.w, r2.x
+        mul r0.w, r0.w, c76.y
+        rcp r1.w, r0.w
+        mul r1.w, r1.w, c76.x
+        mad r1.xyz, r1, c66.x, -r1.w
+        mul r2.xyz, r1, c76.z
+        mul r2.xyz, r2, c3.x
+        cmp r1.xyz, r1, r2, c1.x
+        mad r0.xyz, r0, c66.x, r1
+        mul r1.xyz, r0.w, r0
+        dp3 r1.x, r1, c1.yzww
+        mad r0.xyz, r0, r0.w, -r1.x
+        mad r0.xyz, c77.x, r0, r1.x
+        mul r0.w, r1.x, c79.w
+        mov_sat r1.x, r1.x
+        mad r0.xyz, c79, -r0.w, r0
+        mul r1.yzw, r0.w, c79.xxyz
+        mov_sat r0.w, r0.w
+        mad r0.xyz, r0.w, r0, r1.yzww
+        mul r0.xyz, r0, c78
+        add r0.xyz, r0, r0
+        add r0.w, -r7.y, c77.z
+        pow r2.x, r1.x, r0.w
+        mul oC0.xyz, r0, r2.x
+        mov oC0.w, c3.y
+    
+    // approximately 104 instruction slots used (10 texture, 94 arithmetic)
+};
+
+PixelShader PS_26
+<
+    string AdapLumSampler               = "parameter register(5)";
+    string BloomSampler                 = "parameter register(4)";
+    string BlurSampler                  = "parameter register(3)";
+    string ColorCorrect                 = "parameter register(83)";
+    string ColorShift                   = "parameter register(84)";
+    string Exposure                     = "parameter register(66)";
+    string GBufferTextureSampler2       = "parameter register(0)";
+    string GBufferTextureSampler3       = "parameter register(1)";
+    string HDRSampler                   = "parameter register(2)";
+    string JitterSampler                = "parameter register(6)";
+    string NoiseParams                  = "parameter register(85)";
+    string PLAYER_MASK                  = "parameter register(86)";
+    string StencilCopySampler           = "parameter register(7)";
+    string TexelSize                    = "parameter register(76)";
+    string ToneMapParams                = "parameter register(81)";
+    string deSatContrastGamma           = "parameter register(82)";
+    string dofBlur                      = "parameter register(79)";
+    string dofDist                      = "parameter register(78)";
+    string dofProj                      = "parameter register(77)";
+    string gDirectionalMotionBlurLength = "parameter register(80)";
+    string globalScreenSize             = "parameter register(44)";
+    string motionBlurMatrix             = "parameter register(72)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   sampler2D AdapLumSampler;
+    //   sampler2D BloomSampler;
+    //   sampler2D BlurSampler;
+    //   float4 ColorCorrect;
+    //   float4 ColorShift;
+    //   float Exposure;
+    //   sampler2D GBufferTextureSampler2;
+    //   sampler2D GBufferTextureSampler3;
+    //   sampler2D HDRSampler;
+    //   sampler2D JitterSampler;
+    //   float4 NoiseParams;
+    //   float PLAYER_MASK;
+    //   sampler2D StencilCopySampler;
+    //   float4 TexelSize;
+    //   float4 ToneMapParams;
+    //   float4 deSatContrastGamma;
+    //   float4 dofBlur;
+    //   float4 dofDist;
+    //   float4 dofProj;
+    //   float gDirectionalMotionBlurLength;
+    //   float4 globalScreenSize;
+    //   row_major float4x4 motionBlurMatrix;
+    //
+    //
+    // Registers:
+    //
+    //   Name                         Reg   Size
+    //   ---------------------------- ----- ----
+    //   globalScreenSize             c44      1
+    //   Exposure                     c66      1
+    //   motionBlurMatrix             c72      4
+    //   TexelSize                    c76      1
+    //   dofProj                      c77      1
+    //   dofDist                      c78      1
+    //   dofBlur                      c79      1
+    //   gDirectionalMotionBlurLength c80      1
+    //   ToneMapParams                c81      1
+    //   deSatContrastGamma           c82      1
+    //   ColorCorrect                 c83      1
+    //   ColorShift                   c84      1
+    //   NoiseParams                  c85      1
+    //   PLAYER_MASK                  c86      1
+    //   GBufferTextureSampler2       s0       1
+    //   GBufferTextureSampler3       s1       1
+    //   HDRSampler                   s2       1
+    //   BlurSampler                  s3       1
+    //   BloomSampler                 s4       1
+    //   AdapLumSampler               s5       1
+    //   JitterSampler                s6       1
+    //   StencilCopySampler           s7       1
+    //
+    
+        ps_3_0
+        def c0, 58.1640015, 47.1300011, 3.20000005, 1.79999995
+        def c1, 0, 0.212500006, 0.715399981, 0.0720999986
+        def c2, 0.25, 1, 256, 0
+        def c3, 0, 2, 4, 8
+        def c4, -0.5, -1.5, 1.5, 0.5
+        def c5, 2, -1, 0.125, 0
+        def c6, 1.10000002, 0, 0, 0
+        def c7, 256, 2, 4, 8
+        defi i0, 7, 0, 0, 0
+        dcl_texcoord v0.xy
+        dcl_2d s0
+        dcl_2d s1
+        dcl_2d s2
+        dcl_2d s3
+        dcl_2d s4
+        dcl_2d s5
+        dcl_2d s6
+        dcl_2d s7
+        texld r0, v0, s1
+        add r0.y, -c77.x, c77.y
+        rcp r0.y, r0.y
+        mul r0.z, r0.y, c77.y
+        mul r0.z, r0.z, -c77.x
+        mad r0.x, c77.y, -r0.y, r0.x
+        rcp r0.x, r0.x
+        mul r0.y, r0.z, r0.x
+        texld r1, v0, s2
+        texld r2, v0, s4
+        abs r0.w, c79.w
+        mov r3, c4
+        mad r4.xy, c76, r3, v0
+        texld r4, r4, s2
+        mad r5.xy, c76, r3.zxzw, v0
+        texld r5, r5, s2
+        mad r3.xz, c76.xyyw, r3.wyzw, v0.xyyw
+        texld r6, r3.xzzw, s2
+        mad r3.xy, c76, r3.ywzw, v0
+        texld r7, r3, s2
+        dp3 r1.w, r4, r4
+        rcp r1.w, r1.w
+        cmp r3.xyz, -r1_abs.w, c1.x, r4
+        dp3 r1.w, r5, r5
+        rcp r1.w, r1.w
+        cmp r4.xyz, -r1_abs.w, c1.x, r5
+        dp3 r1.w, r6, r6
+        rcp r1.w, r1.w
+        cmp r5.xyz, -r1_abs.w, c1.x, r6
+        dp3 r1.w, r7, r7
+        rcp r1.w, r1.w
+        cmp r6.xyz, -r1_abs.w, c1.x, r7
+        dp3 r1.w, r1, r1
+        rcp r1.w, r1.w
+        cmp r7.xyz, -r1_abs.w, c1.x, r1
+        mad r1.w, r0.z, -r0.x, c78.w
+        mad r1.w, c78.y, -r3.w, r1.w
+        max r2.w, r1.w, c1.x
+        mad r0.x, r0.z, r0.x, -c78.w
+        mad r0.x, c78.y, -r3.w, r0.x
+        max r1.w, r0.x, c1.x
+        rcp r0.x, c78.x
+        mul r0.x, r2.w, r0.x
+        lrp r2.w, r0.x, c79.x, c79.y
+        min r0.x, c79.x, r2.w
+        rcp r0.z, c78.z
+        mul r0.z, r1.w, r0.z
+        lrp r1.w, r0.z, c79.z, c79.y
+        min r0.z, c79.z, r1.w
+        max r1.w, r0.x, r0.z
+        dp3 r0.x, r7, c1.yzww
+        dp3 r8.x, r3, c1.yzww
+        dp3 r8.y, r4, c1.yzww
+        dp3 r8.z, r5, c1.yzww
+        dp3 r8.w, r6, c1.yzww
+        dp4 r0.z, r8, c2.x
+        add r8, r8, -r0.z
+        dp4 r2.w, r8, r8
+        add r0.x, r0.x, -r0.z
+        mad r0.x, r0.x, r0.x, -r2.w
+        mul r0.z, r1.w, r1.w
+        cmp r0.x, r0.x, c2.y, r0.z
+        texld r8, v0, s0
+        mov r8.yz, c2
+        mad r9, r8.w, -r8.z, c3
+        cmp r9, r9, c2.y, c2.w
+        mad r10, r8.w, -c7.x, c7.yzwx
+        cmp r10, r10, -c2.y, -c2.w
+        add r9, r9, r10
+        mul r9, r9, c4.x
+        dp4 r0.z, r9, c2.y
+        add r0.z, r0.z, c4.w
+        rcp r0.z, r0.z
+        mul r8.xzw, r3.xyyz, r9.x
+        mad r7.xyz, r7, c4.w, r8.xzww
+        mad r7.xyz, r4, r9.y, r7
+        mad r7.xyz, r5, r9.z, r7
+        mad r7.xyz, r6, r9.w, r7
+        mul r7.xyz, r0.z, r7
+        add r0.z, -r0.x, c2.y
+        mul r1.w, r0.x, c2.x
+        mul r3.xyz, r3, r1.w
+        mad r3.xyz, r7, r0.z, r3
+        mad r3.xyz, r4, r1.w, r3
+        mad r3.xyz, r5, r1.w, r3
+        mad r3.xyz, r6, r1.w, r3
+        mad r4.xyz, v0.yxyw, c5.x, c5.y
+        mul r0.z, r4.y, c77.z
+        mul r0.z, r0.y, r0.z
+        mul r1.w, -r4.x, c77.w
+        mul r1.w, r0.y, r1.w
+        mul r5.xyz, r1.w, c73
+        mad r5.xyz, r0.z, c72, r5
+        mad r5.xyz, -r0.y, c74, r5
+        add r5.xyz, r5, c75
+        mul r0.y, -r5.z, c77.z
+        rcp r0.y, r0.y
+        mul r6.x, r5.x, r0.y
+        mul r0.y, r5.z, c77.w
+        rcp r0.y, r0.y
+        mul r6.y, r5.y, r0.y
+        add r0.yz, -r4, r6.xxyw
+        mul r0.yz, r0, c80.x
+        mul r4.xy, r0.yzzw, c5.z
+        texld r5, v0, s7
+        add r1.w, r5.x, -c86.x
+        mul r4.zw, c0.xyxy, v0.xyxy
+        mad r4.zw, r3.xyxy, c3.w, r4
+        texld r5, r4.zwzw, s6
+        add r2.w, r5.x, c4.x
+        mad r4.zw, r4.xyxy, r2.w, v0.xyxy
+        mov r5.xyz, r3
+        mov r2.w, c2.y
+        mov r3.w, c2.y
+        rep i0
+          mad r6.xy, r4, r3.w, r4.zwzw
+          texld r7, r6, s7
+          add r5.w, r7.x, -c86.x
+          cmp r5.w, r5.w, c2.w, c2.y
+          texld r6, r6, s2
+          mad r5.xyz, r6, r5.w, r5
+          add r2.w, r2.w, r5.w
+          add r3.w, r3.w, c2.y
+        endrep
+        rcp r2.w, r2.w
+        mul r0.yz, r0, c44.xxyw
+        dp2add r0.y, r0.yzzw, r0.yzzw, c1.x
+        rsq r0.y, r0.y
+        rcp r0.y, r0.y
+        mul r0.y, r0.y, c4.w
+        add r0.x, r0.x, c2.y
+        rcp r0.x, r0.x
+        mul_sat r0.x, r0.y, r0.x
+        mad r4.xyz, r5, r2.w, -r3
+        mad r0.xyz, r0.x, r4, r3
+        cmp r0.xyz, r1.w, r3, r0
+        cmp r0.xyz, -r0.w, r0, r1
+        mov r1.zw, c0
+        mad r1.xy, v0, r1.zwzw, c85
+        frc r1.xy, r1
+        texld r1, r1, s3
+        add r0.w, r1.z, c4.x
+        mul r0.w, r0.w, c85.z
+        mad r0.xyz, r0.w, c6.x, r0
+        texld r1, c1.x, s5
+        rcp r0.w, r1.x
+        mul r0.w, r0.w, c81.y
+        rcp r1.x, r0.w
+        mul r1.x, r1.x, c81.x
+        mad r1.xyz, r2, c66.x, -r1.x
+        mul r2.xyz, r1, c81.z
+        mul r2.xyz, r2, c2.x
+        cmp r1.xyz, r1, r2, c1.x
+        mad r0.xyz, r0, c66.x, r1
+        mul r1.xyz, r0.w, r0
+        dp3 r1.x, r1, c1.yzww
+        mad r0.xyz, r0, r0.w, -r1.x
+        mad r0.xyz, c82.x, r0, r1.x
+        mul r0.w, r1.x, c84.w
+        mul r1.yzw, r0.w, c84.xxyz
+        mov_sat r2.x, r0.w
+        mad r0.xyz, c84, -r0.w, r0
+        mad r0.xyz, r2.x, r0, r1.yzww
+        mul r0.xyz, r0, c83
+        add r0.xyz, r0, r0
+        mov_sat r1.x, r1.x
+        add r0.w, -r8.y, c82.z
+        pow r2.x, r1.x, r0.w
+        mul oC0.xyz, r0, r2.x
+        mov oC0.w, c2.y
+    
+    // approximately 176 instruction slots used (14 texture, 162 arithmetic)
+};
+
+PixelShader PS_27
+<
+    string AdapLumSampler         = "parameter register(2)";
+    string ColorCorrect           = "parameter register(75)";
+    string ColorShift             = "parameter register(76)";
+    string Exposure               = "parameter register(66)";
+    string GBufferTextureSampler2 = "parameter register(0)";
+    string HDRSampler             = "parameter register(1)";
+    string TexelSize              = "parameter register(72)";
+    string ToneMapParams          = "parameter register(73)";
+    string deSatContrastGamma     = "parameter register(74)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   sampler2D AdapLumSampler;
+    //   float4 ColorCorrect;
+    //   float4 ColorShift;
+    //   float Exposure;
+    //   sampler2D GBufferTextureSampler2;
+    //   sampler2D HDRSampler;
+    //   float4 TexelSize;
+    //   float4 ToneMapParams;
+    //   float4 deSatContrastGamma;
+    //
+    //
+    // Registers:
+    //
+    //   Name                   Reg   Size
+    //   ---------------------- ----- ----
+    //   Exposure               c66      1
+    //   TexelSize              c72      1
+    //   ToneMapParams          c73      1
+    //   deSatContrastGamma     c74      1
+    //   ColorCorrect           c75      1
+    //   ColorShift             c76      1
+    //   GBufferTextureSampler2 s0       1
+    //   HDRSampler             s1       1
+    //   AdapLumSampler         s2       1
+    //
+    
+        ps_3_0
+        def c0, -0.5, -1.5, 1.5, 0.5
+        def c1, 0.212500006, 0.715399981, 0.0720999986, 0.25
+        def c2, 256, 1, 0, 0.25
+        def c3, 0, 2, 4, 8
+        def c4, 256, 2, 4, 8
+        dcl_texcoord v0.xy
+        dcl_2d s0
+        dcl_2d s1
+        dcl_2d s2
+        texld r0, v0, s0
+        mov r0.xy, c2
+        mad r1, r0.w, -r0.x, c3
+        mad r2, r0.w, -c4.x, c4.yzwx
+        cmp r2, r2, -c2.y, -c2.z
+        cmp r1, r1, c2.y, c2.z
+        add r1, r2, r1
+        mul r1, r1, c0.x
+        dp4 r0.x, r1, c2.y
+        add r0.x, r0.x, c0.w
+        rcp r0.x, r0.x
+        mov r2, c0
+        mad r0.zw, c72.xyxy, r2.xyxy, v0.xyxy
+        texld r3, r0.zwzw, s1
+        mul r4.xyz, r1.x, r3
+        texld r5, v0, s1
+        mad r4.xyz, r5, c0.w, r4
+        dp3 r0.z, r5, c1
+        mad r5.xy, c72, r2.zxzw, v0
+        texld r5, r5, s1
+        mad r4.xyz, r5, r1.y, r4
+        mad r1.xy, c72, r2.wzzw, v0
+        texld r6, r1, s1
+        mad r1.xyz, r6, r1.z, r4
+        mad r2.xy, c72, r2.ywzw, v0
+        texld r2, r2, s1
+        mad r1.xyz, r2, r1.w, r1
+        mul r1.xyz, r0.x, r1
+        dp3 r4.x, r3, c1
+        dp3 r4.y, r5, c1
+        dp3 r4.z, r6, c1
+        dp3 r4.w, r2, c1
+        dp4 r0.x, r4, c1.w
+        add r4, r4, -r0.x
+        add r0.x, r0.z, -r0.x
+        dp4 r0.z, r4, r4
+        mad r0.x, r0.x, r0.x, -r0.z
+        cmp r0.xz, r0.x, c2.zyww, c2.yyzw
+        mul r3.xyz, r3, r0.z
+        mad r1.xyz, r1, r0.x, r3
+        mad r1.xyz, r5, r0.z, r1
+        mad r1.xyz, r6, r0.z, r1
+        mad r0.xzw, r2.xyyz, r0.z, r1.xyyz
+        mul r0.xzw, r0, c66.x
+        texld r1, c2.z, s2
+        rcp r1.x, r1.x
+        mul r1.x, r1.x, c73.y
+        mul r1.yzw, r0.xxzw, r1.x
+        dp3 r1.y, r1.yzww, c1
+        mad r0.xzw, r0, r1.x, -r1.y
+        mad r0.xzw, c74.x, r0, r1.y
+        mul r1.x, r1.y, c76.w
+        mov_sat r1.y, r1.y
+        mad r0.xzw, c76.xyyz, -r1.x, r0
+        mul r2.xyz, r1.x, c76
+        mov_sat r1.x, r1.x
+        mad r0.xzw, r1.x, r0, r2.xyyz
+        mul r0.xzw, r0, c75.xyyz
+        add r0.xzw, r0, r0
+        add r0.y, -r0.y, c74.z
+        pow r2.x, r1.y, r0.y
+        mul oC0.xyz, r0.xzww, r2.x
+        mov oC0.w, c2.y
+    
+    // approximately 65 instruction slots used (7 texture, 58 arithmetic)
+};
+
+PixelShader PS_28
+<
+    string AdapLumSampler               = "parameter register(3)";
+    string ColorCorrect                 = "parameter register(82)";
+    string ColorShift                   = "parameter register(83)";
+    string Exposure                     = "parameter register(66)";
+    string GBufferTextureSampler2       = "parameter register(0)";
+    string GBufferTextureSampler3       = "parameter register(1)";
+    string HDRSampler                   = "parameter register(2)";
+    string JitterSampler                = "parameter register(4)";
+    string PLAYER_MASK                  = "parameter register(84)";
+    string StencilCopySampler           = "parameter register(5)";
+    string TexelSize                    = "parameter register(76)";
+    string ToneMapParams                = "parameter register(80)";
+    string deSatContrastGamma           = "parameter register(81)";
+    string dofBlur                      = "parameter register(78)";
+    string dofProj                      = "parameter register(77)";
+    string gDirectionalMotionBlurLength = "parameter register(79)";
+    string globalScreenSize             = "parameter register(44)";
+    string motionBlurMatrix             = "parameter register(72)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   sampler2D AdapLumSampler;
+    //   float4 ColorCorrect;
+    //   float4 ColorShift;
+    //   float Exposure;
+    //   sampler2D GBufferTextureSampler2;
+    //   sampler2D GBufferTextureSampler3;
+    //   sampler2D HDRSampler;
+    //   sampler2D JitterSampler;
+    //   float PLAYER_MASK;
+    //   sampler2D StencilCopySampler;
+    //   float4 TexelSize;
+    //   float4 ToneMapParams;
+    //   float4 deSatContrastGamma;
+    //   float4 dofBlur;
+    //   float4 dofProj;
+    //   float gDirectionalMotionBlurLength;
+    //   float4 globalScreenSize;
+    //   row_major float4x4 motionBlurMatrix;
+    //
+    //
+    // Registers:
+    //
+    //   Name                         Reg   Size
+    //   ---------------------------- ----- ----
+    //   globalScreenSize             c44      1
+    //   Exposure                     c66      1
+    //   motionBlurMatrix             c72      4
+    //   TexelSize                    c76      1
+    //   dofProj                      c77      1
+    //   dofBlur                      c78      1
+    //   gDirectionalMotionBlurLength c79      1
+    //   ToneMapParams                c80      1
+    //   deSatContrastGamma           c81      1
+    //   ColorCorrect                 c82      1
+    //   ColorShift                   c83      1
+    //   PLAYER_MASK                  c84      1
+    //   GBufferTextureSampler2       s0       1
+    //   GBufferTextureSampler3       s1       1
+    //   HDRSampler                   s2       1
+    //   AdapLumSampler               s3       1
+    //   JitterSampler                s4       1
+    //   StencilCopySampler           s5       1
+    //
+    
+        ps_3_0
+        def c0, 58.1640015, 47.1300011, 0, 0
+        def c1, 0, 0.212500006, 0.715399981, 0.0720999986
+        def c2, 0.25, 256, 1, 0
+        def c3, 0, 2, 4, 8
+        def c4, -0.5, -1.5, 1.5, 0.5
+        def c5, 2, -1, 0.125, 0
+        def c6, 256, 2, 4, 8
+        def c7, 0, 0.25, 0.5, 1
+        defi i0, 7, 0, 0, 0
+        dcl_texcoord v0.xy
+        dcl_2d s0
+        dcl_2d s1
+        dcl_2d s2
+        dcl_2d s3
+        dcl_2d s4
+        dcl_2d s5
+        texld r0, v0, s1
+        add r0.y, -c77.x, c77.y
+        rcp r0.y, r0.y
+        mul r0.z, r0.y, c77.y
+        mul r0.z, r0.z, -c77.x
+        mad r0.x, c77.y, -r0.y, r0.x
+        rcp r0.x, r0.x
+        mul r0.x, r0.z, r0.x
+        texld r1, v0, s2
+        abs r0.y, c78.w
+        mov r2, c4
+        mad r0.zw, c76.xyxy, r2.xyxy, v0.xyxy
+        texld r3, r0.zwzw, s2
+        mad r0.zw, c76.xyxy, r2.xyzx, v0.xyxy
+        texld r4, r0.zwzw, s2
+        mad r0.zw, c76.xyxy, r2.xywz, v0.xyxy
+        texld r5, r0.zwzw, s2
+        mad r0.zw, c76.xyxy, r2.xyyw, v0.xyxy
+        texld r2, r0.zwzw, s2
+        dp3 r0.z, r3, r3
+        rcp r0.z, r0.z
+        cmp r3.xyz, -r0_abs.z, c1.x, r3
+        dp3 r0.z, r4, r4
+        rcp r0.z, r0.z
+        cmp r4.xyz, -r0_abs.z, c1.x, r4
+        dp3 r0.z, r5, r5
+        rcp r0.z, r0.z
+        cmp r5.xyz, -r0_abs.z, c1.x, r5
+        dp3 r0.z, r2, r2
+        rcp r0.z, r0.z
+        cmp r2.xyz, -r0_abs.z, c1.x, r2
+        dp3 r0.z, r1, r1
+        rcp r0.z, r0.z
+        cmp r6.xyz, -r0_abs.z, c1.x, r1
+        dp3 r0.z, r6, c1.yzww
+        dp3 r7.x, r3, c1.yzww
+        dp3 r7.y, r4, c1.yzww
+        dp3 r7.z, r5, c1.yzww
+        dp3 r7.w, r2, c1.yzww
+        dp4 r0.w, r7, c2.x
+        add r7, r7, -r0.w
+        dp4 r1.w, r7, r7
+        add r0.z, r0.z, -r0.w
+        mad r0.z, r0.z, r0.z, -r1.w
+        texld r7, v0, s0
+        mov r7.yz, c2
+        mad r8, r7.w, -r7.y, c3
+        cmp r8, r8, c2.z, c2.w
+        mad r9, r7.w, -c6.x, c6.yzwx
+        cmp r9, r9, -c2.z, -c2.w
+        add r8, r8, r9
+        mul r8, r8, c4.x
+        dp4 r0.w, r8, c2.z
+        add r0.w, r0.w, c4.w
+        rcp r0.w, r0.w
+        mul r7.xyw, r3.xyzz, r8.x
+        mad r6.xyz, r6, c4.w, r7.xyww
+        mad r6.xyz, r4, r8.y, r6
+        mad r6.xyz, r5, r8.z, r6
+        mad r6.xyz, r2, r8.w, r6
+        mul r6.xyz, r0.w, r6
+        cmp r7.xyw, r0.z, c7.xyzz, c7.wxzw
+        mul r3.xyz, r3, r7.y
+        mad r3.xyz, r6, r7.x, r3
+        mad r3.xyz, r4, r7.y, r3
+        mad r3.xyz, r5, r7.y, r3
+        mad r2.xyz, r2, r7.y, r3
+        mad r3.xyz, v0.yxyw, c5.x, c5.y
+        mul r0.z, r3.y, c77.z
+        mul r0.z, r0.x, r0.z
+        mul r0.w, -r3.x, c77.w
+        mul r0.w, r0.x, r0.w
+        mul r4.xyz, r0.w, c73
+        mad r4.xyz, r0.z, c72, r4
+        mad r0.xzw, -r0.x, c74.xyyz, r4.xyyz
+        add r0.xzw, r0, c75.xyyz
+        mul r1.w, -r0.w, c77.z
+        rcp r1.w, r1.w
+        mul r4.x, r0.x, r1.w
+        mul r0.x, r0.w, c77.w
+        rcp r0.x, r0.x
+        mul r4.y, r0.z, r0.x
+        add r0.xz, -r3.yyzw, r4.xyyw
+        mul r0.xz, r0, c79.x
+        mul r3.xy, r0.xzzw, c5.z
+        texld r4, v0, s5
+        add r0.w, r4.x, -c84.x
+        mul r3.zw, r2.xyxy, c3.w
+        mad r3.zw, v0.xyxy, c0.xyxy, r3
+        texld r4, r3.zwzw, s4
+        add r1.w, r4.x, c4.x
+        mad r3.zw, r3.xyxy, r1.w, v0.xyxy
+        mov r4.xyz, r2
+        mov r1.w, c2.z
+        mov r2.w, c2.z
+        rep i0
+          mad r5.xy, r3, r2.w, r3.zwzw
+          texld r6, r5, s5
+          add r4.w, r6.x, -c84.x
+          cmp r4.w, r4.w, c2.w, c2.z
+          texld r5, r5, s2
+          mad r4.xyz, r5, r4.w, r4
+          add r1.w, r1.w, r4.w
+          add r2.w, r2.w, c2.z
+        endrep
+        rcp r1.w, r1.w
+        mul r0.xz, r0, c44.xyyw
+        dp2add r0.x, r0.xzzw, r0.xzzw, c1.x
+        rsq r0.x, r0.x
+        rcp r0.x, r0.x
+        mul r0.x, r0.x, c4.w
+        mul_sat r0.x, r7.w, r0.x
+        mad r3.xyz, r4, r1.w, -r2
+        mad r3.xyz, r0.x, r3, r2
+        cmp r0.xzw, r0.w, r2.xyyz, r3.xyyz
+        cmp r0.xyz, -r0.y, r0.xzww, r1
+        mul r0.xyz, r0, c66.x
+        texld r1, c1.x, s3
+        rcp r0.w, r1.x
+        mul r0.w, r0.w, c80.y
+        mul r1.xyz, r0, r0.w
+        dp3 r1.x, r1, c1.yzww
+        mad r0.xyz, r0, r0.w, -r1.x
+        mad r0.xyz, c81.x, r0, r1.x
+        mul r0.w, r1.x, c83.w
+        mul r1.yzw, r0.w, c83.xxyz
+        mov_sat r2.x, r0.w
+        mad r0.xyz, c83, -r0.w, r0
+        mad r0.xyz, r2.x, r0, r1.yzww
+        mul r0.xyz, r0, c82
+        add r0.xyz, r0, r0
+        mov_sat r1.x, r1.x
+        add r0.w, -r7.z, c81.z
+        pow r2.x, r1.x, r0.w
+        mul oC0.xyz, r0, r2.x
+        mov oC0.w, c2.z
+    
+    // approximately 142 instruction slots used (12 texture, 130 arithmetic)
+};
+
+technique GTACompositePostFx
+{
+    pass p0
+    {
+        AlphaBlendEnable = false;
+        AlphaTestEnable = false;
+
+        VertexShader = VS_Passthrough;
+        PixelShader = PS_Copy;
+    }
+    pass p1
+    {
+        AlphaBlendEnable = false;
+        AlphaTestEnable = false;
+
+        VertexShader = VS_Passthrough;
+        PixelShader = PS_AverageLum0;
+    }
+    pass p2
+    {
+        AlphaBlendEnable = false;
+        AlphaTestEnable = false;
+
+        VertexShader = VS_Passthrough;
+        PixelShader = PS_AverageLum1;
+    }
+    pass p3
+    {
+        AlphaBlendEnable = false;
+        AlphaTestEnable = false;
+
+        VertexShader = VS_Passthrough;
+        PixelShader = PS_AverageLum2;
+    }
+    pass p4
+    {
+        AlphaBlendEnable = false;
+        AlphaTestEnable = false;
+
+        VertexShader = VS_Lum;
+        PixelShader = PS_UpdateAdaptedLum;
+    }
+    pass p5
+    {
+        AlphaBlendEnable = false;
+        AlphaTestEnable = false;
+
+        VertexShader = VS_Passthrough;
+        PixelShader = PS_Max;
+    }
+    pass p6
+    {
+        AlphaBlendEnable = false;
+        AlphaTestEnable = false;
+
+        VertexShader = VS_Passthrough;
+        PixelShader = PS_BlurMaxX;
+    }
+    pass p7
+    {
+        AlphaBlendEnable = false;
+        AlphaTestEnable = false;
+
+        VertexShader = VS_Passthrough;
+        PixelShader = PS_BlurMaxY;
+    }
+    pass p8
+    {
+        AlphaBlendEnable = false;
+        AlphaTestEnable = false;
+
+        VertexShader = VS_Passthrough;
+        PixelShader = PS_BlurX;
+    }
+    pass p9
+    {
+        AlphaBlendEnable = false;
+        AlphaTestEnable = false;
+
+        VertexShader = VS_Passthrough;
+        PixelShader = PS_BlurY;
+    }
+    pass p10
+    {
+        AlphaBlendEnable = false;
+        AlphaTestEnable = false;
+
+        VertexShader = VS_Passthrough;
+        PixelShader = PS_GTAComposite;
+    }
+    pass p11
+    {
+        AlphaBlendEnable = false;
+        AlphaTestEnable = false;
+
+        VertexShader = VS_Passthrough;
+        PixelShader = PS_GTACompositeMB;
+    }
+    pass p12
+    {
+        AlphaBlendEnable = false;
+        AlphaTestEnable = false;
+
+        VertexShader = VS_Passthrough;
+        PixelShader = PS_GTACompositeHighDOF;
+    }
+    pass p13
+    {
+        AlphaBlendEnable = false;
+        AlphaTestEnable = false;
+
+        VertexShader = VS_Passthrough;
+        PixelShader = PS_GTACompositeMBHighDOF;
+    }
+    pass p14
+    {
+        AlphaBlendEnable = false;
+        AlphaTestEnable = false;
+
+        VertexShader = VS_Passthrough;
+        PixelShader = PS_GTACompositeDofDebug;
+    }
+    pass p15
+    {
+        AlphaBlendEnable = false;
+        AlphaTestEnable = false;
+
+        VertexShader = VS_Passthrough;
+        PixelShader = PS_GTACompositeMBDofDebug;
+    }
+    pass p16
+    {
+        AlphaBlendEnable = false;
+        AlphaTestEnable = false;
+
+        VertexShader = VS_Passthrough;
+        PixelShader = PS_GTACompositeHighDOFDofDebug;
+    }
+    pass p17
+    {
+        AlphaBlendEnable = false;
+        AlphaTestEnable = false;
+
+        VertexShader = VS_Passthrough;
+        PixelShader = PS_GTACompositeMBHighDOFDofDebug;
+    }
+    pass p18
+    {
+        AlphaBlendEnable = false;
+        AlphaTestEnable = false;
+
+        VertexShader = VS_Passthrough;
+        PixelShader = PS_GTADepthEffectsSmoke;
+    }
+    pass p19
+    {
+        AlphaBlendEnable = false;
+        AlphaTestEnable = false;
+
+        VertexShader = VS_Passthrough;
+        PixelShader = PS_GTADepthEffects;
+    }
+    pass p20
+    {
+        AlphaBlendEnable = false;
+        AlphaTestEnable = false;
+
+        VertexShader = VS_Passthrough;
+        PixelShader = PS_Simple;
+    }
+    pass p21
+    {
+        AlphaBlendEnable = false;
+        AlphaTestEnable = false;
+
+        VertexShader = VS_Passthrough;
+        PixelShader = PS_CopyStencil;
+    }
+    pass p22
+    {
+        AlphaBlendEnable = false;
+        AlphaTestEnable = false;
+
+        VertexShader = VS_Passthrough;
+        PixelShader = PS_GTADepthEffects_01;
+    }
+    pass p23
+    {
+        AlphaBlendEnable = false;
+        AlphaTestEnable = false;
+
+        VertexShader = VS_Passthrough;
+        PixelShader = PS_GTADepthEffects_10;
+    }
+    pass p24
+    {
+        AlphaBlendEnable = false;
+        AlphaTestEnable = false;
+
+        VertexShader = VS_Passthrough;
+        PixelShader = PS_25;
+    }
+    pass p25
+    {
+        AlphaBlendEnable = false;
+        AlphaTestEnable = false;
+
+        VertexShader = VS_Passthrough;
+        PixelShader = PS_26;
+    }
+    pass p26
+    {
+        AlphaBlendEnable = false;
+        AlphaTestEnable = false;
+
+        VertexShader = VS_Passthrough;
+        PixelShader = PS_27;
+    }
+    pass p27
+    {
+        AlphaBlendEnable = false;
+        AlphaTestEnable = false;
+
+        VertexShader = VS_Passthrough;
+        PixelShader = PS_28;
+    }
+}
+

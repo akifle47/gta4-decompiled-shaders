@@ -1,0 +1,415 @@
+//Globals
+shared float4 gAllGlobals[64] : AllGlobals;
+shared float4x3 gBoneMtx[48] : WorldMatrixArray;
+shared float4x4 gWorld : World;
+shared float4x4 gWorldView : WorldView;
+shared float4x4 gWorldViewProj : WorldViewProjection;
+shared float4x4 gViewInverse : ViewInverse;
+shared texture stippletexture;
+shared sampler StippleTexture = 
+sampler_state
+{
+    Texture = <stippletexture>;
+    MinFilter = POINT;
+    MagFilter = POINT;
+    MipFilter = POINT;
+    AddressU = WRAP;
+    AddressV = WRAP;
+};
+shared float4 gDepthFxParams : DepthFxParams = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 gDirectionalLight : DirectionalLight;
+shared float4 gDirectionalColour : DirectionalColour;
+shared float4 gLightPosX : LightPositionX;
+shared float4 gLightPosY : LightPositionY;
+shared float4 gLightPosZ : LightPositionZ;
+shared float4 gLightDirX : LightDirX;
+shared float4 gLightDirY : LightDirY;
+shared float4 gLightDirZ : LightDirZ;
+shared float4 gLightFallOff : LightFallOff;
+shared float4 gLightConeScale : LightConeScale;
+shared float4 gLightConeOffset : LightConeOffset;
+shared float4 gLightColR : LightColR;
+shared float4 gLightColG : LightColG;
+shared float4 gLightColB : LightColB;
+shared float4 gLightPointPosX : LightPointPositionX;
+shared float4 gLightPointPosY : LightPointPositionY;
+shared float4 gLightPointPosZ : LightPointPositionZ;
+shared float4 gLightPointColR : LightPointColR;
+shared float4 gLightPointColG : LightPointColG;
+shared float4 gLightPointColB : LightPointColB;
+shared float4 gLightPointFallOff : LightPointFallOff;
+shared float4 gLightDir2X : LightDir2X;
+shared float4 gLightDir2Y : LightDir2Y;
+shared float4 gLightDir2Z : LightDir2Z;
+shared float4 gLightConeScale2 : LightConeScale2;
+shared float4 gLightConeOffset2 : LightConeOffset2;
+shared float4 gLightAmbient0 : LightAmbientColor0<string UIWidget = "Ambient Light Color 0"; string Space = "material";> = float4(0.000000, 0.000000, 0.000000, 1.000000);
+shared float4 gLightAmbient1 : LightAmbientColor1<string UIWidget = "Ambient Light Color 1"; string Space = "material";> = float4(0.000000, 0.000000, 0.000000, 1.000000);
+shared float4 globalScalars : globalScalars = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 globalScalars2 : globalScalars2 = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 gAspectRatio : gAspectRatio = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 globalScreenSize : globalScreenSize = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 globalFogParams : globalFogParams = float4(1600.000000, 9000000.000000, 0.010000, 1.000000);
+shared float4 globalFogColor : globalFogColor = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 globalFogColorN : globalFogColorN = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 gDayNightEffects : globalDayNightEffects = float4(1.000000, 0.000000, 1.000000, 0.000000);
+shared float gInvColorExpBias : ColorExpBias = 1.000000;
+shared float4 colorize : Colorize = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 stencil : Stencil = float4(0.000000, 255.000000, 0.000000, 0.000000);
+shared float4 gFacetCentre : FacetCentre;
+shared float4 gShadowCommonParam0123 : ShadowCommonParam0123;
+shared float4 gShadowParam14151617 : ShadowParam14151617;
+shared float4 gShadowParam18192021 : ShadowParam18192021;
+shared float4 gShadowParam0123 : ShadowParam0123;
+shared float4 gShadowParam4567 : ShadowParam4567;
+shared float4 gShadowParam891113 : ShadowParam891113;
+shared float4x4 gShadowMatrix : ShadowMatrix;
+shared texture ShadowZTextureDir;
+shared sampler gShadowZSamplerDir = 
+sampler_state
+{
+    Texture = <ShadowZTextureDir>;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+    MipFilter = POINT;
+    MinFilter = POINT;
+    MagFilter = POINT;
+};
+shared texture ShadowZTextureDirVS;
+shared sampler gShadowZSamplerDirVS = 
+sampler_state
+{
+    Texture = <ShadowZTextureDirVS>;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+    MipFilter = POINT;
+    MinFilter = POINT;
+    MagFilter = POINT;
+};
+shared texture ShadowZTextureCache;
+shared sampler gShadowZSamplerCache = 
+sampler_state
+{
+    Texture = <ShadowZTextureCache>;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+    MipFilter = POINT;
+    MinFilter = POINT;
+    MagFilter = POINT;
+};
+shared texture ShadowTextureLUT;
+shared sampler gShadowSamplerLUT = 
+sampler_state
+{
+    Texture = <ShadowTextureLUT>;
+    AddressU = WRAP;
+    AddressV = WRAP;
+    MipFilter = POINT;
+    MinFilter = LINEAR;
+    MagFilter = LINEAR;
+};
+
+//Locals
+float shadowmap_res : ShadowMapResolution = 1280.000000;
+texture ConvertTexture;
+sampler ConvertSampler = 
+sampler_state
+{
+    Texture = <ConvertTexture>;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+    AddressW = CLAMP;
+    MipFilter = POINT;
+    MinFilter = POINT;
+    MagFilter = POINT;
+};
+float4 clearcol : ClearfColour = float4(1.000000, 0.000000, 0.000000, 0.000000);
+
+//Vertex shaders
+VertexShader VS_Blit
+<
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+        vs_3_0
+        def c0, 1, 0, 0, 0
+        dcl_position v0
+        dcl_texcoord v1
+        dcl_position o0
+        dcl_texcoord o1.xy
+        mad o0, v0.xyzx, c0.xxxy, c0.yyyx
+        mov o1.xy, v1
+    
+    // approximately 2 instruction slots used
+};
+
+//Pixel shaders
+PixelShader PixelShader0 = NULL;
+
+PixelShader PS_ClearCascade
+<
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+        ps_3_0
+        def c0, -100, 0, 0, 0
+        mov oC0, c0.x
+    
+    // approximately 1 instruction slot used
+};
+
+PixelShader PS_BlitToAtlas
+<
+    string ConvertSampler       = "parameter register(0)";
+    string gShadowParam18192021 = "parameter register(53)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   sampler2D ConvertSampler;
+    //   float4 gShadowParam18192021;
+    //
+    //
+    // Registers:
+    //
+    //   Name                 Reg   Size
+    //   -------------------- ----- ----
+    //   gShadowParam18192021 c53      1
+    //   ConvertSampler       s0       1
+    //
+    
+        ps_3_0
+        def c0, 0.5, 1, 0.25, 0
+        dcl_texcoord v0.xy
+        dcl_2d s0
+        mov r0.x, c0.x
+        mad r1.x, c53.z, r0.x, v0.x
+        mad r1.y, c53.z, -r0.x, v0.y
+        texld r1, r1, s0
+        mov r1.y, r1.x
+        mad r2.x, c53.z, -r0.x, v0.x
+        mad r2.y, c53.z, r0.x, v0.y
+        texld r2, r2, s0
+        mov r1.z, r2.x
+        mad r0.yz, c53.z, -r0.x, v0.xxyw
+        texld r2, r0.yzzw, s0
+        mov r1.x, r2.x
+        mad r0.xy, c53.z, r0.x, v0
+        texld r0, r0, s0
+        mov r1.w, r0.x
+        dp4 r0.x, r1, c0.y
+        mul oC0.x, r0.x, c0.z
+        mov oC0.yzw, c0.w
+    
+    // approximately 18 instruction slots used (4 texture, 14 arithmetic)
+};
+
+//takes a sample at the center
+PixelShader PS_BlitToAtlas2
+<
+    string ConvertSampler       = "parameter register(0)";
+    string gShadowParam18192021 = "parameter register(53)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   sampler2D ConvertSampler;
+    //   float4 gShadowParam18192021;
+    //
+    //
+    // Registers:
+    //
+    //   Name                 Reg   Size
+    //   -------------------- ----- ----
+    //   gShadowParam18192021 c53      1
+    //   ConvertSampler       s0       1
+    //
+    
+        ps_3_0
+        def c0, 0.200000003, 0.333333343, 0, 0
+        def c1, -0.25, -2, 0, -1
+        dcl_texcoord v0.xy
+        dcl_2d s0
+        mov r0.yzw, c1
+        mad r1.xy, c53.x, r0_abs.yzzw, v0
+        texld r1, r1, s0
+        mad r0.xy, c53.x, r0.yzzw, v0
+        texld r2, r0, s0
+        mad r0.xy, c53.x, r0.wzzw, v0
+        texld r3, r0, s0
+        add r0.xy, r2, r3
+        texld r2, v0, s0
+        add r0.xy, r0, r2
+        add r1.zw, r3.xyxy, r2.xyxy
+        mad r0.zw, c53.x, r0_abs.xywz, v0.xyxy
+        texld r2, r0.zwzw, s0
+        add r0.xy, r0, r2
+        add r0.zw, r1, r2.xyxy
+        mul r0.zw, r0, c0.y
+        add r0.xy, r1, r0
+        mul r0.xy, r0, c0.x
+        add r1.x, c1.x, v0.x
+        cmp oC0.xy, r1.x, r0.zwzw, r0
+        mov oC0.zw, -c1.w
+    
+    // approximately 21 instruction slots used (5 texture, 16 arithmetic)
+};
+
+PixelShader PS_BlitToAtlas3
+<
+    string ConvertSampler       = "parameter register(0)";
+    string gShadowParam18192021 = "parameter register(53)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   sampler2D ConvertSampler;
+    //   float4 gShadowParam18192021;
+    //
+    //
+    // Registers:
+    //
+    //   Name                 Reg   Size
+    //   -------------------- ----- ----
+    //   gShadowParam18192021 c53      1
+    //   ConvertSampler       s0       1
+    //
+    
+        ps_3_0
+        def c0, 0.200000003, 0.333333343, 0, 0
+        def c1, -0.25, 0, -2, -1
+        dcl_texcoord v0.xy
+        dcl_2d s0
+        mov r0.yzw, c1
+        mad r1.xy, c53.y, r0_abs.yzzw, v0
+        texld r1, r1, s0
+        mad r0.xz, c53.y, r0.yyzw, v0.xyyw
+        texld r2, r0.xzzw, s0
+        mad r0.xz, c53.y, r0.yyww, v0.xyyw
+        texld r3, r0.xzzw, s0
+        add r0.xz, r2.xyyw, r3.xyyw
+        texld r2, v0, s0
+        add r0.xz, r0, r2.xyyw
+        add r1.zw, r3.xyxy, r2.xyxy
+        mad r0.yw, c53.y, r0_abs, v0.xxzy
+        texld r2, r0.ywzw, s0
+        add r0.xy, r0.xzzw, r2
+        add r0.zw, r1, r2.xyxy
+        mul r0.zw, r0, c0.y
+        add r0.xy, r1, r0
+        mul r0.xy, r0, c0.x
+        add r1.x, c1.x, v0.x
+        cmp oC0.xy, r1.x, r0.zwzw, r0
+        mov oC0.zw, -c1.w
+    
+    // approximately 21 instruction slots used (5 texture, 16 arithmetic)
+};
+
+PixelShader PS_CascadeBlit
+<
+    string ConvertSampler = "parameter register(0)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   sampler2D ConvertSampler;
+    //
+    //
+    // Registers:
+    //
+    //   Name           Reg   Size
+    //   -------------- ----- ----
+    //   ConvertSampler s0       1
+    //
+    
+        ps_3_0
+        dcl_texcoord v0.xy
+        dcl_2d s0
+        texld oC0, v0, s0
+    
+    // approximately 1 instruction slot used (1 texture, 0 arithmetic)
+};
+
+technique convert
+{
+    pass p0
+    {
+        CullMode = NONE;
+        ZWriteEnable = false;
+        ZEnable = false;
+        AlphaBlendEnable = false;
+        AlphaTestEnable = false;
+
+        VertexShader = VS_Blit;
+        PixelShader = PS_ClearCascade;
+    }
+    pass p1
+    {
+        CullMode = NONE;
+        ZWriteEnable = true;
+        ZFunc = ALWAYS;
+        AlphaBlendEnable = false;
+        AlphaTestEnable = false;
+
+        VertexShader = VS_Blit;
+        PixelShader = PS_BlitToAtlas;
+    }
+    pass p2
+    {
+        CullMode = NONE;
+        ZWriteEnable = true;
+        ZFunc = ALWAYS;
+        AlphaBlendEnable = false;
+        AlphaTestEnable = false;
+
+        VertexShader = VS_Blit;
+        PixelShader = PS_BlitToAtlas2;
+    }
+    pass p3
+    {
+        CullMode = NONE;
+        ZWriteEnable = true;
+        ZFunc = ALWAYS;
+        AlphaBlendEnable = false;
+        AlphaTestEnable = false;
+
+        VertexShader = VS_Blit;
+        PixelShader = PS_BlitToAtlas3;
+    }
+}
+
+technique blit
+{
+    pass p0
+    {
+        CullMode = NONE;
+        ZWriteEnable = true;
+        ZFunc = ALWAYS;
+        AlphaBlendEnable = false;
+        AlphaTestEnable = false;
+
+        VertexShader = VS_Blit;
+        PixelShader = PS_CascadeBlit;
+    }
+}
+

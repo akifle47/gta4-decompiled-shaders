@@ -1,0 +1,274 @@
+//Globals
+shared float4 gAllGlobals[64] : AllGlobals;
+shared float4x3 gBoneMtx[48] : WorldMatrixArray;
+shared float4x4 gWorld : World;
+shared float4x4 gWorldView : WorldView;
+shared float4x4 gWorldViewProj : WorldViewProjection;
+shared float4x4 gViewInverse : ViewInverse;
+shared texture stippletexture;
+shared sampler StippleTexture = 
+sampler_state
+{
+    Texture = <stippletexture>;
+    MinFilter = POINT;
+    MagFilter = POINT;
+    MipFilter = POINT;
+    AddressU = WRAP;
+    AddressV = WRAP;
+};
+shared float4 gDepthFxParams : DepthFxParams = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 gDirectionalLight : DirectionalLight;
+shared float4 gDirectionalColour : DirectionalColour;
+shared float4 gLightPosX : LightPositionX;
+shared float4 gLightPosY : LightPositionY;
+shared float4 gLightPosZ : LightPositionZ;
+shared float4 gLightDirX : LightDirX;
+shared float4 gLightDirY : LightDirY;
+shared float4 gLightDirZ : LightDirZ;
+shared float4 gLightFallOff : LightFallOff;
+shared float4 gLightConeScale : LightConeScale;
+shared float4 gLightConeOffset : LightConeOffset;
+shared float4 gLightColR : LightColR;
+shared float4 gLightColG : LightColG;
+shared float4 gLightColB : LightColB;
+shared float4 gLightPointPosX : LightPointPositionX;
+shared float4 gLightPointPosY : LightPointPositionY;
+shared float4 gLightPointPosZ : LightPointPositionZ;
+shared float4 gLightPointColR : LightPointColR;
+shared float4 gLightPointColG : LightPointColG;
+shared float4 gLightPointColB : LightPointColB;
+shared float4 gLightPointFallOff : LightPointFallOff;
+shared float4 gLightDir2X : LightDir2X;
+shared float4 gLightDir2Y : LightDir2Y;
+shared float4 gLightDir2Z : LightDir2Z;
+shared float4 gLightConeScale2 : LightConeScale2;
+shared float4 gLightConeOffset2 : LightConeOffset2;
+shared float4 gLightAmbient0 : LightAmbientColor0<string UIWidget = "Ambient Light Color 0"; string Space = "material";> = float4(0.000000, 0.000000, 0.000000, 1.000000);
+shared float4 gLightAmbient1 : LightAmbientColor1<string UIWidget = "Ambient Light Color 1"; string Space = "material";> = float4(0.000000, 0.000000, 0.000000, 1.000000);
+shared float4 globalScalars : globalScalars = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 globalScalars2 : globalScalars2 = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 gAspectRatio : gAspectRatio = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 globalScreenSize : globalScreenSize = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 globalFogParams : globalFogParams = float4(1600.000000, 9000000.000000, 0.010000, 1.000000);
+shared float4 globalFogColor : globalFogColor = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 globalFogColorN : globalFogColorN = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 gDayNightEffects : globalDayNightEffects = float4(1.000000, 0.000000, 1.000000, 0.000000);
+shared float gInvColorExpBias : ColorExpBias = 1.000000;
+shared float4 colorize : Colorize = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 stencil : Stencil = float4(0.000000, 255.000000, 0.000000, 0.000000);
+shared float4 gFacetCentre : FacetCentre;
+shared float4 gShadowCommonParam0123 : ShadowCommonParam0123;
+shared float4 gShadowParam14151617 : ShadowParam14151617;
+shared float4 gShadowParam18192021 : ShadowParam18192021;
+shared float4 gShadowParam0123 : ShadowParam0123;
+shared float4 gShadowParam4567 : ShadowParam4567;
+shared float4 gShadowParam891113 : ShadowParam891113;
+shared float4x4 gShadowMatrix : ShadowMatrix;
+shared texture ShadowZTextureDir;
+shared sampler gShadowZSamplerDir = 
+sampler_state
+{
+    Texture = <ShadowZTextureDir>;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+    MipFilter = POINT;
+    MinFilter = POINT;
+    MagFilter = POINT;
+};
+shared texture ShadowZTextureDirVS;
+shared sampler gShadowZSamplerDirVS = 
+sampler_state
+{
+    Texture = <ShadowZTextureDirVS>;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+    MipFilter = POINT;
+    MinFilter = POINT;
+    MagFilter = POINT;
+};
+shared texture ShadowZTextureCache;
+shared sampler gShadowZSamplerCache = 
+sampler_state
+{
+    Texture = <ShadowZTextureCache>;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+    MipFilter = POINT;
+    MinFilter = POINT;
+    MagFilter = POINT;
+};
+shared texture ShadowTextureLUT;
+shared sampler gShadowSamplerLUT = 
+sampler_state
+{
+    Texture = <ShadowTextureLUT>;
+    AddressU = WRAP;
+    AddressV = WRAP;
+    MipFilter = POINT;
+    MinFilter = LINEAR;
+    MagFilter = LINEAR;
+};
+
+//Locals
+float shadowmap_res : ShadowMapResolution = 1280.000000;
+float2 facetMask[4] : facetMask = 
+{
+    float2(-1.000000, 0.000000), 
+    float2(1.000000, 0.000000), 
+    float2(0.000000, -1.000000), 
+    float2(0.000000, 1.000000)
+};
+
+//Vertex shaders
+VertexShader VS_TransformCascadeGen
+<
+    string gShadowMatrix = "parameter register(60)";
+    string gWorld        = "parameter register(0)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   row_major float4x4 gShadowMatrix;
+    //   row_major float4x4 gWorld;
+    //
+    //
+    // Registers:
+    //
+    //   Name          Reg   Size
+    //   ------------- ----- ----
+    //   gWorld        c0       4
+    //   gShadowMatrix c60      4
+    //
+    
+        vs_3_0
+        def c4, 1, 0, 0, 0
+        dcl_position v0
+        dcl_position o0
+        dcl_texcoord o1.x
+        mul r0.xyz, c1, v0.y
+        mad r0.xyz, v0.x, c0, r0
+        mad r0.xyz, v0.z, c2, r0
+        add r0.xyz, r0, c3
+        mul r1, r0.y, c61
+        mad r1, r0.x, c60, r1
+        mad r0, r0.z, c62, r1
+        add r0, r0, c63
+        min r0.z, r0.z, c4.x
+        add o0.z, -r0.z, c4.x
+        mad o0.xyw, r0.xyzx, c4.xxzy, c4.yyzx
+        mov o1.x, r0.w
+    
+    // approximately 12 instruction slots used
+};
+
+VertexShader VS_TransformCascadeGenSkin
+<
+    string gBoneMtx      = "parameter register(64)";
+    string gShadowMatrix = "parameter register(60)";
+    string gWorld        = "parameter register(0)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   float4x3 gBoneMtx[48];
+    //   row_major float4x4 gShadowMatrix;
+    //   row_major float4x4 gWorld;
+    //
+    //
+    // Registers:
+    //
+    //   Name          Reg   Size
+    //   ------------- ----- ----
+    //   gWorld        c0       4
+    //   gShadowMatrix c60      4
+    //   gBoneMtx      c64    144
+    //
+    
+        vs_3_0
+        def c0, 765.005859, 1, 0, 0
+        dcl_position v0
+        dcl_blendweight v1
+        dcl_blendindices v2
+        dcl_position o0
+        dcl_texcoord o1.x
+        mul r0, c0.x, v2
+        mova a0, r0
+        mul r0, v1.y, c64[a0.y]
+        mad r0, c64[a0.x], v1.x, r0
+        mad r0, c64[a0.z], v1.z, r0
+        mad r0, c64[a0.w], v1.w, r0
+        mad r1, v0.xyzx, c0.yyyz, c0.zzzy
+        dp4 r0.x, r1, r0
+        mul r2, v1.y, c65[a0.y]
+        mad r2, c65[a0.x], v1.x, r2
+        mad r2, c65[a0.z], v1.z, r2
+        mad r2, c65[a0.w], v1.w, r2
+        dp4 r0.y, r1, r2
+        mul r2, v1.y, c66[a0.y]
+        mad r2, c66[a0.x], v1.x, r2
+        mad r2, c66[a0.z], v1.z, r2
+        mad r2, c66[a0.w], v1.w, r2
+        dp4 r0.z, r1, r2
+        add r0.xyz, r0, c3
+        mul r1, r0.y, c61
+        mad r1, r0.x, c60, r1
+        mad r0, r0.z, c62, r1
+        add r0, r0, c63
+        min r0.z, r0.z, c0.y
+        add o0.z, -r0.z, c0.y
+        mad o0.xyw, r0.xyzx, c0.yyzz, c0.zzzy
+        mov o1.x, r0.w
+    
+    // approximately 27 instruction slots used
+};
+
+//Pixel shaders
+PixelShader PixelShader0 = NULL;
+
+PixelShader PS_CascadeGen
+<
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+        ps_3_0
+        def c0, 1, 0, 0, 0
+        dcl_texcoord v0.x
+        mad oC0, v0.x, c0.xxxy, c0.yyyx
+    
+    // approximately 1 instruction slot used
+};
+
+technique unlit_draw
+{
+    pass p0
+    {
+        AlphaBlendEnable = false;
+        AlphaTestEnable = false;
+
+        VertexShader = VS_TransformCascadeGen;
+        PixelShader = PS_CascadeGen;
+    }
+}
+
+technique unlit_drawskinned
+{
+    pass p0
+    {
+        AlphaBlendEnable = false;
+        AlphaTestEnable = false;
+
+        VertexShader = VS_TransformCascadeGenSkin;
+        PixelShader = PS_CascadeGen;
+    }
+}
+

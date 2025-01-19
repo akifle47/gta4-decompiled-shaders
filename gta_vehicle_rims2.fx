@@ -1,0 +1,2366 @@
+//Globals
+shared float4 gAllGlobals[64] : AllGlobals;
+shared float4x3 gBoneMtx[48] : WorldMatrixArray;
+shared float4x4 gWorld : World;
+shared float4x4 gWorldView : WorldView;
+shared float4x4 gWorldViewProj : WorldViewProjection;
+shared float4x4 gViewInverse : ViewInverse;
+shared texture stippletexture;
+shared sampler StippleTexture = 
+sampler_state
+{
+    Texture = <stippletexture>;
+    MinFilter = POINT;
+    MagFilter = POINT;
+    MipFilter = POINT;
+    AddressU = WRAP;
+    AddressV = WRAP;
+};
+shared float4 gDepthFxParams : DepthFxParams = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 gDirectionalLight : DirectionalLight;
+shared float4 gDirectionalColour : DirectionalColour;
+shared float4 gLightPosX : LightPositionX;
+shared float4 gLightPosY : LightPositionY;
+shared float4 gLightPosZ : LightPositionZ;
+shared float4 gLightDirX : LightDirX;
+shared float4 gLightDirY : LightDirY;
+shared float4 gLightDirZ : LightDirZ;
+shared float4 gLightFallOff : LightFallOff;
+shared float4 gLightConeScale : LightConeScale;
+shared float4 gLightConeOffset : LightConeOffset;
+shared float4 gLightColR : LightColR;
+shared float4 gLightColG : LightColG;
+shared float4 gLightColB : LightColB;
+shared float4 gLightPointPosX : LightPointPositionX;
+shared float4 gLightPointPosY : LightPointPositionY;
+shared float4 gLightPointPosZ : LightPointPositionZ;
+shared float4 gLightPointColR : LightPointColR;
+shared float4 gLightPointColG : LightPointColG;
+shared float4 gLightPointColB : LightPointColB;
+shared float4 gLightPointFallOff : LightPointFallOff;
+shared float4 gLightDir2X : LightDir2X;
+shared float4 gLightDir2Y : LightDir2Y;
+shared float4 gLightDir2Z : LightDir2Z;
+shared float4 gLightConeScale2 : LightConeScale2;
+shared float4 gLightConeOffset2 : LightConeOffset2;
+shared float4 gLightAmbient0 : LightAmbientColor0<string UIWidget = "Ambient Light Color 0"; string Space = "material";> = float4(0.000000, 0.000000, 0.000000, 1.000000);
+shared float4 gLightAmbient1 : LightAmbientColor1<string UIWidget = "Ambient Light Color 1"; string Space = "material";> = float4(0.000000, 0.000000, 0.000000, 1.000000);
+shared float4 globalScalars : globalScalars = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 globalScalars2 : globalScalars2 = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 gAspectRatio : gAspectRatio = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 globalScreenSize : globalScreenSize = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 globalFogParams : globalFogParams = float4(1600.000000, 9000000.000000, 0.010000, 1.000000);
+shared float4 globalFogColor : globalFogColor = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 globalFogColorN : globalFogColorN = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 gDayNightEffects : globalDayNightEffects = float4(1.000000, 0.000000, 1.000000, 0.000000);
+shared float gInvColorExpBias : ColorExpBias = 1.000000;
+shared float4 colorize : Colorize = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 stencil : Stencil = float4(0.000000, 255.000000, 0.000000, 0.000000);
+shared float4 gFacetCentre : FacetCentre;
+shared float4 gShadowCommonParam0123 : ShadowCommonParam0123;
+shared float4 gShadowParam14151617 : ShadowParam14151617;
+shared float4 gShadowParam18192021 : ShadowParam18192021;
+shared float4 gShadowParam0123 : ShadowParam0123;
+shared float4 gShadowParam4567 : ShadowParam4567;
+shared float4 gShadowParam891113 : ShadowParam891113;
+shared float4x4 gShadowMatrix : ShadowMatrix;
+shared texture ShadowZTextureDir;
+shared sampler gShadowZSamplerDir = 
+sampler_state
+{
+    Texture = <ShadowZTextureDir>;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+    MipFilter = POINT;
+    MinFilter = POINT;
+    MagFilter = POINT;
+};
+shared texture ShadowZTextureDirVS;
+shared sampler gShadowZSamplerDirVS = 
+sampler_state
+{
+    Texture = <ShadowZTextureDirVS>;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+    MipFilter = POINT;
+    MinFilter = POINT;
+    MagFilter = POINT;
+};
+shared texture ShadowZTextureCache;
+shared sampler gShadowZSamplerCache = 
+sampler_state
+{
+    Texture = <ShadowZTextureCache>;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+    MipFilter = POINT;
+    MinFilter = POINT;
+    MagFilter = POINT;
+};
+shared texture ShadowTextureLUT;
+shared sampler gShadowSamplerLUT = 
+sampler_state
+{
+    Texture = <ShadowTextureLUT>;
+    AddressU = WRAP;
+    AddressV = WRAP;
+    MipFilter = POINT;
+    MinFilter = LINEAR;
+    MagFilter = LINEAR;
+};
+
+//Locals
+texture DiffuseTex;
+sampler TextureSampler<string UIName = "Diffuse Texture";> = 
+sampler_state
+{
+    Texture = <DiffuseTex>;
+    AddressU = WRAP;
+    AddressV = WRAP;
+    AddressW = WRAP;
+    MipFilter = LINEAR;
+    MinFilter = ANISOTROPIC;
+    MagFilter = LINEAR;
+};
+float shadowmap_res : ShadowMapResolution = 1280.000000;
+float2 facetMask[4] : facetMask = 
+{
+    float2(-1.000000, 0.000000), 
+    float2(1.000000, 0.000000), 
+    float2(0.000000, -1.000000), 
+    float2(0.000000, 1.000000)
+};
+float3 matDiffuseColor : DiffuseColor<string UIName = "Vehicle Diffuse Color"; float UIMin = 0.000000; float UIMax = 10.000000; float UIStep = 0.010000;> = float3(1.000000, 1.000000, 1.000000);
+float4 matDiffuseColor2 : DiffuseColor2 = float4(1.000000, 1.000000, 1.000000, 1.000000);
+float dirtLevel : DirtLevel = 1.000000;
+float3 dirtColor : DirtColor = float3(0.231372, 0.223529, 0.203921);
+float specularFactor : specularFactor = 180.000000;
+float specularFactorED : Specular<string UIName = "Specular Falloff"; float UIMin = 0.000000; float UIMax = 10000.000000; float UIStep = 0.100000;> = 1.000000;
+float specularColorFactor : specularColorFactor = 0.150000;
+float specularColorFactorED : SpecularColor<string UIName = "Specular Intensity"; float UIMin = 0.000000; float UIMax = 10000.000000; float UIStep = 0.100000;> = 1.000000;
+float3 specMapIntMask : SpecularMapIntensityMask<string UIWidget = "slider"; float UIMin = 0.000000; float UIMax = 1.000000; float UIStep = 0.010000; string UIName = "specular map intensity mask color";> = float3(1.000000, 0.000000, 0.000000);
+float specular2Factor : specular2Factor = 40.000000;
+float specular2FactorED : Specular2Factor<string UIName = "Specular2 Falloff"; float UIMin = 0.000000; float UIMax = 10000.000000; float UIStep = 0.100000;> = 1.000000;
+float specular2ColorIntensityRE : specular2ColorIntensityRE = 1.700000;
+float specular2ColorIntensityED : specular2ColorIntensity<string UIName = "Specular2 Intensity"; float UIMin = 0.000000; float UIMax = 10000.000000; float UIStep = 0.100000;> = 1.000000;
+float3 specular2Color : Specular2Color = float3(0.000000, 0.500000, 0.000000);
+float reflectivePower : reflectivePower = 0.450000;
+float reflectivePowerED : Reflectivity<string UIName = "Reflectivity"; float UIMin = -10.000000; float UIMax = 10.000000; float UIStep = 0.100000;> = 1.000000;
+float3 LuminanceConstants : LuminanceConstants = float3(0.212500, 0.715400, 0.072100);
+texture DirtTex;
+sampler DirtSampler<string UIName = "Dirt Texture";> = 
+sampler_state
+{
+    Texture = <DirtTex>;
+    AddressU = WRAP;
+    AddressV = WRAP;
+    AddressW = WRAP;
+    MipFilter = LINEAR;
+    MinFilter = ANISOTROPIC;
+    MagFilter = LINEAR;
+};
+texture SpecularTex;
+sampler SpecSampler<string UIName = "Specular Texture"; string UIHint = "specularmap";> = 
+sampler_state
+{
+    Texture = <SpecularTex>;
+    AddressU = WRAP;
+    AddressV = WRAP;
+    AddressW = WRAP;
+    MipFilter = LINEAR;
+    MinFilter = ANISOTROPIC;
+    MagFilter = LINEAR;
+};
+texture damagevertbuffer;
+sampler DamageVertBuffer = 
+sampler_state
+{
+    Texture = <damagevertbuffer>;
+    MinFilter = POINT;
+    MagFilter = POINT;
+    MipFilter = POINT;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+};
+
+//Vertex shaders
+VertexShader VS_VehicleTransformR2VB
+<
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+        vs_3_0
+        def c0, 1, 0, 0, 0
+        dcl_position v0
+        dcl_texcoord v1
+        dcl_position o0
+        dcl_texcoord o1
+        mad o0, v0.xyzx, c0.xxxy, c0.yyyx
+        mul o1, c0.xxyy, v1.xyxx
+    
+    // approximately 2 instruction slots used
+};
+
+VertexShader VS_VehicleTransform
+<
+    string gViewInverse   = "parameter register(12)";
+    string gWorld         = "parameter register(0)";
+    string gWorldViewProj = "parameter register(8)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   row_major float4x4 gViewInverse;
+    //   row_major float4x4 gWorld;
+    //   row_major float4x4 gWorldViewProj;
+    //
+    //
+    // Registers:
+    //
+    //   Name           Reg   Size
+    //   -------------- ----- ----
+    //   gWorld         c0       4
+    //   gWorldViewProj c8       4
+    //   gViewInverse   c12      4
+    //
+    
+        vs_3_0
+        def c4, 9.99999975e-006, 1, 0, 0
+        dcl_position v0
+        dcl_color v1
+        dcl_texcoord v2
+        dcl_normal v3
+        dcl_position o0
+        dcl_texcoord o1.xy
+        dcl_texcoord1 o2
+        dcl_texcoord3 o3.xyz
+        dcl_color o4
+        dcl_texcoord2 o5
+        mul r0.xyz, c1, v0.y
+        mad r0.xyz, v0.x, c0, r0
+        mad r0.xyz, v0.z, c2, r0
+        add r0.xyz, r0, c3
+        add r1.xyz, r0, c3
+        mov o5.xyz, r0
+        add o3.xyz, -r1, c15
+        mul r0.xyz, c1, v3.y
+        mad r0.xyz, v3.x, c0, r0
+        mad r0.xyz, v3.z, c2, r0
+        add r0.xyz, r0, c4.x
+        dp3 r0.w, r0, r0
+        rsq r0.w, r0.w
+        mul o2.xyz, r0, r0.w
+        mul r0, c9, v0.y
+        mad r0, v0.x, c8, r0
+        mad r0, v0.z, c10, r0
+        add r0, r0, c11
+        mov o0, r0
+        mov o2.w, r0.w
+        mov o1.xy, v2
+        mad o4, v1.xyzx, c4.yyyz, c4.zzzy
+        mov o5.w, c4.y
+    
+    // approximately 23 instruction slots used
+};
+
+VertexShader VS_VehicleTransformSkin
+<
+    string gBoneMtx       = "parameter register(64)";
+    string gViewInverse   = "parameter register(12)";
+    string gWorld         = "parameter register(0)";
+    string gWorldViewProj = "parameter register(8)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   float4x3 gBoneMtx[48];
+    //   row_major float4x4 gViewInverse;
+    //   row_major float4x4 gWorld;
+    //   row_major float4x4 gWorldViewProj;
+    //
+    //
+    // Registers:
+    //
+    //   Name           Reg   Size
+    //   -------------- ----- ----
+    //   gWorld         c0       4
+    //   gWorldViewProj c8       4
+    //   gViewInverse   c12      4
+    //   gBoneMtx       c64    144
+    //
+    
+        vs_3_0
+        def c0, 765.005859, 1, 0, 0
+        dcl_position v0
+        dcl_blendindices v1
+        dcl_texcoord v2
+        dcl_normal v3
+        dcl_color v4
+        dcl_position o0
+        dcl_texcoord o1.xy
+        dcl_texcoord1 o2
+        dcl_texcoord3 o3.xyz
+        dcl_color o4
+        dcl_texcoord2 o5
+        mad r0, v0.xyzx, c0.yyyz, c0.zzzy
+        mul r1.x, c0.x, v1.x
+        mova a0.x, r1.x
+        dp4 r1.x, r0, c64[a0.x]
+        dp4 r1.y, r0, c65[a0.x]
+        dp4 r1.z, r0, c66[a0.x]
+        add r0.xyz, r1, c3
+        mul r2, r1.y, c9
+        mad r2, r1.x, c8, r2
+        mad r1, r1.z, c10, r2
+        add r1, r1, c11
+        add o3.xyz, -r0, c15
+        mov o5.xyz, r0
+        dp3 o2.x, v3, c64[a0.x]
+        dp3 o2.y, v3, c65[a0.x]
+        dp3 o2.z, v3, c66[a0.x]
+        mov o0, r1
+        mov o2.w, r1.w
+        mov o1.xy, v2
+        mad o4, v4.xyzx, c0.yyyz, c0.zzzy
+        mov o5.w, c0.y
+    
+    // approximately 21 instruction slots used
+};
+
+VertexShader VS_VehicleTransformD
+<
+    string gViewInverse   = "parameter register(12)";
+    string gWorld         = "parameter register(0)";
+    string gWorldViewProj = "parameter register(8)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   row_major float4x4 gViewInverse;
+    //   row_major float4x4 gWorld;
+    //   row_major float4x4 gWorldViewProj;
+    //
+    //
+    // Registers:
+    //
+    //   Name           Reg   Size
+    //   -------------- ----- ----
+    //   gWorld         c0       4
+    //   gWorldViewProj c8       4
+    //   gViewInverse   c12      4
+    //
+    
+        vs_3_0
+        def c4, 9.99999975e-006, 1, 0, 0
+        dcl_position v0
+        dcl_color v1
+        dcl_texcoord v2
+        dcl_normal v3
+        dcl_position o0
+        dcl_texcoord o1.xy
+        dcl_texcoord1 o2
+        dcl_texcoord3 o3.xyz
+        dcl_color o4
+        dcl_texcoord6 o5
+        mul r0.xyz, c1, v0.y
+        mad r0.xyz, v0.x, c0, r0
+        mad r0.xyz, v0.z, c2, r0
+        add r0.xyz, r0, c3
+        add r1.xyz, r0, c3
+        mov o5.xyz, r0
+        add o3.xyz, -r1, c15
+        mul r0.xyz, c1, v3.y
+        mad r0.xyz, v3.x, c0, r0
+        mad r0.xyz, v3.z, c2, r0
+        add r0.xyz, r0, c4.x
+        dp3 r0.w, r0, r0
+        rsq r0.w, r0.w
+        mul o2.xyz, r0, r0.w
+        mul r0, c9, v0.y
+        mad r0, v0.x, c8, r0
+        mad r0, v0.z, c10, r0
+        add r0, r0, c11
+        mov o0, r0
+        mov o2.w, r0.w
+        mov o1.xy, v2
+        mad o4, v1.xyzx, c4.yyyz, c4.zzzy
+        mov o5.w, c4.y
+    
+    // approximately 23 instruction slots used
+};
+
+VertexShader VS_VehicleTransformSkinD
+<
+    string gBoneMtx       = "parameter register(64)";
+    string gViewInverse   = "parameter register(12)";
+    string gWorld         = "parameter register(0)";
+    string gWorldViewProj = "parameter register(8)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   float4x3 gBoneMtx[48];
+    //   row_major float4x4 gViewInverse;
+    //   row_major float4x4 gWorld;
+    //   row_major float4x4 gWorldViewProj;
+    //
+    //
+    // Registers:
+    //
+    //   Name           Reg   Size
+    //   -------------- ----- ----
+    //   gWorld         c0       4
+    //   gWorldViewProj c8       4
+    //   gViewInverse   c12      4
+    //   gBoneMtx       c64    144
+    //
+    
+        vs_3_0
+        def c0, 765.005859, 1, 0, 0
+        dcl_position v0
+        dcl_blendindices v1
+        dcl_texcoord v2
+        dcl_normal v3
+        dcl_color v4
+        dcl_position o0
+        dcl_texcoord o1.xy
+        dcl_texcoord1 o2
+        dcl_texcoord3 o3.xyz
+        dcl_color o4
+        dcl_texcoord6 o5
+        mad r0, v0.xyzx, c0.yyyz, c0.zzzy
+        mul r1.x, c0.x, v1.x
+        mova a0.x, r1.x
+        dp4 r1.x, r0, c64[a0.x]
+        dp4 r1.y, r0, c65[a0.x]
+        dp4 r1.z, r0, c66[a0.x]
+        add r0.xyz, r1, c3
+        add o3.xyz, -r0, c15
+        dp3 o2.x, v3, c64[a0.x]
+        dp3 o2.y, v3, c65[a0.x]
+        dp3 o2.z, v3, c66[a0.x]
+        mul r0, r1.y, c9
+        mov o5.xyz, r1
+        mad r0, r1.x, c8, r0
+        mad r0, r1.z, c10, r0
+        add r0, r0, c11
+        mov o0, r0
+        mov o2.w, r0.w
+        mov o1.xy, v2
+        mad o4, v4.xyzx, c0.yyyz, c0.zzzy
+        mov o5.w, c0.y
+    
+    // approximately 21 instruction slots used
+};
+
+VertexShader VS_VehicleShadowDepth
+<
+    string gShadowMatrix = "parameter register(60)";
+    string gWorld        = "parameter register(0)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   row_major float4x4 gShadowMatrix;
+    //   row_major float4x4 gWorld;
+    //
+    //
+    // Registers:
+    //
+    //   Name          Reg   Size
+    //   ------------- ----- ----
+    //   gWorld        c0       4
+    //   gShadowMatrix c60      4
+    //
+    
+        vs_3_0
+        def c4, 1, 0, 0, 0
+        dcl_position v0
+        dcl_position o0
+        dcl_texcoord o1.x
+        mul r0.xyz, c1, v0.y
+        mad r0.xyz, v0.x, c0, r0
+        mad r0.xyz, v0.z, c2, r0
+        add r0.xyz, r0, c3
+        mul r1, r0.y, c61
+        mad r1, r0.x, c60, r1
+        mad r0, r0.z, c62, r1
+        add r0, r0, c63
+        min r0.z, r0.z, c4.x
+        add o0.z, -r0.z, c4.x
+        mad o0.xyw, r0.xyzx, c4.xxzy, c4.yyzx
+        mov o1.x, r0.w
+    
+    // approximately 12 instruction slots used
+};
+
+VertexShader VS_VehicleShadowDepthSkin
+<
+    string facetMask            = "parameter register(208)";
+    string gBoneMtx             = "parameter register(64)";
+    string gShadowMatrix        = "parameter register(60)";
+    string gShadowParam0123     = "parameter register(57)";
+    string gShadowParam14151617 = "parameter register(56)";
+    string gShadowParam891113   = "parameter register(59)";
+    string gWorld               = "parameter register(0)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   float2 facetMask[4];
+    //   float4x3 gBoneMtx[48];
+    //   row_major float4x4 gShadowMatrix;
+    //   float4 gShadowParam0123;
+    //   float4 gShadowParam14151617;
+    //   float4 gShadowParam891113;
+    //   row_major float4x4 gWorld;
+    //
+    //
+    // Registers:
+    //
+    //   Name                 Reg   Size
+    //   -------------------- ----- ----
+    //   gWorld               c0       4
+    //   gShadowParam14151617 c56      1
+    //   gShadowParam0123     c57      1
+    //   gShadowParam891113   c59      1
+    //   gShadowMatrix        c60      4
+    //   gBoneMtx             c64    144
+    //   facetMask            c208     4
+    //
+    
+        vs_3_0
+        def c0, 765.005859, 1, 0, -0.5
+        def c1, 2, 9.99999994e-009, 0, 0
+        dcl_position v0
+        dcl_blendweight v1
+        dcl_blendindices v2
+        dcl_position o0
+        dcl_texcoord o1.x
+        mul r0, c0.x, v2
+        mova a0, r0
+        mul r0, v1.y, c64[a0.y]
+        mul r1, v1.y, c65[a0.y]
+        mul r2, v1.y, c66[a0.y]
+        mad r0, c64[a0.x], v1.x, r0
+        mad r1, c65[a0.x], v1.x, r1
+        mad r2, c66[a0.x], v1.x, r2
+        mad r0, c64[a0.z], v1.z, r0
+        mad r1, c65[a0.z], v1.z, r1
+        mad r2, c66[a0.z], v1.z, r2
+        mad r0, c64[a0.w], v1.w, r0
+        mad r1, c65[a0.w], v1.w, r1
+        mad r2, c66[a0.w], v1.w, r2
+        mad r3, v0.xyzx, c0.yyyz, c0.zzzy
+        dp4 r0.x, r3, r0
+        dp4 r0.y, r3, r1
+        dp4 r0.z, r3, r2
+        add r0.xyz, r0, c3
+        mul r1, r0.y, c61
+        mad r1, r0.x, c60, r1
+        mad r1, r0.z, c62, r1
+        add r1, r1, c63
+        min r0.w, r1.z, c0.y
+        add o0.z, -r0.w, c0.y
+        abs r0.w, c56.x
+        if_ge -r0.w, r0.w
+          mul r2.xyz, r0.y, c61
+          mad r2.xyz, r0.x, c60, r2
+          mad r2.xyz, r0.z, c62, r2
+          add r2.xyz, r2, c63
+          add r0.w, r2.z, c59.z
+          abs r1.z, c56.y
+          sge r1.z, -r1.z, r1.z
+          add r1.z, r1.z, c0.w
+          mul r0.w, r0.w, r1.z
+          add r2.w, r0.w, r0.w
+          dp3 r1.z, r2.xyww, r2.xyww
+          rsq r1.z, r1.z
+          rcp r1.z, r1.z
+          mad r0.w, r0.w, -c1.x, r1.z
+          rcp r0.w, r0.w
+          mul r3.xy, r2, r0.w
+          mul r3.w, r2.w, -c57.w
+          mul r3.z, r1.z, -c57.w
+        else
+          mov r2.y, c0.y
+          add r0.w, -r2.y, c56.x
+          if_ge -r0_abs.w, r0_abs.w
+            mul r2.xyz, r0.y, c61
+            mad r2.xyz, r0.x, c60, r2
+            mad r2.xyz, r0.z, c62, r2
+            add r2.xyz, r2, c63
+            mul r4.z, r2.z, c57.w
+            mov r2.w, -c0.w
+            mov r4.xy, c57.z
+            mul r3.xyz, r2.xyww, r4
+            frc r0.w, c56.y
+            add r0.w, -r0.w, c56.y
+            mova a0.x, r0.w
+            mul r2.xy, r3, c208[a0.x]
+            add r0.w, r2.y, r2.x
+            add r3.w, r0.w, c1.x
+            max r3.z, r3.z, c0.z
+          else
+            mul r2.xyz, r0.y, c61
+            mad r0.xyw, r0.x, c60.xyzz, r2.xyzz
+            mad r0.xyz, r0.z, c62, r0.xyww
+            add r0.xyz, r0, c63
+            mul r3.xy, r0, c57.z
+            mov r3.w, -r0.z
+            mov r0.x, c57.x
+            add r0.y, r0.x, -c59.w
+            rcp r0.y, r0.y
+            mul r0.w, r0.y, c59.w
+            mul r0.x, r0.x, c59.w
+            mul r0.x, r0.y, r0.x
+            mad r3.z, r0.z, r0.w, r0.x
+          endif
+        endif
+        dp4 r0.x, r3, c0.y
+        mad o0.x, r0.x, c1.y, r1.x
+        mad o0.yw, r1.y, c0.xyzz, c0.xzzy
+        mov o1.x, r1.w
+    
+    // approximately 88 instruction slots used
+};
+
+VertexShader VS_VehicleTransformUnlit
+<
+    string gWorldViewProj = "parameter register(8)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   row_major float4x4 gWorldViewProj;
+    //
+    //
+    // Registers:
+    //
+    //   Name           Reg   Size
+    //   -------------- ----- ----
+    //   gWorldViewProj c8       4
+    //
+    
+        vs_3_0
+        dcl_position v0
+        dcl_color v1
+        dcl_texcoord v2
+        dcl_position o0
+        dcl_texcoord o1.xy
+        dcl_color o2
+        mul r0, c9, v0.y
+        mad r0, v0.x, c8, r0
+        mad r0, v0.z, c10, r0
+        add o0, r0, c11
+        mov o1.xy, v2
+        mov o2, v1
+    
+    // approximately 6 instruction slots used
+};
+
+VertexShader VS_VehicleTransformSkinUnlit
+<
+    string gBoneMtx       = "parameter register(64)";
+    string gWorldViewProj = "parameter register(8)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   float4x3 gBoneMtx[48];
+    //   row_major float4x4 gWorldViewProj;
+    //
+    //
+    // Registers:
+    //
+    //   Name           Reg   Size
+    //   -------------- ----- ----
+    //   gWorldViewProj c8       4
+    //   gBoneMtx       c64    144
+    //
+    
+        vs_3_0
+        def c0, 765.005859, 1, 0, 0
+        dcl_position v0
+        dcl_blendindices v1
+        dcl_texcoord v2
+        dcl_color v3
+        dcl_position o0
+        dcl_texcoord o1.xy
+        dcl_color o2
+        mul r0.x, c0.x, v1.x
+        mova a0.x, r0.x
+        mad r0, v0.xyzx, c0.yyyz, c0.zzzy
+        dp4 r1.x, r0, c65[a0.x]
+        mul r1, r1.x, c9
+        dp4 r2.x, r0, c64[a0.x]
+        dp4 r0.x, r0, c66[a0.x]
+        mad r1, r2.x, c8, r1
+        mad r0, r0.x, c10, r1
+        add o0, r0, c11
+        mov o1.xy, v2
+        mad o2, v3.xyzx, c0.yyyz, c0.zzzy
+    
+    // approximately 12 instruction slots used
+};
+
+//Pixel shaders
+PixelShader PixelShader0 = NULL;
+
+PixelShader PS_VehicleR2VB
+<
+    string DamageVertBuffer = "parameter register(0)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   sampler2D DamageVertBuffer;
+    //
+    //
+    // Registers:
+    //
+    //   Name             Reg   Size
+    //   ---------------- ----- ----
+    //   DamageVertBuffer s0       1
+    //
+    
+        ps_3_0
+        dcl_texcoord v0.xy
+        dcl_2d s0
+        texld oC0, v0, s0
+    
+    // approximately 1 instruction slot used (1 texture, 0 arithmetic)
+};
+
+PixelShader PS_VehicleTexturedEight
+<
+    string DirtSampler          = "parameter register(1)";
+    string LuminanceConstants   = "parameter register(78)";
+    string SpecSampler          = "parameter register(2)";
+    string TextureSampler       = "parameter register(0)";
+    string dirtColor            = "parameter register(73)";
+    string dirtLevel            = "parameter register(72)";
+    string gDepthFxParams       = "parameter register(16)";
+    string gDirectionalColour   = "parameter register(18)";
+    string gDirectionalLight    = "parameter register(17)";
+    string gFacetCentre         = "parameter register(54)";
+    string gLightAmbient0       = "parameter register(37)";
+    string gLightAmbient1       = "parameter register(38)";
+    string gLightColB           = "parameter register(31)";
+    string gLightColG           = "parameter register(30)";
+    string gLightColR           = "parameter register(29)";
+    string gLightConeOffset     = "parameter register(27)";
+    string gLightConeOffset2    = "parameter register(71)";
+    string gLightConeScale      = "parameter register(26)";
+    string gLightConeScale2     = "parameter register(70)";
+    string gLightDir2X          = "parameter register(67)";
+    string gLightDir2Y          = "parameter register(68)";
+    string gLightDir2Z          = "parameter register(69)";
+    string gLightDirX           = "parameter register(22)";
+    string gLightDirY           = "parameter register(23)";
+    string gLightDirZ           = "parameter register(24)";
+    string gLightFallOff        = "parameter register(25)";
+    string gLightPointColB      = "parameter register(65)";
+    string gLightPointColG      = "parameter register(64)";
+    string gLightPointColR      = "parameter register(35)";
+    string gLightPointFallOff   = "parameter register(36)";
+    string gLightPointPosX      = "parameter register(32)";
+    string gLightPointPosY      = "parameter register(33)";
+    string gLightPointPosZ      = "parameter register(34)";
+    string gLightPosX           = "parameter register(19)";
+    string gLightPosY           = "parameter register(20)";
+    string gLightPosZ           = "parameter register(21)";
+    string gShadowMatrix        = "parameter register(60)";
+    string gShadowParam0123     = "parameter register(57)";
+    string gShadowParam14151617 = "parameter register(56)";
+    string gShadowParam18192021 = "parameter register(53)";
+    string gShadowParam4567     = "parameter register(58)";
+    string gShadowParam891113   = "parameter register(59)";
+    string gShadowZSamplerDir   = "parameter register(15)";
+    string gViewInverse         = "parameter register(12)";
+    string globalFogColor       = "parameter register(42)";
+    string globalFogColorN      = "parameter register(43)";
+    string globalFogParams      = "parameter register(41)";
+    string globalScalars        = "parameter register(39)";
+    string matDiffuseColor      = "parameter register(66)";
+    string reflectivePowerED    = "parameter register(77)";
+    string specMapIntMask       = "parameter register(76)";
+    string specularColorFactor  = "parameter register(75)";
+    string specularFactor       = "parameter register(74)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   sampler2D DirtSampler;
+    //   float3 LuminanceConstants;
+    //   sampler2D SpecSampler;
+    //   sampler2D TextureSampler;
+    //   float3 dirtColor;
+    //   float dirtLevel;
+    //   float4 gDepthFxParams;
+    //   float4 gDirectionalColour;
+    //   float4 gDirectionalLight;
+    //   float4 gFacetCentre;
+    //   float4 gLightAmbient0;
+    //   float4 gLightAmbient1;
+    //   float4 gLightColB;
+    //   float4 gLightColG;
+    //   float4 gLightColR;
+    //   float4 gLightConeOffset;
+    //   float4 gLightConeOffset2;
+    //   float4 gLightConeScale;
+    //   float4 gLightConeScale2;
+    //   float4 gLightDir2X;
+    //   float4 gLightDir2Y;
+    //   float4 gLightDir2Z;
+    //   float4 gLightDirX;
+    //   float4 gLightDirY;
+    //   float4 gLightDirZ;
+    //   float4 gLightFallOff;
+    //   float4 gLightPointColB;
+    //   float4 gLightPointColG;
+    //   float4 gLightPointColR;
+    //   float4 gLightPointFallOff;
+    //   float4 gLightPointPosX;
+    //   float4 gLightPointPosY;
+    //   float4 gLightPointPosZ;
+    //   float4 gLightPosX;
+    //   float4 gLightPosY;
+    //   float4 gLightPosZ;
+    //   row_major float4x4 gShadowMatrix;
+    //   float4 gShadowParam0123;
+    //   float4 gShadowParam14151617;
+    //   float4 gShadowParam18192021;
+    //   float4 gShadowParam4567;
+    //   float4 gShadowParam891113;
+    //   sampler2D gShadowZSamplerDir;
+    //   row_major float4x4 gViewInverse;
+    //   float4 globalFogColor;
+    //   float4 globalFogColorN;
+    //   float4 globalFogParams;
+    //   float4 globalScalars;
+    //   float3 matDiffuseColor;
+    //   float reflectivePowerED;
+    //   float3 specMapIntMask;
+    //   float specularColorFactor;
+    //   float specularFactor;
+    //
+    //
+    // Registers:
+    //
+    //   Name                 Reg   Size
+    //   -------------------- ----- ----
+    //   gViewInverse         c12      4
+    //   gDepthFxParams       c16      1
+    //   gDirectionalLight    c17      1
+    //   gDirectionalColour   c18      1
+    //   gLightPosX           c19      1
+    //   gLightPosY           c20      1
+    //   gLightPosZ           c21      1
+    //   gLightDirX           c22      1
+    //   gLightDirY           c23      1
+    //   gLightDirZ           c24      1
+    //   gLightFallOff        c25      1
+    //   gLightConeScale      c26      1
+    //   gLightConeOffset     c27      1
+    //   gLightColR           c29      1
+    //   gLightColG           c30      1
+    //   gLightColB           c31      1
+    //   gLightPointPosX      c32      1
+    //   gLightPointPosY      c33      1
+    //   gLightPointPosZ      c34      1
+    //   gLightPointColR      c35      1
+    //   gLightPointFallOff   c36      1
+    //   gLightAmbient0       c37      1
+    //   gLightAmbient1       c38      1
+    //   globalScalars        c39      1
+    //   globalFogParams      c41      1
+    //   globalFogColor       c42      1
+    //   globalFogColorN      c43      1
+    //   gShadowParam18192021 c53      1
+    //   gFacetCentre         c54      1
+    //   gShadowParam14151617 c56      1
+    //   gShadowParam0123     c57      1
+    //   gShadowParam4567     c58      1
+    //   gShadowParam891113   c59      1
+    //   gShadowMatrix        c60      4
+    //   gLightPointColG      c64      1
+    //   gLightPointColB      c65      1
+    //   matDiffuseColor      c66      1
+    //   gLightDir2X          c67      1
+    //   gLightDir2Y          c68      1
+    //   gLightDir2Z          c69      1
+    //   gLightConeScale2     c70      1
+    //   gLightConeOffset2    c71      1
+    //   dirtLevel            c72      1
+    //   dirtColor            c73      1
+    //   specularFactor       c74      1
+    //   specularColorFactor  c75      1
+    //   specMapIntMask       c76      1
+    //   reflectivePowerED    c77      1
+    //   LuminanceConstants   c78      1
+    //   TextureSampler       s0       1
+    //   DirtSampler          s1       1
+    //   SpecSampler          s2       1
+    //   gShadowZSamplerDir   s15      1
+    //
+    
+        ps_3_0
+        def c0, 9.99999975e-006, 0, 1, -0.25
+        def c1, -0.5, 0.5, 1.33333337, 9.99999975e-005
+        def c2, 1.5, -0.326211989, -0.405809999, 0.0833333358
+        def c3, -0.791558981, -0.597710013, -0.100000001, 1.11111116
+        def c4, 0.212500006, 0.715399981, 0.0720999986, 1.00000001e-007
+        def c5, 1, -1, 0, -0
+        def c6, 0.896420002, 0.412458003, -0.321940005, -0.932614982
+        def c7, 0.185461, -0.893123984, 0.507430971, 0.0644249991
+        def c8, 0.473434001, -0.480026007, 0.519456029, 0.767022014
+        def c9, -0.203345001, 0.620715976, 0.962339997, -0.194983006
+        def c10, -0.840143979, -0.0735799968, -0.69591397, 0.457136989
+        dcl_texcoord v0.xy
+        dcl_texcoord1 v1
+        dcl_texcoord3 v2.xyz
+        dcl_color v3
+        dcl_texcoord2 v4.xyz
+        dcl_2d s0
+        dcl_2d s1
+        dcl_2d s2
+        dcl_2d s15
+        texld r0, v0, s0
+        add r1.xyz, c0.x, v1
+        nrm r2.xyz, r1
+        texld r1, v0, s2
+        mul r1.w, r1.w, c74.x
+        mul r2.w, r1.w, c77.x
+        dp3 r1.x, r1, c76
+        mul r1.x, r1.x, c75.x
+        mul r1.x, r1.x, c77.x
+        mul r0.xyz, r0, c66
+        mul r0, r0, v3
+        dp3 r1.y, v3, c78
+        mul r1.y, r1.y, c39.z
+        mov r3.yz, c0
+        if_lt -c72.x, r3.y
+          texld r4, v0, s1
+          mul r1.z, r4.x, c72.x
+          mad r5.x, r4.x, -c72.x, r3.z
+          lrp r5.yzw, r1.z, c73.xxyz, r0.xxyz
+          mad r6, r0.xxyz, c0.yzzz, c0.zyyy
+          cmp r4, -r4.x, r6, r5
+          mov r0.xyz, r4.yzww
+        else
+          mov r4.x, c0.z
+        endif
+        mul r1.x, r1.x, r4.x
+        add r3.xyw, c0.x, v2.xyzz
+        nrm r4.xyz, r3.xyww
+        mad_sat r1.z, r2.z, c1.x, c1.y
+        mov r5.xyz, c38
+        mad r3.xyw, r5.xyzz, r1.z, c37.xyzz
+        dp3 r1.z, -r4, r2
+        add r1.z, r1.z, r1.z
+        mad r5.xyz, r2, -r1.z, -r4
+        mul r6.xyz, c18.w, c18
+        dp3 r1.z, r2, -c17
+        add r1.z, r1.z, c0.w
+        mul_sat r1.z, r1.z, c1.z
+        dp3_sat r4.w, -c17, r5
+        add r4.w, r4.w, c1.w
+        mov r5.w, c1.w
+        mad r1.w, r1.w, c77.x, r5.w
+        pow r5.w, r4.w, r1.w
+        mul r7.xyz, c61.xyww, v4.y
+        mad r7.xyz, v4.x, c60.xyww, r7
+        mad r7.xyz, v4.z, c62.xyww, r7
+        add r7.xyz, r7, c63.xyww
+        dp3 r1.w, c14, v4
+        add r8.xyz, -r1.w, -c54
+        cmp r8.yzw, r8.xxyz, c0.z, c0.y
+        mov r8.x, c0.z
+        dp4 r9.x, r8, c57
+        dp4 r9.y, r8, c58
+        dp4 r10.x, r8, c59
+        dp4 r10.y, r8, c56
+        mad r7.xy, r7, r9, r10
+        add r8.xyz, c15, -v4
+        dp3 r1.w, r8, r8
+        rsq r1.w, r1.w
+        rcp r1.w, r1.w
+        rcp r4.w, c53.w
+        mul r4.w, r1.w, r4.w
+        mul r4.w, r4.w, r4.w
+        mul r4.w, r4.w, c2.x
+        mov r8.y, c53.y
+        mad r8.xz, r8.y, c2.yyzw, r7.xyyw
+        texld r9, r8.xzzw, s15
+        add r6.w, r7.z, -r9.x
+        cmp r6.w, r6.w, c0.z, c0.y
+        mad r8.xz, r8.y, c10.xyyw, r7.xyyw
+        texld r9, r8.xzzw, s15
+        add r7.w, r7.z, -r9.x
+        cmp r7.w, r7.w, c0.z, c0.y
+        add r6.w, r6.w, r7.w
+        mad r8.xz, r8.y, c10.zyww, r7.xyyw
+        texld r9, r8.xzzw, s15
+        add r7.w, r7.z, -r9.x
+        cmp r7.w, r7.w, c0.z, c0.y
+        add r6.w, r6.w, r7.w
+        mad r8.xz, r8.y, c9.xyyw, r7.xyyw
+        texld r9, r8.xzzw, s15
+        add r7.w, r7.z, -r9.x
+        cmp r7.w, r7.w, c0.z, c0.y
+        add r6.w, r6.w, r7.w
+        mad r8.xz, r8.y, c9.zyww, r7.xyyw
+        texld r9, r8.xzzw, s15
+        add r7.w, r7.z, -r9.x
+        cmp r7.w, r7.w, c0.z, c0.y
+        add r6.w, r6.w, r7.w
+        mad r8.xz, r8.y, c8.xyyw, r7.xyyw
+        texld r9, r8.xzzw, s15
+        add r7.w, r7.z, -r9.x
+        cmp r7.w, r7.w, c0.z, c0.y
+        add r6.w, r6.w, r7.w
+        mad r8.xz, r8.y, c8.zyww, r7.xyyw
+        texld r9, r8.xzzw, s15
+        add r7.w, r7.z, -r9.x
+        cmp r7.w, r7.w, c0.z, c0.y
+        add r6.w, r6.w, r7.w
+        mad r8.xz, r8.y, c7.xyyw, r7.xyyw
+        texld r9, r8.xzzw, s15
+        add r7.w, r7.z, -r9.x
+        cmp r7.w, r7.w, c0.z, c0.y
+        add r6.w, r6.w, r7.w
+        mad r8.xz, r8.y, c7.zyww, r7.xyyw
+        texld r9, r8.xzzw, s15
+        add r7.w, r7.z, -r9.x
+        cmp r7.w, r7.w, c0.z, c0.y
+        add r6.w, r6.w, r7.w
+        mad r8.xz, r8.y, c6.xyyw, r7.xyyw
+        texld r9, r8.xzzw, s15
+        add r7.w, r7.z, -r9.x
+        cmp r7.w, r7.w, c0.z, c0.y
+        add r6.w, r6.w, r7.w
+        mad r8.xz, r8.y, c6.zyww, r7.xyyw
+        texld r9, r8.xzzw, s15
+        add r7.w, r7.z, -r9.x
+        cmp r7.w, r7.w, c0.z, c0.y
+        add r6.w, r6.w, r7.w
+        mad r7.xy, r8.y, c3, r7
+        texld r8, r7, s15
+        add r7.x, r7.z, -r8.x
+        cmp r7.x, r7.x, c0.z, c0.y
+        add r6.w, r6.w, r7.x
+        mad r4.w, r6.w, c2.w, r4.w
+        add r1.w, r1.w, -c53.w
+        cmp r7.xy, r1.w, c5, c5.zwzw
+        add r1.w, r4.w, r7.y
+        cmp_sat r1.w, r1.w, r4.w, r7.x
+        mul r7.xyz, r6, r5.w
+        mul r7.xyz, r1.w, r7
+        mul r6.xyz, r6, r1.z
+        mul r6.xyz, r1.w, r6
+        mad r1.yzw, r3.xxyw, r1.y, r6.xxyz
+        mul r2.w, r2.w, -c0.w
+        add r6, c19, -v4.x
+        add r8, c20, -v4.y
+        add r9, c21, -v4.z
+        mul r10, r6, r6
+        mad r10, r8, r8, r10
+        mad r10, r9, r9, r10
+        add r11, r10, c0.x
+        rsq r12.x, r11.x
+        rsq r12.y, r11.y
+        rsq r12.z, r11.z
+        rsq r12.w, r11.w
+        mad r10, r10, -c25, r3.z
+        max r11, r10, c0.y
+        mul r10, r11, r11
+        mad r10, r10, r10, c3.z
+        mul r11, r10, c3.w
+        cmp r10, r10, r11, c0.y
+        mul r11, r2.x, r6
+        mad r11, r8, r2.y, r11
+        mad r11, r9, r2.z, r11
+        mul r10, r10, r11
+        mul_sat r10, r12, r10
+        mul r11, r6, -c22
+        mad r11, r8, -c23, r11
+        mad r11, r9, -c24, r11
+        mul r11, r12, r11
+        mov r13, c26
+        mad_sat r11, r11, r13, c27
+        mul r10, r10, r11
+        mul r6, r5.x, r6
+        mad r6, r5.y, r8, r6
+        mad r6, r5.z, r9, r6
+        mul r6, r12, r6
+        log r8.x, r6_abs.x
+        log r8.y, r6_abs.y
+        log r8.z, r6_abs.z
+        log r8.w, r6_abs.w
+        mul r6, r2.w, r8
+        exp r8.x, r6.x
+        exp r8.y, r6.y
+        exp r8.z, r6.z
+        exp r8.w, r6.w
+        mul r6, r10, r8
+        dp4 r8.x, c29, r10
+        dp4 r8.y, c30, r10
+        dp4 r8.z, c31, r10
+        dp4 r9.x, c29, r6
+        dp4 r9.y, c30, r6
+        dp4 r9.z, c31, r6
+        add r1.yzw, r1, r8.xxyz
+        mad r3.xyw, r7.xyzz, c17.w, r9.xyzz
+        add r6, c32, -v4.x
+        add r7, c33, -v4.y
+        add r8, c34, -v4.z
+        mul r9, r6, r6
+        mad r9, r7, r7, r9
+        mad r9, r8, r8, r9
+        add r10, r9, c0.x
+        rsq r11.x, r10.x
+        rsq r11.y, r10.y
+        rsq r11.z, r10.z
+        rsq r11.w, r10.w
+        mad r9, r9, -c36, r3.z
+        max r10, r9, c0.y
+        mul r9, r10, r10
+        mad r9, r9, r9, c3.z
+        mul r10, r9, c3.w
+        cmp r9, r9, r10, c0.y
+        mul r10, r2.x, r6
+        mad r10, r7, r2.y, r10
+        mad r10, r8, r2.z, r10
+        mul r9, r9, r10
+        mul_sat r9, r11, r9
+        mul r10, r6, -c67
+        mad r10, r7, -c68, r10
+        mad r10, r8, -c69, r10
+        mul r10, r11, r10
+        mov r12, c70
+        mad_sat r10, r10, r12, c71
+        mul r9, r9, r10
+        mul r6, r5.x, r6
+        mad r6, r5.y, r7, r6
+        mad r5, r5.z, r8, r6
+        mul r5, r11, r5
+        log r6.x, r5_abs.x
+        log r6.y, r5_abs.y
+        log r6.z, r5_abs.z
+        log r6.w, r5_abs.w
+        mul r5, r2.w, r6
+        exp r6.x, r5.x
+        exp r6.y, r5.y
+        exp r6.z, r5.z
+        exp r6.w, r5.w
+        mul r5, r9, r6
+        dp4 r6.x, c35, r9
+        dp4 r6.y, c64, r9
+        dp4 r6.z, c65, r9
+        dp4 r7.x, c35, r5
+        dp4 r7.y, c64, r5
+        dp4 r7.z, c65, r5
+        add r5.xyz, r1.yzww, r6
+        add r1.yzw, r3.xxyw, r7.xxyz
+        dp3 r2.x, r4, r2
+        add r2.x, -r2_abs.x, c0.z
+        mul r2.x, r2.x, r2.x
+        mul r2.x, r2.x, r2.x
+        mad_sat r2.x, r2.x, c1.y, c1.y
+        mul r1.x, r1.x, r2.x
+        mov r5.w, c0.z
+        mul r0, r0, r5
+        mad r0.xyz, r1.x, r1.yzww, r0
+        mul oC0.w, r0.w, c39.x
+        add r0.w, c16.w, -v1.w
+        add r1.x, -c16.z, c16.w
+        rcp r1.x, r1.x
+        mul_sat r0.w, r0.w, r1.x
+        add r0.w, -r0.w, c0.z
+        add r1.xy, -r3.z, c16
+        mul r1.y, r0.w, r1.y
+        mad r0.w, r0.w, r1.x, c0.z
+        dp3 r1.x, r0, c4
+        lrp r2.xyz, r0.w, r0, r1.x
+        add r0.x, r1.x, c4.w
+        pow r2.w, r0_abs.x, r1.y
+        mul r0.xyz, r2, r2.w
+        rcp r0.w, c41.x
+        mul_sat r0.w, r0.w, v1.w
+        add r1.x, -c41.x, v1.w
+        add r1.y, -c41.x, c41.y
+        rcp r1.y, r1.y
+        mul_sat r1.x, r1.x, r1.y
+        lrp r3.x, c41.w, r0.w, r1.x
+        add r0.w, r3.x, c41.z
+        mov r3.xyz, c43
+        add r1.yzw, -r3.xxyz, c42.xxyz
+        mad r1.xyz, r1.x, r1.yzww, c43
+        mad r1.xyz, r2, -r2.w, r1
+        mad oC0.xyz, r0.w, r1, r0
+    
+    // approximately 283 instruction slots used (15 texture, 268 arithmetic)
+};
+
+PixelShader PS_VehicleTexturedZero
+<
+    string DirtSampler          = "parameter register(1)";
+    string LuminanceConstants   = "parameter register(78)";
+    string SpecSampler          = "parameter register(2)";
+    string TextureSampler       = "parameter register(0)";
+    string dirtColor            = "parameter register(73)";
+    string dirtLevel            = "parameter register(72)";
+    string gDepthFxParams       = "parameter register(16)";
+    string gDirectionalColour   = "parameter register(18)";
+    string gDirectionalLight    = "parameter register(17)";
+    string gFacetCentre         = "parameter register(54)";
+    string gLightAmbient0       = "parameter register(37)";
+    string gLightAmbient1       = "parameter register(38)";
+    string gShadowMatrix        = "parameter register(60)";
+    string gShadowParam0123     = "parameter register(57)";
+    string gShadowParam14151617 = "parameter register(56)";
+    string gShadowParam18192021 = "parameter register(53)";
+    string gShadowParam4567     = "parameter register(58)";
+    string gShadowParam891113   = "parameter register(59)";
+    string gShadowZSamplerDir   = "parameter register(15)";
+    string gViewInverse         = "parameter register(12)";
+    string globalFogColor       = "parameter register(42)";
+    string globalFogColorN      = "parameter register(43)";
+    string globalFogParams      = "parameter register(41)";
+    string globalScalars        = "parameter register(39)";
+    string matDiffuseColor      = "parameter register(66)";
+    string reflectivePowerED    = "parameter register(77)";
+    string specMapIntMask       = "parameter register(76)";
+    string specularColorFactor  = "parameter register(75)";
+    string specularFactor       = "parameter register(74)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   sampler2D DirtSampler;
+    //   float3 LuminanceConstants;
+    //   sampler2D SpecSampler;
+    //   sampler2D TextureSampler;
+    //   float3 dirtColor;
+    //   float dirtLevel;
+    //   float4 gDepthFxParams;
+    //   float4 gDirectionalColour;
+    //   float4 gDirectionalLight;
+    //   float4 gFacetCentre;
+    //   float4 gLightAmbient0;
+    //   float4 gLightAmbient1;
+    //   row_major float4x4 gShadowMatrix;
+    //   float4 gShadowParam0123;
+    //   float4 gShadowParam14151617;
+    //   float4 gShadowParam18192021;
+    //   float4 gShadowParam4567;
+    //   float4 gShadowParam891113;
+    //   sampler2D gShadowZSamplerDir;
+    //   row_major float4x4 gViewInverse;
+    //   float4 globalFogColor;
+    //   float4 globalFogColorN;
+    //   float4 globalFogParams;
+    //   float4 globalScalars;
+    //   float3 matDiffuseColor;
+    //   float reflectivePowerED;
+    //   float3 specMapIntMask;
+    //   float specularColorFactor;
+    //   float specularFactor;
+    //
+    //
+    // Registers:
+    //
+    //   Name                 Reg   Size
+    //   -------------------- ----- ----
+    //   gViewInverse         c12      4
+    //   gDepthFxParams       c16      1
+    //   gDirectionalLight    c17      1
+    //   gDirectionalColour   c18      1
+    //   gLightAmbient0       c37      1
+    //   gLightAmbient1       c38      1
+    //   globalScalars        c39      1
+    //   globalFogParams      c41      1
+    //   globalFogColor       c42      1
+    //   globalFogColorN      c43      1
+    //   gShadowParam18192021 c53      1
+    //   gFacetCentre         c54      1
+    //   gShadowParam14151617 c56      1
+    //   gShadowParam0123     c57      1
+    //   gShadowParam4567     c58      1
+    //   gShadowParam891113   c59      1
+    //   gShadowMatrix        c60      4
+    //   matDiffuseColor      c66      1
+    //   dirtLevel            c72      1
+    //   dirtColor            c73      1
+    //   specularFactor       c74      1
+    //   specularColorFactor  c75      1
+    //   specMapIntMask       c76      1
+    //   reflectivePowerED    c77      1
+    //   LuminanceConstants   c78      1
+    //   TextureSampler       s0       1
+    //   DirtSampler          s1       1
+    //   SpecSampler          s2       1
+    //   gShadowZSamplerDir   s15      1
+    //
+    
+        ps_3_0
+        def c0, 9.99999975e-006, 0, 1, -0.25
+        def c1, -0.5, 0.5, 1.33333337, 9.99999975e-005
+        def c2, 1.5, -0.326211989, -0.405809999, 0.0833333358
+        def c3, 0.212500006, 0.715399981, 0.0720999986, 0
+        def c4, -0.791558981, -0.597710013, 1.00000001e-007, 0
+        def c5, 1, -1, 0, -0
+        def c6, 0.896420002, 0.412458003, -0.321940005, -0.932614982
+        def c7, 0.185461, -0.893123984, 0.507430971, 0.0644249991
+        def c8, 0.473434001, -0.480026007, 0.519456029, 0.767022014
+        def c9, -0.203345001, 0.620715976, 0.962339997, -0.194983006
+        def c10, -0.840143979, -0.0735799968, -0.69591397, 0.457136989
+        dcl_texcoord v0.xy
+        dcl_texcoord1 v1
+        dcl_texcoord3 v2.xyz
+        dcl_color v3
+        dcl_texcoord2 v4.xyz
+        dcl_2d s0
+        dcl_2d s1
+        dcl_2d s2
+        dcl_2d s15
+        texld r0, v0, s0
+        add r1.xyz, c0.x, v1
+        nrm r2.xyz, r1
+        texld r1, v0, s2
+        mul r1.w, r1.w, c74.x
+        dp3 r1.x, r1, c76
+        mul r1.x, r1.x, c75.x
+        mul r1.x, r1.x, c77.x
+        mul r0.xyz, r0, c66
+        mul r0, r0, v3
+        dp3 r1.y, v3, c78
+        mul r1.y, r1.y, c39.z
+        mov r3.yz, c0
+        if_lt -c72.x, r3.y
+          texld r4, v0, s1
+          mul r1.z, r4.x, c72.x
+          mad r5.x, r4.x, -c72.x, r3.z
+          lrp r5.yzw, r1.z, c73.xxyz, r0.xxyz
+          mad r6, r0.xxyz, c0.yzzz, c0.zyyy
+          cmp r4, -r4.x, r6, r5
+          mov r0.xyz, r4.yzww
+        else
+          mov r4.x, c0.z
+        endif
+        mul r1.x, r1.x, r4.x
+        add r3.xyw, c0.x, v2.xyzz
+        nrm r4.xyz, r3.xyww
+        mad_sat r1.z, r2.z, c1.x, c1.y
+        mov r5.xyz, c38
+        mad r3.xyw, r5.xyzz, r1.z, c37.xyzz
+        dp3 r1.z, -r4, r2
+        add r1.z, r1.z, r1.z
+        mad r5.xyz, r2, -r1.z, -r4
+        mul r6.xyz, c18.w, c18
+        dp3 r1.z, r2, -c17
+        add r1.z, r1.z, c0.w
+        mul_sat r1.z, r1.z, c1.z
+        dp3_sat r2.w, -c17, r5
+        add r2.w, r2.w, c1.w
+        mov r4.w, c1.w
+        mad r1.w, r1.w, c77.x, r4.w
+        pow r4.w, r2.w, r1.w
+        mul r5.xyz, c61.xyww, v4.y
+        mad r5.xyz, v4.x, c60.xyww, r5
+        mad r5.xyz, v4.z, c62.xyww, r5
+        add r5.xyz, r5, c63.xyww
+        dp3 r1.w, c14, v4
+        add r7.xyz, -r1.w, -c54
+        cmp r7.yzw, r7.xxyz, c0.z, c0.y
+        mov r7.x, c0.z
+        dp4 r8.x, r7, c57
+        dp4 r8.y, r7, c58
+        dp4 r9.x, r7, c59
+        dp4 r9.y, r7, c56
+        mad r5.xy, r5, r8, r9
+        add r7.xyz, c15, -v4
+        dp3 r1.w, r7, r7
+        rsq r1.w, r1.w
+        rcp r1.w, r1.w
+        rcp r2.w, c53.w
+        mul r2.w, r1.w, r2.w
+        mul r2.w, r2.w, r2.w
+        mul r2.w, r2.w, c2.x
+        mov r7.y, c53.y
+        mad r7.xz, r7.y, c2.yyzw, r5.xyyw
+        texld r8, r7.xzzw, s15
+        add r5.w, r5.z, -r8.x
+        cmp r5.w, r5.w, c0.z, c0.y
+        mad r7.xz, r7.y, c10.xyyw, r5.xyyw
+        texld r8, r7.xzzw, s15
+        add r6.w, r5.z, -r8.x
+        cmp r6.w, r6.w, c0.z, c0.y
+        add r5.w, r5.w, r6.w
+        mad r7.xz, r7.y, c10.zyww, r5.xyyw
+        texld r8, r7.xzzw, s15
+        add r6.w, r5.z, -r8.x
+        cmp r6.w, r6.w, c0.z, c0.y
+        add r5.w, r5.w, r6.w
+        mad r7.xz, r7.y, c9.xyyw, r5.xyyw
+        texld r8, r7.xzzw, s15
+        add r6.w, r5.z, -r8.x
+        cmp r6.w, r6.w, c0.z, c0.y
+        add r5.w, r5.w, r6.w
+        mad r7.xz, r7.y, c9.zyww, r5.xyyw
+        texld r8, r7.xzzw, s15
+        add r6.w, r5.z, -r8.x
+        cmp r6.w, r6.w, c0.z, c0.y
+        add r5.w, r5.w, r6.w
+        mad r7.xz, r7.y, c8.xyyw, r5.xyyw
+        texld r8, r7.xzzw, s15
+        add r6.w, r5.z, -r8.x
+        cmp r6.w, r6.w, c0.z, c0.y
+        add r5.w, r5.w, r6.w
+        mad r7.xz, r7.y, c8.zyww, r5.xyyw
+        texld r8, r7.xzzw, s15
+        add r6.w, r5.z, -r8.x
+        cmp r6.w, r6.w, c0.z, c0.y
+        add r5.w, r5.w, r6.w
+        mad r7.xz, r7.y, c7.xyyw, r5.xyyw
+        texld r8, r7.xzzw, s15
+        add r6.w, r5.z, -r8.x
+        cmp r6.w, r6.w, c0.z, c0.y
+        add r5.w, r5.w, r6.w
+        mad r7.xz, r7.y, c7.zyww, r5.xyyw
+        texld r8, r7.xzzw, s15
+        add r6.w, r5.z, -r8.x
+        cmp r6.w, r6.w, c0.z, c0.y
+        add r5.w, r5.w, r6.w
+        mad r7.xz, r7.y, c6.xyyw, r5.xyyw
+        texld r8, r7.xzzw, s15
+        add r6.w, r5.z, -r8.x
+        cmp r6.w, r6.w, c0.z, c0.y
+        add r5.w, r5.w, r6.w
+        mad r7.xz, r7.y, c6.zyww, r5.xyyw
+        texld r8, r7.xzzw, s15
+        add r6.w, r5.z, -r8.x
+        cmp r6.w, r6.w, c0.z, c0.y
+        add r5.w, r5.w, r6.w
+        mad r5.xy, r7.y, c4, r5
+        texld r7, r5, s15
+        add r5.x, r5.z, -r7.x
+        cmp r5.x, r5.x, c0.z, c0.y
+        add r5.x, r5.w, r5.x
+        mad r2.w, r5.x, c2.w, r2.w
+        add r1.w, r1.w, -c53.w
+        cmp r5.xy, r1.w, c5, c5.zwzw
+        add r1.w, r2.w, r5.y
+        cmp_sat r1.w, r1.w, r2.w, r5.x
+        mul r5.xyz, r6, r4.w
+        mul r5.xyz, r1.w, r5
+        mul r6.xyz, r6, r1.z
+        mul r6.xyz, r1.w, r6
+        mul r5.xyz, r5, c17.w
+        mad r6.xyz, r3.xyww, r1.y, r6
+        dp3 r1.y, r4, r2
+        add r1.y, -r1_abs.y, c0.z
+        mul r1.y, r1.y, r1.y
+        mul r1.y, r1.y, r1.y
+        mad_sat r1.y, r1.y, c1.y, c1.y
+        mul r1.x, r1.x, r1.y
+        mov r6.w, c0.z
+        mul r0, r0, r6
+        mad r0.xyz, r1.x, r5, r0
+        mul oC0.w, r0.w, c39.x
+        add r0.w, c16.w, -v1.w
+        add r1.x, -c16.z, c16.w
+        rcp r1.x, r1.x
+        mul_sat r0.w, r0.w, r1.x
+        add r0.w, -r0.w, c0.z
+        add r1.xy, -r3.z, c16
+        mul r1.y, r0.w, r1.y
+        mad r0.w, r0.w, r1.x, c0.z
+        dp3 r1.x, r0, c3
+        lrp r2.xyz, r0.w, r0, r1.x
+        add r0.x, r1.x, c4.z
+        pow r2.w, r0_abs.x, r1.y
+        mul r0.xyz, r2, r2.w
+        rcp r0.w, c41.x
+        mul_sat r0.w, r0.w, v1.w
+        add r1.x, -c41.x, v1.w
+        add r1.y, -c41.x, c41.y
+        rcp r1.y, r1.y
+        mul_sat r1.x, r1.x, r1.y
+        lrp r3.x, c41.w, r0.w, r1.x
+        add r0.w, r3.x, c41.z
+        mov r3.xyz, c43
+        add r1.yzw, -r3.xxyz, c42.xxyz
+        mad r1.xyz, r1.x, r1.yzww, c43
+        mad r1.xyz, r2, -r2.w, r1
+        mad oC0.xyz, r0.w, r1, r0
+    
+    // approximately 180 instruction slots used (15 texture, 165 arithmetic)
+};
+
+PixelShader PS_VehicleTexturedFour
+<
+    string DirtSampler          = "parameter register(1)";
+    string LuminanceConstants   = "parameter register(78)";
+    string SpecSampler          = "parameter register(2)";
+    string TextureSampler       = "parameter register(0)";
+    string dirtColor            = "parameter register(73)";
+    string dirtLevel            = "parameter register(72)";
+    string gDepthFxParams       = "parameter register(16)";
+    string gDirectionalColour   = "parameter register(18)";
+    string gDirectionalLight    = "parameter register(17)";
+    string gFacetCentre         = "parameter register(54)";
+    string gLightAmbient0       = "parameter register(37)";
+    string gLightAmbient1       = "parameter register(38)";
+    string gLightColB           = "parameter register(31)";
+    string gLightColG           = "parameter register(30)";
+    string gLightColR           = "parameter register(29)";
+    string gLightConeOffset     = "parameter register(27)";
+    string gLightConeScale      = "parameter register(26)";
+    string gLightDirX           = "parameter register(22)";
+    string gLightDirY           = "parameter register(23)";
+    string gLightDirZ           = "parameter register(24)";
+    string gLightFallOff        = "parameter register(25)";
+    string gLightPosX           = "parameter register(19)";
+    string gLightPosY           = "parameter register(20)";
+    string gLightPosZ           = "parameter register(21)";
+    string gShadowMatrix        = "parameter register(60)";
+    string gShadowParam0123     = "parameter register(57)";
+    string gShadowParam14151617 = "parameter register(56)";
+    string gShadowParam18192021 = "parameter register(53)";
+    string gShadowParam4567     = "parameter register(58)";
+    string gShadowParam891113   = "parameter register(59)";
+    string gShadowZSamplerDir   = "parameter register(15)";
+    string gViewInverse         = "parameter register(12)";
+    string globalFogColor       = "parameter register(42)";
+    string globalFogColorN      = "parameter register(43)";
+    string globalFogParams      = "parameter register(41)";
+    string globalScalars        = "parameter register(39)";
+    string matDiffuseColor      = "parameter register(66)";
+    string reflectivePowerED    = "parameter register(77)";
+    string specMapIntMask       = "parameter register(76)";
+    string specularColorFactor  = "parameter register(75)";
+    string specularFactor       = "parameter register(74)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   sampler2D DirtSampler;
+    //   float3 LuminanceConstants;
+    //   sampler2D SpecSampler;
+    //   sampler2D TextureSampler;
+    //   float3 dirtColor;
+    //   float dirtLevel;
+    //   float4 gDepthFxParams;
+    //   float4 gDirectionalColour;
+    //   float4 gDirectionalLight;
+    //   float4 gFacetCentre;
+    //   float4 gLightAmbient0;
+    //   float4 gLightAmbient1;
+    //   float4 gLightColB;
+    //   float4 gLightColG;
+    //   float4 gLightColR;
+    //   float4 gLightConeOffset;
+    //   float4 gLightConeScale;
+    //   float4 gLightDirX;
+    //   float4 gLightDirY;
+    //   float4 gLightDirZ;
+    //   float4 gLightFallOff;
+    //   float4 gLightPosX;
+    //   float4 gLightPosY;
+    //   float4 gLightPosZ;
+    //   row_major float4x4 gShadowMatrix;
+    //   float4 gShadowParam0123;
+    //   float4 gShadowParam14151617;
+    //   float4 gShadowParam18192021;
+    //   float4 gShadowParam4567;
+    //   float4 gShadowParam891113;
+    //   sampler2D gShadowZSamplerDir;
+    //   row_major float4x4 gViewInverse;
+    //   float4 globalFogColor;
+    //   float4 globalFogColorN;
+    //   float4 globalFogParams;
+    //   float4 globalScalars;
+    //   float3 matDiffuseColor;
+    //   float reflectivePowerED;
+    //   float3 specMapIntMask;
+    //   float specularColorFactor;
+    //   float specularFactor;
+    //
+    //
+    // Registers:
+    //
+    //   Name                 Reg   Size
+    //   -------------------- ----- ----
+    //   gViewInverse         c12      4
+    //   gDepthFxParams       c16      1
+    //   gDirectionalLight    c17      1
+    //   gDirectionalColour   c18      1
+    //   gLightPosX           c19      1
+    //   gLightPosY           c20      1
+    //   gLightPosZ           c21      1
+    //   gLightDirX           c22      1
+    //   gLightDirY           c23      1
+    //   gLightDirZ           c24      1
+    //   gLightFallOff        c25      1
+    //   gLightConeScale      c26      1
+    //   gLightConeOffset     c27      1
+    //   gLightColR           c29      1
+    //   gLightColG           c30      1
+    //   gLightColB           c31      1
+    //   gLightAmbient0       c37      1
+    //   gLightAmbient1       c38      1
+    //   globalScalars        c39      1
+    //   globalFogParams      c41      1
+    //   globalFogColor       c42      1
+    //   globalFogColorN      c43      1
+    //   gShadowParam18192021 c53      1
+    //   gFacetCentre         c54      1
+    //   gShadowParam14151617 c56      1
+    //   gShadowParam0123     c57      1
+    //   gShadowParam4567     c58      1
+    //   gShadowParam891113   c59      1
+    //   gShadowMatrix        c60      4
+    //   matDiffuseColor      c66      1
+    //   dirtLevel            c72      1
+    //   dirtColor            c73      1
+    //   specularFactor       c74      1
+    //   specularColorFactor  c75      1
+    //   specMapIntMask       c76      1
+    //   reflectivePowerED    c77      1
+    //   LuminanceConstants   c78      1
+    //   TextureSampler       s0       1
+    //   DirtSampler          s1       1
+    //   SpecSampler          s2       1
+    //   gShadowZSamplerDir   s15      1
+    //
+    
+        ps_3_0
+        def c0, 9.99999975e-006, 0, 1, -0
+        def c1, -0.5, 0.5, -0.25, 1.33333337
+        def c2, 9.99999975e-005, 1.5, -0.326211989, -0.405809999
+        def c3, -0.791558981, -0.597710013, 0.0833333358, -0.100000001
+        def c4, 1, -1, 0, -0
+        def c5, 1.11111116, 0.212500006, 0.715399981, 0.0720999986
+        def c6, 1.00000001e-007, 0, 0, 0
+        def c7, 0.896420002, 0.412458003, -0.321940005, -0.932614982
+        def c8, 0.185461, -0.893123984, 0.507430971, 0.0644249991
+        def c9, 0.473434001, -0.480026007, 0.519456029, 0.767022014
+        def c10, -0.203345001, 0.620715976, 0.962339997, -0.194983006
+        def c11, -0.840143979, -0.0735799968, -0.69591397, 0.457136989
+        dcl_texcoord v0.xy
+        dcl_texcoord1 v1
+        dcl_texcoord3 v2.xyz
+        dcl_color v3
+        dcl_texcoord2 v4.xyz
+        dcl_2d s0
+        dcl_2d s1
+        dcl_2d s2
+        dcl_2d s15
+        texld r0, v0, s0
+        add r1.xyz, c0.x, v1
+        nrm r2.xyz, r1
+        texld r1, v0, s2
+        mul r1.w, r1.w, c74.x
+        mul r2.w, r1.w, c77.x
+        dp3 r1.x, r1, c76
+        mul r1.x, r1.x, c75.x
+        mul r1.x, r1.x, c77.x
+        mul r0.xyz, r0, c66
+        mul r0, r0, v3
+        dp3 r1.y, v3, c78
+        mul r1.y, r1.y, c39.z
+        mov r3.yz, c0
+        if_lt -c72.x, r3.y
+          texld r4, v0, s1
+          mul r1.z, r4.x, c72.x
+          mad r5.x, r4.x, -c72.x, r3.z
+          lrp r5.yzw, r1.z, c73.xxyz, r0.xxyz
+          mad r6, r0.xxyz, c0.yzzz, c0.zwww
+          cmp r4, -r4.x, r6, r5
+          mov r0.xyz, r4.yzww
+        else
+          mov r4.x, c0.z
+        endif
+        mul r1.x, r1.x, r4.x
+        add r3.xyw, c0.x, v2.xyzz
+        nrm r4.xyz, r3.xyww
+        mad_sat r1.z, r2.z, c1.x, c1.y
+        mov r5.xyz, c38
+        mad r3.xyw, r5.xyzz, r1.z, c37.xyzz
+        dp3 r1.z, -r4, r2
+        add r1.z, r1.z, r1.z
+        mad r5.xyz, r2, -r1.z, -r4
+        mul r6.xyz, c18.w, c18
+        dp3 r1.z, r2, -c17
+        add r1.z, r1.z, c1.z
+        mul_sat r1.z, r1.z, c1.w
+        dp3_sat r4.w, -c17, r5
+        add r4.w, r4.w, c2.x
+        mov r7.xzw, c2
+        mad r1.w, r1.w, c77.x, r7.x
+        pow r5.w, r4.w, r1.w
+        mul r8.xyz, c61.xyww, v4.y
+        mad r8.xyz, v4.x, c60.xyww, r8
+        mad r8.xyz, v4.z, c62.xyww, r8
+        add r8.xyz, r8, c63.xyww
+        dp3 r1.w, c14, v4
+        add r9.xyz, -r1.w, -c54
+        cmp r9.yzw, r9.xxyz, c0.z, c0.y
+        mov r9.x, c0.z
+        dp4 r7.x, r9, c57
+        dp4 r7.y, r9, c58
+        dp4 r10.x, r9, c59
+        dp4 r10.y, r9, c56
+        mad r7.xy, r8, r7, r10
+        add r8.xyw, c15.xyzz, -v4.xyzz
+        dp3 r1.w, r8.xyww, r8.xyww
+        rsq r1.w, r1.w
+        rcp r1.w, r1.w
+        rcp r4.w, c53.w
+        mul r4.w, r1.w, r4.w
+        mul r4.w, r4.w, r4.w
+        mul r4.w, r4.w, c2.y
+        mad r7.zw, c53.y, r7, r7.xyxy
+        texld r9, r7.zwzw, s15
+        add r6.w, r8.z, -r9.x
+        cmp r6.w, r6.w, c0.z, c0.y
+        mov r8.y, c53.y
+        mad r7.zw, r8.y, c11.xyxy, r7.xyxy
+        texld r9, r7.zwzw, s15
+        add r7.z, r8.z, -r9.x
+        cmp r7.z, r7.z, c0.z, c0.y
+        add r6.w, r6.w, r7.z
+        mad r7.zw, r8.y, c11, r7.xyxy
+        texld r9, r7.zwzw, s15
+        add r7.z, r8.z, -r9.x
+        cmp r7.z, r7.z, c0.z, c0.y
+        add r6.w, r6.w, r7.z
+        mad r7.zw, r8.y, c10.xyxy, r7.xyxy
+        texld r9, r7.zwzw, s15
+        add r7.z, r8.z, -r9.x
+        cmp r7.z, r7.z, c0.z, c0.y
+        add r6.w, r6.w, r7.z
+        mad r7.zw, r8.y, c10, r7.xyxy
+        texld r9, r7.zwzw, s15
+        add r7.z, r8.z, -r9.x
+        cmp r7.z, r7.z, c0.z, c0.y
+        add r6.w, r6.w, r7.z
+        mad r7.zw, r8.y, c9.xyxy, r7.xyxy
+        texld r9, r7.zwzw, s15
+        add r7.z, r8.z, -r9.x
+        cmp r7.z, r7.z, c0.z, c0.y
+        add r6.w, r6.w, r7.z
+        mad r7.zw, r8.y, c9, r7.xyxy
+        texld r9, r7.zwzw, s15
+        add r7.z, r8.z, -r9.x
+        cmp r7.z, r7.z, c0.z, c0.y
+        add r6.w, r6.w, r7.z
+        mad r7.zw, r8.y, c8.xyxy, r7.xyxy
+        texld r9, r7.zwzw, s15
+        add r7.z, r8.z, -r9.x
+        cmp r7.z, r7.z, c0.z, c0.y
+        add r6.w, r6.w, r7.z
+        mad r7.zw, r8.y, c8, r7.xyxy
+        texld r9, r7.zwzw, s15
+        add r7.z, r8.z, -r9.x
+        cmp r7.z, r7.z, c0.z, c0.y
+        add r6.w, r6.w, r7.z
+        mad r7.zw, r8.y, c7.xyxy, r7.xyxy
+        texld r9, r7.zwzw, s15
+        add r7.z, r8.z, -r9.x
+        cmp r7.z, r7.z, c0.z, c0.y
+        add r6.w, r6.w, r7.z
+        mad r7.zw, r8.y, c7, r7.xyxy
+        texld r9, r7.zwzw, s15
+        add r7.z, r8.z, -r9.x
+        cmp r7.z, r7.z, c0.z, c0.y
+        add r6.w, r6.w, r7.z
+        mad r7.xy, r8.y, c3, r7
+        texld r7, r7, s15
+        add r7.x, r8.z, -r7.x
+        cmp r7.x, r7.x, c0.z, c0.y
+        add r6.w, r6.w, r7.x
+        mad r4.w, r6.w, c3.z, r4.w
+        add r1.w, r1.w, -c53.w
+        cmp r7.xy, r1.w, c4, c4.zwzw
+        add r1.w, r4.w, r7.y
+        cmp_sat r1.w, r1.w, r4.w, r7.x
+        mul r7.xyz, r6, r5.w
+        mul r7.xyz, r1.w, r7
+        mul r6.xyz, r6, r1.z
+        mul r6.xyz, r1.w, r6
+        mad r1.yzw, r3.xxyw, r1.y, r6.xxyz
+        mul r2.w, r2.w, -c1.z
+        add r6, c19, -v4.x
+        add r8, c20, -v4.y
+        add r9, c21, -v4.z
+        mul r10, r6, r6
+        mad r10, r8, r8, r10
+        mad r10, r9, r9, r10
+        add r11, r10, c0.x
+        rsq r12.x, r11.x
+        rsq r12.y, r11.y
+        rsq r12.z, r11.z
+        rsq r12.w, r11.w
+        mad r10, r10, -c25, r3.z
+        max r11, r10, c0.y
+        mul r10, r11, r11
+        mad r10, r10, r10, c3.w
+        mul r11, r10, c5.x
+        cmp r10, r10, r11, c0.y
+        mul r11, r2.x, r6
+        mad r11, r8, r2.y, r11
+        mad r11, r9, r2.z, r11
+        mul r10, r10, r11
+        mul_sat r10, r12, r10
+        mul r11, r6, -c22
+        mad r11, r8, -c23, r11
+        mad r11, r9, -c24, r11
+        mul r11, r12, r11
+        mov r13, c26
+        mad_sat r11, r11, r13, c27
+        mul r10, r10, r11
+        mul r6, r5.x, r6
+        mad r6, r5.y, r8, r6
+        mad r5, r5.z, r9, r6
+        mul r5, r12, r5
+        log r6.x, r5_abs.x
+        log r6.y, r5_abs.y
+        log r6.z, r5_abs.z
+        log r6.w, r5_abs.w
+        mul r5, r2.w, r6
+        exp r6.x, r5.x
+        exp r6.y, r5.y
+        exp r6.z, r5.z
+        exp r6.w, r5.w
+        mul r5, r10, r6
+        dp4 r6.x, c29, r10
+        dp4 r6.y, c30, r10
+        dp4 r6.z, c31, r10
+        dp4 r8.x, c29, r5
+        dp4 r8.y, c30, r5
+        dp4 r8.z, c31, r5
+        add r5.xyz, r1.yzww, r6
+        mad r1.yzw, r7.xxyz, c17.w, r8.xxyz
+        dp3 r2.x, r4, r2
+        add r2.x, -r2_abs.x, c0.z
+        mul r2.x, r2.x, r2.x
+        mul r2.x, r2.x, r2.x
+        mad_sat r2.x, r2.x, c1.y, c1.y
+        mul r1.x, r1.x, r2.x
+        mov r5.w, c0.z
+        mul r0, r0, r5
+        mad r0.xyz, r1.x, r1.yzww, r0
+        mul oC0.w, r0.w, c39.x
+        add r0.w, c16.w, -v1.w
+        add r1.x, -c16.z, c16.w
+        rcp r1.x, r1.x
+        mul_sat r0.w, r0.w, r1.x
+        add r0.w, -r0.w, c0.z
+        add r1.xy, -r3.z, c16
+        mul r1.y, r0.w, r1.y
+        mad r0.w, r0.w, r1.x, c0.z
+        dp3 r1.x, r0, c5.yzww
+        lrp r2.xyz, r0.w, r0, r1.x
+        add r0.x, r1.x, c6.x
+        pow r2.w, r0_abs.x, r1.y
+        mul r0.xyz, r2, r2.w
+        rcp r0.w, c41.x
+        mul_sat r0.w, r0.w, v1.w
+        add r1.x, -c41.x, v1.w
+        add r1.y, -c41.x, c41.y
+        rcp r1.y, r1.y
+        mul_sat r1.x, r1.x, r1.y
+        lrp r3.x, c41.w, r0.w, r1.x
+        add r0.w, r3.x, c41.z
+        mov r3.xyz, c43
+        add r1.yzw, -r3.xxyz, c42.xxyz
+        mad r1.xyz, r1.x, r1.yzww, c43
+        mad r1.xyz, r2, -r2.w, r1
+        mad oC0.xyz, r0.w, r1, r0
+    
+    // approximately 232 instruction slots used (15 texture, 217 arithmetic)
+};
+
+PixelShader PS_DeferredVehicleTextured
+<
+    string DirtSampler               = "parameter register(1)";
+    string LuminanceConstants        = "parameter register(85)";
+    string SpecSampler               = "parameter register(2)";
+    string TextureSampler            = "parameter register(0)";
+    string dirtColor                 = "parameter register(74)";
+    string dirtLevel                 = "parameter register(73)";
+    string gDirectionalLight         = "parameter register(17)";
+    string globalScalars             = "parameter register(39)";
+    string matDiffuseColor           = "parameter register(66)";
+    string matDiffuseColor2          = "parameter register(72)";
+    string reflectivePowerED         = "parameter register(84)";
+    string specMapIntMask            = "parameter register(79)";
+    string specular2ColorIntensityED = "parameter register(83)";
+    string specular2ColorIntensityRE = "parameter register(82)";
+    string specular2Factor           = "parameter register(80)";
+    string specular2FactorED         = "parameter register(81)";
+    string specularColorFactor       = "parameter register(77)";
+    string specularColorFactorED     = "parameter register(78)";
+    string specularFactor            = "parameter register(75)";
+    string specularFactorED          = "parameter register(76)";
+    string stencil                   = "parameter register(52)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   sampler2D DirtSampler;
+    //   float3 LuminanceConstants;
+    //   sampler2D SpecSampler;
+    //   sampler2D TextureSampler;
+    //   float3 dirtColor;
+    //   float dirtLevel;
+    //   float4 gDirectionalLight;
+    //   float4 globalScalars;
+    //   float3 matDiffuseColor;
+    //   float4 matDiffuseColor2;
+    //   float reflectivePowerED;
+    //   float3 specMapIntMask;
+    //   float specular2ColorIntensityED;
+    //   float specular2ColorIntensityRE;
+    //   float specular2Factor;
+    //   float specular2FactorED;
+    //   float specularColorFactor;
+    //   float specularColorFactorED;
+    //   float specularFactor;
+    //   float specularFactorED;
+    //   float4 stencil;
+    //
+    //
+    // Registers:
+    //
+    //   Name                      Reg   Size
+    //   ------------------------- ----- ----
+    //   gDirectionalLight         c17      1
+    //   globalScalars             c39      1
+    //   stencil                   c52      1
+    //   matDiffuseColor           c66      1
+    //   matDiffuseColor2          c72      1
+    //   dirtLevel                 c73      1
+    //   dirtColor                 c74      1
+    //   specularFactor            c75      1
+    //   specularFactorED          c76      1
+    //   specularColorFactor       c77      1
+    //   specularColorFactorED     c78      1
+    //   specMapIntMask            c79      1
+    //   specular2Factor           c80      1
+    //   specular2FactorED         c81      1
+    //   specular2ColorIntensityRE c82      1
+    //   specular2ColorIntensityED c83      1
+    //   reflectivePowerED         c84      1
+    //   LuminanceConstants        c85      1
+    //   TextureSampler            s0       1
+    //   DirtSampler               s1       1
+    //   SpecSampler               s2       1
+    //
+    
+        ps_3_0
+        def c0, 9.99999975e-006, 0, 1, 9.99999975e-005
+        def c1, -13.2877121, 0.5, 0.001953125, 0
+        dcl_texcoord v0.xy
+        dcl_texcoord1 v1.xyz
+        dcl_texcoord3 v2.xyz
+        dcl_color v3
+        dcl_2d s0
+        dcl_2d s1
+        dcl_2d s2
+        texld r0, v0, s0
+        add r1.xyz, c0.x, v1
+        dp3 r1.w, r1, r1
+        rsq r1.w, r1.w
+        mul r2.xyz, r1, r1.w
+        texld r3, v0, s2
+        mul r2.w, r3.w, c75.x
+        mul r2.w, r2.w, c84.x
+        dp3 r3.x, r3, c79
+        mul r3.x, r3.x, c77.x
+        mul r3.x, r3.x, c84.x
+        mul r0.xyz, r0, c66
+        mul r0, r0, v3
+        dp3 r3.y, v3, c85
+        mul oC2.z, r3.y, c39.z
+        mov r3.yz, c0
+        if_lt -c73.x, r3.y
+          texld r4, v0, s1
+          mul r3.w, r4.x, c73.x
+          mad r5.x, r4.x, -c73.x, r3.z
+          lrp r5.yzw, r3.w, c74.xxyz, r0.xxyz
+          mad r6, r0.xxyz, c0.yzzz, c0.zyyy
+          cmp r4, -r4.x, r6, r5
+          mov r0.xyz, r4.yzww
+        else
+          mov r4.x, c0.z
+        endif
+        mul r3.w, r3.x, r4.x
+        mov r4.x, c82.x
+        mul r4.x, r4.x, c83.x
+        mov r5.x, c80.x
+        mul r4.y, r5.x, c81.x
+        mov r5.x, c75.x
+        mul r4.z, r5.x, c76.x
+        rcp r4.z, r4.z
+        mul r4.z, r2.w, r4.z
+        mov r5.x, c77.x
+        mul r4.w, r5.x, c78.x
+        rcp r4.w, r4.w
+        mul r3.x, r3.x, r4.w
+        mul r4.yz, r4.xzxw, r4.xyxw
+        mul r3.x, r3.x, r4.z
+        add r5.xyz, c0.x, v2
+        nrm r6.xyz, r5
+        dp3 r4.z, -r6, r2
+        add r4.z, r4.z, r4.z
+        mad r2.xyz, r2, -r4.z, -r6
+        dp3 r2.x, -c17, r2
+        add r2.y, r2.x, c0.w
+        log r2.y, r2.y
+        cmp r2.x, r2.x, r2.y, c1.x
+        mul r2.x, r4.y, r2.x
+        exp r2.x, r2.x
+        mad r2.xyz, r3.x, r2.x, r0
+        cmp oC0.xyz, -r4.x, r0, r2
+        mul r0.x, r3.w, c72.w
+        mul r0.y, r2.w, c72.w
+        mad r1.xyz, r1, r1.w, c0.z
+        mul oC1.xyz, r1, c1.y
+        mul oC2.x, r0.x, c1.y
+        mul r0.x, r0.y, c1.z
+        rsq r0.x, r0.x
+        rcp oC2.y, r0.x
+        mul r0.x, r0.w, c39.x
+        mov oC0.w, r0.x
+        mov oC1.w, r0.x
+        mov oC2.w, r0.x
+        mul oC3, r3.zyyy, c52.x
+    
+    // approximately 72 instruction slots used (3 texture, 69 arithmetic)
+};
+
+PixelShader PS_ShadowDepth
+<
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+        ps_3_0
+        def c0, 1, 0, 0, 0
+        dcl_texcoord v0.x
+        mad oC0, v0.x, c0.xxxy, c0.yyyx
+    
+    // approximately 1 instruction slot used
+};
+
+PixelShader PS_ShadowDepthMasked
+<
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+        ps_3_0
+        def c0, 1, 0, 0, 0
+        dcl_texcoord v0.x
+        mad oC0, v0.x, c0.xxxy, c0.yyyx
+    
+    // approximately 1 instruction slot used
+};
+
+PixelShader PS_VehicleTexturedUnlit
+<
+    string DirtSampler     = "parameter register(1)";
+    string TextureSampler  = "parameter register(0)";
+    string dirtColor       = "parameter register(73)";
+    string dirtLevel       = "parameter register(72)";
+    string globalScalars   = "parameter register(39)";
+    string matDiffuseColor = "parameter register(66)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   sampler2D DirtSampler;
+    //   sampler2D TextureSampler;
+    //   float3 dirtColor;
+    //   float dirtLevel;
+    //   float4 globalScalars;
+    //   float3 matDiffuseColor;
+    //
+    //
+    // Registers:
+    //
+    //   Name            Reg   Size
+    //   --------------- ----- ----
+    //   globalScalars   c39      1
+    //   matDiffuseColor c66      1
+    //   dirtLevel       c72      1
+    //   dirtColor       c73      1
+    //   TextureSampler  s0       1
+    //   DirtSampler     s1       1
+    //
+    
+        ps_3_0
+        def c0, 0, 0, 0, 0
+        dcl_texcoord v0.xy
+        dcl_color v1
+        dcl_2d s0
+        dcl_2d s1
+        texld r0, v0, s0
+        mul r1.xyz, r0, c66
+        mov r0.x, r0.w
+        mul r1.w, r0.x, c39.x
+        mul r0, r1, v1
+        mov r1.x, c72.x
+        if_lt -r1.x, c0.x
+          texld r1, v0, s1
+          mul r1.y, r1.x, c72.x
+          lrp r2.xyz, r1.y, c73, r0
+          cmp r0.xyz, -r1.x, r0, r2
+        endif
+        mov oC0, r0
+    
+    // approximately 15 instruction slots used (2 texture, 13 arithmetic)
+};
+
+technique blitr2vb
+{
+    pass p0
+    {
+        VertexShader = VS_VehicleTransformR2VB;
+        PixelShader = PS_VehicleR2VB;
+    }
+}
+
+technique draw
+{
+    pass p0
+    {
+        AlphaBlendEnable = true;
+        AlphaTestEnable = true;
+
+        VertexShader = VS_VehicleTransform;
+        PixelShader = PS_VehicleTexturedEight;
+    }
+}
+
+technique drawskinned
+{
+    pass p0
+    {
+        AlphaRef = 64;
+        AlphaBlendEnable = true;
+        AlphaTestEnable = true;
+
+        VertexShader = VS_VehicleTransformSkin;
+        PixelShader = PS_VehicleTexturedEight;
+    }
+}
+
+technique lightweight0_draw
+{
+    pass p0
+    {
+        AlphaBlendEnable = true;
+        AlphaTestEnable = true;
+
+        VertexShader = VS_VehicleTransform;
+        PixelShader = PS_VehicleTexturedZero;
+    }
+}
+
+technique lightweight0_drawskinned
+{
+    pass p0
+    {
+        AlphaRef = 64;
+        AlphaBlendEnable = true;
+        AlphaTestEnable = true;
+
+        VertexShader = VS_VehicleTransformSkin;
+        PixelShader = PS_VehicleTexturedZero;
+    }
+}
+
+technique lightweight4_draw
+{
+    pass p0
+    {
+        AlphaBlendEnable = true;
+        AlphaTestEnable = true;
+
+        VertexShader = VS_VehicleTransform;
+        PixelShader = PS_VehicleTexturedFour;
+    }
+}
+
+technique lightweight4_drawskinned
+{
+    pass p0
+    {
+        AlphaRef = 64;
+        AlphaBlendEnable = true;
+        AlphaTestEnable = true;
+
+        VertexShader = VS_VehicleTransformSkin;
+        PixelShader = PS_VehicleTexturedFour;
+    }
+}
+
+technique deferred_draw
+{
+    pass p0
+    {
+        VertexShader = VS_VehicleTransformD;
+        PixelShader = PS_DeferredVehicleTextured;
+    }
+}
+
+technique deferred_drawskinned
+{
+    pass p0
+    {
+        AlphaRef = 64;
+        AlphaBlendEnable = false;
+        AlphaTestEnable = false;
+
+        VertexShader = VS_VehicleTransformSkinD;
+        PixelShader = PS_DeferredVehicleTextured;
+    }
+}
+
+technique wd_draw
+{
+    pass p0
+    {
+        VertexShader = VS_VehicleShadowDepth;
+        PixelShader = PS_ShadowDepth;
+    }
+}
+
+technique wd_drawskinned
+{
+    pass p0
+    {
+        VertexShader = VS_VehicleShadowDepthSkin;
+        PixelShader = PS_ShadowDepth;
+    }
+}
+
+technique wd_masked_draw
+{
+    pass p0
+    {
+        VertexShader = VS_VehicleShadowDepth;
+        PixelShader = PS_ShadowDepthMasked;
+    }
+}
+
+technique wd_masked_drawskinned
+{
+    pass p0
+    {
+        VertexShader = VS_VehicleShadowDepthSkin;
+        PixelShader = PS_ShadowDepthMasked;
+    }
+}
+
+technique unlit_draw
+{
+    pass p0
+    {
+        VertexShader = VS_VehicleTransformUnlit;
+        PixelShader = PS_VehicleTexturedUnlit;
+    }
+}
+
+technique unlit_drawskinned
+{
+    pass p0
+    {
+        VertexShader = VS_VehicleTransformSkinUnlit;
+        PixelShader = PS_VehicleTexturedUnlit;
+    }
+}
+
+technique reflection_draw
+{
+    pass p0
+    {
+        VertexShader = VS_VehicleTransform;
+        PixelShader = PS_VehicleTexturedZero;
+    }
+}
+
+technique reflection_drawskinned
+{
+    pass p0
+    {
+        VertexShader = VS_VehicleTransformSkin;
+        PixelShader = PS_VehicleTexturedZero;
+    }
+}
+

@@ -1,0 +1,765 @@
+//Globals
+shared float4 gAllGlobals[64] : AllGlobals;
+shared float4x3 gBoneMtx[48] : WorldMatrixArray;
+shared float4x4 gWorld : World;
+shared float4x4 gWorldView : WorldView;
+shared float4x4 gWorldViewProj : WorldViewProjection;
+shared float4x4 gViewInverse : ViewInverse;
+shared texture stippletexture;
+shared sampler StippleTexture = 
+sampler_state
+{
+    Texture = <stippletexture>;
+    MinFilter = POINT;
+    MagFilter = POINT;
+    MipFilter = POINT;
+    AddressU = WRAP;
+    AddressV = WRAP;
+};
+shared float4 gDepthFxParams : DepthFxParams = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 gDirectionalLight : DirectionalLight;
+shared float4 gDirectionalColour : DirectionalColour;
+shared float4 gLightPosX : LightPositionX;
+shared float4 gLightPosY : LightPositionY;
+shared float4 gLightPosZ : LightPositionZ;
+shared float4 gLightDirX : LightDirX;
+shared float4 gLightDirY : LightDirY;
+shared float4 gLightDirZ : LightDirZ;
+shared float4 gLightFallOff : LightFallOff;
+shared float4 gLightConeScale : LightConeScale;
+shared float4 gLightConeOffset : LightConeOffset;
+shared float4 gLightColR : LightColR;
+shared float4 gLightColG : LightColG;
+shared float4 gLightColB : LightColB;
+shared float4 gLightPointPosX : LightPointPositionX;
+shared float4 gLightPointPosY : LightPointPositionY;
+shared float4 gLightPointPosZ : LightPointPositionZ;
+shared float4 gLightPointColR : LightPointColR;
+shared float4 gLightPointColG : LightPointColG;
+shared float4 gLightPointColB : LightPointColB;
+shared float4 gLightPointFallOff : LightPointFallOff;
+shared float4 gLightDir2X : LightDir2X;
+shared float4 gLightDir2Y : LightDir2Y;
+shared float4 gLightDir2Z : LightDir2Z;
+shared float4 gLightConeScale2 : LightConeScale2;
+shared float4 gLightConeOffset2 : LightConeOffset2;
+shared float4 gLightAmbient0 : LightAmbientColor0<string UIWidget = "Ambient Light Color 0"; string Space = "material";> = float4(0.000000, 0.000000, 0.000000, 1.000000);
+shared float4 gLightAmbient1 : LightAmbientColor1<string UIWidget = "Ambient Light Color 1"; string Space = "material";> = float4(0.000000, 0.000000, 0.000000, 1.000000);
+shared float4 globalScalars : globalScalars = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 globalScalars2 : globalScalars2 = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 gAspectRatio : gAspectRatio = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 globalScreenSize : globalScreenSize = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 globalFogParams : globalFogParams = float4(1600.000000, 9000000.000000, 0.010000, 1.000000);
+shared float4 globalFogColor : globalFogColor = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 globalFogColorN : globalFogColorN = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 gDayNightEffects : globalDayNightEffects = float4(1.000000, 0.000000, 1.000000, 0.000000);
+shared float gInvColorExpBias : ColorExpBias = 1.000000;
+shared float4 colorize : Colorize = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 stencil : Stencil = float4(0.000000, 255.000000, 0.000000, 0.000000);
+shared float4 gFacetCentre : FacetCentre;
+shared float4 gShadowCommonParam0123 : ShadowCommonParam0123;
+shared float4 gShadowParam14151617 : ShadowParam14151617;
+shared float4 gShadowParam18192021 : ShadowParam18192021;
+shared float4 gShadowParam0123 : ShadowParam0123;
+shared float4 gShadowParam4567 : ShadowParam4567;
+shared float4 gShadowParam891113 : ShadowParam891113;
+shared float4x4 gShadowMatrix : ShadowMatrix;
+shared texture ShadowZTextureDir;
+shared sampler gShadowZSamplerDir = 
+sampler_state
+{
+    Texture = <ShadowZTextureDir>;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+    MipFilter = POINT;
+    MinFilter = POINT;
+    MagFilter = POINT;
+};
+shared texture ShadowZTextureDirVS;
+shared sampler gShadowZSamplerDirVS = 
+sampler_state
+{
+    Texture = <ShadowZTextureDirVS>;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+    MipFilter = POINT;
+    MinFilter = POINT;
+    MagFilter = POINT;
+};
+shared texture ShadowZTextureCache;
+shared sampler gShadowZSamplerCache = 
+sampler_state
+{
+    Texture = <ShadowZTextureCache>;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+    MipFilter = POINT;
+    MinFilter = POINT;
+    MagFilter = POINT;
+};
+shared texture ShadowTextureLUT;
+shared sampler gShadowSamplerLUT = 
+sampler_state
+{
+    Texture = <ShadowTextureLUT>;
+    AddressU = WRAP;
+    AddressV = WRAP;
+    MipFilter = POINT;
+    MinFilter = LINEAR;
+    MagFilter = LINEAR;
+};
+
+//Locals
+texture DiffuseTex;
+sampler TextureSampler<string UIName = "Diffuse Texture";> = 
+sampler_state
+{
+    Texture = <DiffuseTex>;
+    AddressU = WRAP;
+    AddressV = WRAP;
+    AddressW = WRAP;
+    MipFilter = LINEAR;
+    MinFilter = ANISOTROPIC;
+    MagFilter = LINEAR;
+};
+float shadowmap_res : ShadowMapResolution = 1280.000000;
+float2 facetMask[4] : facetMask = 
+{
+    float2(-1.000000, 0.000000), 
+    float2(1.000000, 0.000000), 
+    float2(0.000000, -1.000000), 
+    float2(0.000000, 1.000000)
+};
+float3 LuminanceConstants : LuminanceConstants = float3(0.212500, 0.715400, 0.072100);
+texture imposterTexture;
+sampler imposterSampler<string UIName = "Diffuse Billboard Texture";> = 
+sampler_state
+{
+    Texture = <imposterTexture>;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+    AddressW = CLAMP;
+    MipFilter = NONE;
+    MinFilter = LINEAR;
+    MagFilter = LINEAR;
+};
+texture blitTexture;
+sampler blitSampler<string UIName = "Blit Texture";> = 
+sampler_state
+{
+    Texture = <blitTexture>;
+    AddressU = WRAP;
+    AddressV = WRAP;
+    AddressW = WRAP;
+    MipFilter = NONE;
+    MinFilter = POINT;
+    MagFilter = POINT;
+    MipMapLodBias = 8.000000;
+};
+float3 imposterDir[8] : imposterDir = 
+{
+    float3(1.000000, 0.000000, 0.000000), 
+    float3(0.577350, 0.577350, -0.577350), 
+    float3(0.000000, 1.000000, 0.000000), 
+    float3(-0.577350, 0.577350, -0.577350), 
+    float3(-1.000000, 0.000000, 0.000000), 
+    float3(-0.577350, -0.577350, -0.577350), 
+    float3(0.000000, -1.000000, 0.000000), 
+    float3(0.577350, -0.577350, -0.577350)
+};
+float3 imposterWorldX : imposterWorldX = float3(1.000000, 0.000000, 0.000000);
+float3 imposterWorldY : imposterWorldY = float3(0.000000, 1.000000, 0.000000);
+float3 imposterWorldZ : imposterWorldZ = float3(0.000000, 0.000000, 1.000000);
+float4 g_ImposterSize : g_ImposterSize = float4(128.000000, 8.000000, 16.000000, 0.015625);
+float3 normTable[16] : normTable = 
+{
+    float3(0.000000, 0.000000, 0.000000), 
+    float3(0.000000, 0.000000, -1.000000), 
+    float3(0.000000, 0.500000, -0.866025), 
+    float3(0.433013, -0.250000, -0.866025), 
+    float3(-0.433013, -0.250000, -0.866025), 
+    float3(0.000000, 0.939693, 0.342020), 
+    float3(0.813798, 0.469846, -0.342020), 
+    float3(0.813798, -0.469846, 0.342020), 
+    float3(0.000000, -0.939693, -0.342020), 
+    float3(-0.813798, -0.469846, 0.342020), 
+    float3(-0.813798, 0.469846, -0.342020), 
+    float3(-0.433013, 0.250000, 0.866025), 
+    float3(0.433013, 0.250000, 0.866025), 
+    float3(0.000000, -0.500000, -0.866025), 
+    float3(0.000000, 0.000000, 1.000000), 
+    float3(0.000000, 0.000000, 0.000000)
+};
+
+//Vertex shaders
+VertexShader VS_Imposter
+<
+    string gWorldViewProj = "parameter register(8)";
+    string imposterWorldX = "parameter register(208)";
+    string imposterWorldY = "parameter register(209)";
+    string imposterWorldZ = "parameter register(210)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   row_major float4x4 gWorldViewProj;
+    //   float3 imposterWorldX;
+    //   float3 imposterWorldY;
+    //   float3 imposterWorldZ;
+    //
+    //
+    // Registers:
+    //
+    //   Name           Reg   Size
+    //   -------------- ----- ----
+    //   gWorldViewProj c8       4
+    //   imposterWorldX c208     1
+    //   imposterWorldY c209     1
+    //   imposterWorldZ c210     1
+    //
+    
+        vs_3_0
+        def c0, 9.99999975e-006, 0.577350259, -0.577350259, 1
+        def c1, 1, -1, 0, 0
+        dcl_position v0
+        dcl_normal v1
+        dcl_color v2
+        dcl_texcoord v3
+        dcl_position o0
+        dcl_color o1
+        dcl_texcoord o2
+        dcl_texcoord1 o3
+        dcl_texcoord2 o4
+        dcl_texcoord3 o5
+        dcl_texcoord4 o6
+        dcl_texcoord5 o7.xyz
+        dcl_texcoord6 o8.xyz
+        dcl_texcoord7 o9.xyz
+        mul r0, c9, v0.y
+        mad r0, v0.x, c8, r0
+        mad r0, v0.z, c10, r0
+        add o0, r0, c11
+        add r0.xyz, c0.x, v1
+        nrm r1.xyz, r0
+        dp3 r0.x, r1, c0.yyzw
+        add r0.x, r0.x, c0.w
+        dp3 r1.w, r1.yxzw, c0.yzzw
+        add r0.y, r1.w, c0.w
+        dp3 r1.w, r1, c0.z
+        add r0.z, r1.w, c0.w
+        dp3 r1.z, r1, c0.yzzw
+        mad r2, r1.xyxy, c1.xxyy, c1.x
+        add r0.w, r1.z, c0.w
+        max r1, r0, r2
+        max r1.xy, r1.ywzw, r1.xzzw
+        max r1.x, r1.y, r1.x
+        sge r3, r0, r1.x
+        sge r1, r2, r1.x
+        add r4, -r3, c0.w
+        mul r4, r0, r4
+        add r5, -r1, c0.w
+        mul r5, r2, r5
+        max r6, r4, r5
+        max r6.xy, r6.ywzw, r6.xzzw
+        max r6.x, r6.y, r6.x
+        sge r7, r5, r6.x
+        sge r6, r4, r6.x
+        add r8, -r7, c0.w
+        mul r5, r5, r8
+        add r8, -r6, c0.w
+        mul r4, r4, r8
+        max r8, r5, r4
+        max r8.xy, r8.ywzw, r8.xzzw
+        max r8.x, r8.y, r8.x
+        sge r4, r4, r8.x
+        sge r5, r5, r8.x
+        mul r5, r2, r5
+        dp4 r5.x, r5, c0.w
+        mul r4, r0, r4
+        dp4 r4.x, r4, c0.w
+        add r4.x, r5.x, r4.x
+        mul r5, r0, r6
+        mul r0, r0, r3
+        mov o4, r3
+        dp4 r0.x, r0, c0.w
+        mov o6, r6
+        dp4 r0.y, r5, c0.w
+        mul r3, r2, r7
+        mov o5, r7
+        mul r2, r2, r1
+        mov o3, r1
+        dp4 r0.z, r2, c0.w
+        add r0.z, r0.x, r0.z
+        dp4 r0.x, r3, c0.w
+        add r0.w, r0.y, r0.x
+        add r0.xy, -r4.x, r0.zwzw
+        add r0.z, r0.y, r0.x
+        rcp r0.z, r0.z
+        mul o2.zw, r0.xyxy, r0.z
+        mov o1, v2
+        mad o2.xy, v3, c1, c1.zxzw
+        mov o7.xyz, c208
+        mov o8.xyz, c209
+        mov o9.xyz, c210
+    
+    // approximately 68 instruction slots used
+};
+
+VertexShader VS_ImposterShadow
+<
+    string gShadowMatrix = "parameter register(60)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   row_major float4x4 gShadowMatrix;
+    //
+    //
+    // Registers:
+    //
+    //   Name          Reg   Size
+    //   ------------- ----- ----
+    //   gShadowMatrix c60      4
+    //
+    
+        vs_3_0
+        def c0, 16, 8, 0, 0
+        def c1, 1, 0, -1, 0
+        dcl_position v0
+        dcl_color v1
+        dcl_texcoord v2
+        dcl_position o0
+        dcl_texcoord o1
+        mul r0, c61, v0.y
+        mad r0, v0.x, c60, r0
+        mad r0, v0.z, c62, r0
+        add r0, r0, c63
+        min r0.z, r0.z, c1.x
+        add o0.z, -r0.z, c1.x
+        mad o0.xyw, r0.xyzx, c1.xxzy, c1.yyzx
+        mov o1.w, r0.w
+        mad o1.xy, v2, c1.xzzw, c1.yxzw
+        mad o1.z, v1.x, c0.x, c0.y
+    
+    // approximately 10 instruction slots used
+};
+
+VertexShader VS_Blit
+<
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+        vs_3_0
+        def c0, 1, 0, 0, 0
+        dcl_position v0
+        dcl_position o0
+        mad o0, v0.xyzx, c0.xxxy, c0.yyyx
+    
+    // approximately 1 instruction slot used
+};
+
+//Pixel shaders
+PixelShader PixelShader0 = NULL;
+
+PixelShader PS_ImposterDeferred
+<
+    string g_ImposterSize  = "parameter register(66)";
+    string imposterSampler = "parameter register(0)";
+    string normTable       = "parameter register(72)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   float4 g_ImposterSize;
+    //   sampler2D imposterSampler;
+    //   float3 normTable[16];
+    //
+    //
+    // Registers:
+    //
+    //   Name            Reg   Size
+    //   --------------- ----- ----
+    //   g_ImposterSize  c66      1
+    //   normTable       c72     16
+    //   imposterSampler s0       1
+    //
+    
+        ps_3_0
+        def c0, 15.9377499, 16, 255.003998, 0.0625
+        def c1, -0, -1, -2, -3
+        def c2, -4, -5, -6, -7
+        def c3, -8, -9, -10, -11
+        def c4, -12, -13, -14, -15
+        def c5, -1, 1, 0, -0
+        def c6, 9.99999975e-006, 0.5, 0, 0
+        dcl_color v0.w
+        dcl_texcoord v1
+        dcl_texcoord1 v2
+        dcl_texcoord2 v3
+        dcl_texcoord3 v4
+        dcl_texcoord4 v5
+        dcl_texcoord5 v6.xyz
+        dcl_texcoord6 v7.xyz
+        dcl_texcoord7 v8.xyz
+        dcl_2d s0
+        texld r0, v1, s0
+        mul r1, r0, c0.x
+        frc r1, r1
+        mul r1, r1, c0.y
+        mad r0, r0, c0.z, -r1
+        mul r0, r0, c0.w
+        dp4 r2.x, r0, v5
+        dp4 r0.x, r0, v3
+        dp4 r0.y, r1, v4
+        dp4 r0.z, r1, v2
+        add r0.x, r0.x, r0.z
+        add r0.y, r2.x, r0.y
+        mov_sat r0.z, r0.y
+        mul r0.z, r0.z, v1.w
+        mov_sat r0.w, r0.x
+        mad r0.z, r0.w, v1.z, r0.z
+        mul oC0.w, r0.z, v0.w
+        frc r0.z, r0.x
+        add r0.x, r0.x, -r0.z
+        add r1, r0.x, c1
+        mov r2, c5
+        cmp r3.xyz, -r1_abs.x, c72, r2.z
+        cmp r3.xyz, -r1_abs.y, c73, r3
+        cmp r1.xyz, -r1_abs.z, c74, r3
+        cmp r1.xyz, -r1_abs.w, c75, r1
+        add r3, r0.x, c2
+        cmp r1.xyz, -r3_abs.x, c76, r1
+        cmp r1.xyz, -r3_abs.y, c77, r1
+        cmp r1.xyz, -r3_abs.z, c78, r1
+        cmp r1.xyz, -r3_abs.w, c79, r1
+        add r3, r0.x, c3
+        add r4, r0.x, c4
+        cmp r0.xzw, -r3_abs.x, c80.xyyz, r1.xyyz
+        cmp r0.xzw, -r3_abs.y, c81.xyyz, r0
+        cmp r0.xzw, -r3_abs.z, c82.xyyz, r0
+        cmp r0.xzw, -r3_abs.w, c83.xyyz, r0
+        cmp r0.xzw, -r4_abs.x, c84.xyyz, r0
+        cmp r0.xzw, -r4_abs.y, c85.xyyz, r0
+        cmp r0.xzw, -r4_abs.z, c86.xyyz, r0
+        cmp r0.xzw, -r4_abs.w, c87.xyyz, r0
+        frc r1.x, r0.y
+        add r0.y, r0.y, -r1.x
+        add r1, r0.y, c1
+        cmp r3.xyz, -r1_abs.x, c72, r2.z
+        cmp r3.xyz, -r1_abs.y, c73, r3
+        cmp r1.xyz, -r1_abs.z, c74, r3
+        cmp r1.xyz, -r1_abs.w, c75, r1
+        add r3, r0.y, c2
+        cmp r1.xyz, -r3_abs.x, c76, r1
+        cmp r1.xyz, -r3_abs.y, c77, r1
+        cmp r1.xyz, -r3_abs.z, c78, r1
+        cmp r1.xyz, -r3_abs.w, c79, r1
+        add r3, r0.y, c3
+        add r4, r0.y, c4
+        cmp r1.xyz, -r3_abs.x, c80, r1
+        cmp r1.xyz, -r3_abs.y, c81, r1
+        cmp r1.xyz, -r3_abs.z, c82, r1
+        cmp r1.xyz, -r3_abs.w, c83, r1
+        cmp r1.xyz, -r4_abs.x, c84, r1
+        cmp r1.xyz, -r4_abs.y, c85, r1
+        cmp r1.xyz, -r4_abs.z, c86, r1
+        cmp r1.xyz, -r4_abs.w, c87, r1
+        mul r1.xyz, r1, v1.w
+        mad r0.xyz, r0.xzww, v1.z, r1
+        add r0.xyz, r0, c6.x
+        nrm r1.xyz, r0
+        mul r0.xyz, r1.y, v7
+        mad r0.xyz, v6, r1.x, r0
+        mad r0.xyz, v8, r1.z, r0
+        mad oC1.xyz, r0, c6.y, c6.y
+        mad r0, c66.w, r2.xyzz, r2.ywww
+        texldl r0, r0, s0
+        mov oC0.xyz, r0
+        mov oC1.w, c5.z
+        mov oC2, c6.zyyz
+        mov oC3, c5.z
+    
+    // approximately 79 instruction slots used (3 texture, 76 arithmetic)
+};
+
+PixelShader PS_ImposterShadow
+<
+    string blitSampler     = "parameter register(1)";
+    string g_ImposterSize  = "parameter register(66)";
+    string imposterSampler = "parameter register(0)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   sampler2D blitSampler;
+    //   float4 g_ImposterSize;
+    //   sampler2D imposterSampler;
+    //
+    //
+    // Registers:
+    //
+    //   Name            Reg   Size
+    //   --------------- ----- ----
+    //   g_ImposterSize  c66      1
+    //   imposterSampler s0       1
+    //   blitSampler     s1       1
+    //
+    
+        ps_3_0
+        def c0, 0.200000003, 1, -0.5, 0
+        dcl_texcoord v0
+        dcl_2d s0
+        dcl_2d s1
+        mul r0.xy, v0.z, v0
+        frc r0.xy, r0
+        texld r0, r0, s1
+        mul r0.x, r0.w, v0.z
+        mul r0.x, r0.x, c66.w
+        mad r0.xy, r0.x, c0.x, v0
+        texld r0, r0, s0
+        dp4 r0.x, r0, c0.y
+        add r0.x, r0.x, c0.z
+        cmp r0, r0.x, -c0.w, -c0.y
+        texkill r0
+        mul oC0.y, v0.w, v0.w
+        mad oC0.xzw, v0.w, c0.yyww, c0.wywy
+    
+    // approximately 13 instruction slots used (2 texture, 11 arithmetic)
+};
+
+PixelShader PS_ImposterShadowMasked
+<
+    string blitSampler     = "parameter register(1)";
+    string g_ImposterSize  = "parameter register(66)";
+    string imposterSampler = "parameter register(0)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   sampler2D blitSampler;
+    //   float4 g_ImposterSize;
+    //   sampler2D imposterSampler;
+    //
+    //
+    // Registers:
+    //
+    //   Name            Reg   Size
+    //   --------------- ----- ----
+    //   g_ImposterSize  c66      1
+    //   imposterSampler s0       1
+    //   blitSampler     s1       1
+    //
+    
+        ps_3_0
+        def c0, 0.200000003, 1, -0.5, 0
+        dcl_texcoord v0
+        dcl_2d s0
+        dcl_2d s1
+        mul r0.xy, v0.z, v0
+        frc r0.xy, r0
+        texld r0, r0, s1
+        mul r0.x, r0.w, v0.z
+        mul r0.x, r0.x, c66.w
+        mad r0.xy, r0.x, c0.x, v0
+        texld r0, r0, s0
+        dp4 r0.x, r0, c0.y
+        add r0.x, r0.x, c0.z
+        cmp r0, r0.x, -c0.w, -c0.y
+        texkill r0
+        mul oC0.y, v0.w, v0.w
+        mad oC0.xzw, v0.w, c0.yyww, c0.wywy
+    
+    // approximately 13 instruction slots used (2 texture, 11 arithmetic)
+};
+
+PixelShader PS_BlitAverage
+<
+    string blitSampler = "parameter register(0)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   sampler2D blitSampler;
+    //
+    //
+    // Registers:
+    //
+    //   Name         Reg   Size
+    //   ------------ ----- ----
+    //   blitSampler  s0       1
+    //
+    
+        ps_3_0
+        def c0, 0, 0, 0.125, 0.0625
+        def c1, 0.0625, 0.1875, 0.3125, 0.4375
+        def c2, 1, -0.5, 0, 0
+        def c3, 0.5625, 0.6875, 0.8125, 0.9375
+        defi i0, 8, 0, 0, 0
+        dcl_2d s0
+        mov r0.y, c1.x
+        mov r1.y, c1.y
+        mov r2.y, c1.z
+        mov r3.y, c1.w
+        mov r4.y, c3.x
+        mov r5.y, c3.y
+        mov r6.y, c3.z
+        mov r7.y, c3.w
+        mov r8.xyz, c0.y
+        mov r0.zw, c0.y
+        rep i0
+          mad r0.x, r0.w, c0.z, c0.w
+          texld r9, r0, s0
+          mad r1.x, r0.w, c0.z, c0.w
+          texld r10, r1, s0
+          mad r2.x, r0.w, c0.z, c0.w
+          texld r11, r2, s0
+          mad r3.x, r0.w, c0.z, c0.w
+          texld r12, r3, s0
+          mad r4.x, r0.w, c0.z, c0.w
+          texld r13, r4, s0
+          mad r5.x, r0.w, c0.z, c0.w
+          texld r14, r5, s0
+          mad r6.x, r0.w, c0.z, c0.w
+          texld r15, r6, s0
+          mad r7.x, r0.w, c0.z, c0.w
+          texld r16, r7, s0
+          dp3 r17.x, r9, c2.x
+          dp3 r17.y, r10, c2.x
+          dp3 r17.z, r11, c2.x
+          dp3 r17.w, r12, c2.x
+          dp3 r18.x, r13, c2.x
+          dp3 r18.y, r14, c2.x
+          dp3 r18.z, r15, c2.x
+          dp3 r18.w, r16, c2.x
+          add r17, r17, c2.y
+          cmp r17, r17, c2.x, c2.z
+          add r18, r18, c2.y
+          cmp r18, r18, c2.x, c2.z
+          mad r1.xzw, r9.xyyz, r17.x, r8.xyyz
+          mad r1.xzw, r10.xyyz, r17.y, r1
+          mad r1.xzw, r11.xyyz, r17.z, r1
+          mad r1.xzw, r12.xyyz, r17.w, r1
+          mad r1.xzw, r13.xyyz, r18.x, r1
+          mad r1.xzw, r14.xyyz, r18.y, r1
+          mad r1.xzw, r15.xyyz, r18.z, r1
+          mad r8.xyz, r16, r18.w, r1.xzww
+          dp4 r0.x, r17, c2.x
+          dp4 r1.x, r18, c2.x
+          add r0.x, r0.x, r1.x
+          add r0.z, r0.z, r0.x
+          add r0.w, r0.w, c2.x
+        endrep
+        rcp r0.x, r0.z
+        mul oC0.xyz, r8, r0.x
+        mov oC0.w, c2.x
+    
+    // approximately 59 instruction slots used (8 texture, 51 arithmetic)
+};
+
+technique draw
+{
+    pass p0
+    {
+        StencilRef = 3;
+        AlphaTestEnable = false;
+        AlphaBlendEnable = false;
+        CullMode = NONE;
+
+        VertexShader = VS_Imposter;
+        PixelShader = PS_ImposterDeferred;
+    }
+}
+
+technique deferred_draw
+{
+    pass p0
+    {
+        StencilRef = 3;
+        AlphaTestEnable = false;
+        AlphaBlendEnable = false;
+        CullMode = NONE;
+
+        VertexShader = VS_Imposter;
+        PixelShader = PS_ImposterDeferred;
+    }
+}
+
+technique deferredalphaclip_draw
+{
+    pass p0
+    {
+        StencilRef = 3;
+        AlphaTestEnable = false;
+        AlphaBlendEnable = false;
+        CullMode = NONE;
+
+        VertexShader = VS_Imposter;
+        PixelShader = PS_ImposterDeferred;
+    }
+}
+
+technique wd_draw
+{
+    pass p0
+    {
+        AlphaTestEnable = false;
+        AlphaBlendEnable = false;
+        CullMode = NONE;
+
+        VertexShader = VS_ImposterShadow;
+        PixelShader = PS_ImposterShadow;
+    }
+}
+
+technique wd_masked_draw
+{
+    pass p0
+    {
+        AlphaTestEnable = false;
+        AlphaBlendEnable = false;
+        CullMode = NONE;
+
+        VertexShader = VS_ImposterShadow;
+        PixelShader = PS_ImposterShadowMasked;
+    }
+}
+
+technique blit_average
+{
+    pass p0
+    {
+        AlphaTestEnable = false;
+        AlphaBlendEnable = false;
+        CullMode = NONE;
+
+        VertexShader = VS_Blit;
+        PixelShader = PS_BlitAverage;
+    }
+}
+

@@ -1,0 +1,904 @@
+//Globals
+shared float4 gAllGlobals[64] : AllGlobals;
+shared float4x4 gWorld : World;
+shared float4x4 gWorldView : WorldView;
+shared float4x4 gWorldViewProj : WorldViewProjection;
+shared float4x4 gViewInverse : ViewInverse;
+shared texture stippletexture;
+shared sampler StippleTexture = 
+sampler_state
+{
+    Texture = <stippletexture>;
+    MinFilter = POINT;
+    MagFilter = POINT;
+    MipFilter = POINT;
+    AddressU = WRAP;
+    AddressV = WRAP;
+};
+shared float4 gDepthFxParams : DepthFxParams = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 gDirectionalLight : DirectionalLight;
+shared float4 gDirectionalColour : DirectionalColour;
+shared float4 gLightPosX : LightPositionX;
+shared float4 gLightPosY : LightPositionY;
+shared float4 gLightPosZ : LightPositionZ;
+shared float4 gLightDirX : LightDirX;
+shared float4 gLightDirY : LightDirY;
+shared float4 gLightDirZ : LightDirZ;
+shared float4 gLightFallOff : LightFallOff;
+shared float4 gLightConeScale : LightConeScale;
+shared float4 gLightConeOffset : LightConeOffset;
+shared float4 gLightColR : LightColR;
+shared float4 gLightColG : LightColG;
+shared float4 gLightColB : LightColB;
+shared float4 gLightPointPosX : LightPointPositionX;
+shared float4 gLightPointPosY : LightPointPositionY;
+shared float4 gLightPointPosZ : LightPointPositionZ;
+shared float4 gLightPointColR : LightPointColR;
+shared float4 gLightPointColG : LightPointColG;
+shared float4 gLightPointColB : LightPointColB;
+shared float4 gLightPointFallOff : LightPointFallOff;
+shared float4 gLightDir2X : LightDir2X;
+shared float4 gLightDir2Y : LightDir2Y;
+shared float4 gLightDir2Z : LightDir2Z;
+shared float4 gLightConeScale2 : LightConeScale2;
+shared float4 gLightConeOffset2 : LightConeOffset2;
+shared float4 gLightAmbient0 : LightAmbientColor0<string UIWidget = "Ambient Light Color 0"; string Space = "material";> = float4(0.000000, 0.000000, 0.000000, 1.000000);
+shared float4 gLightAmbient1 : LightAmbientColor1<string UIWidget = "Ambient Light Color 1"; string Space = "material";> = float4(0.000000, 0.000000, 0.000000, 1.000000);
+shared float4 globalScalars : globalScalars = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 globalScalars2 : globalScalars2 = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 gAspectRatio : gAspectRatio = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 globalScreenSize : globalScreenSize = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 globalFogParams : globalFogParams = float4(1600.000000, 9000000.000000, 0.010000, 1.000000);
+shared float4 globalFogColor : globalFogColor = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 globalFogColorN : globalFogColorN = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 gDayNightEffects : globalDayNightEffects = float4(1.000000, 0.000000, 1.000000, 0.000000);
+shared float gInvColorExpBias : ColorExpBias = 1.000000;
+shared float4 colorize : Colorize = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 stencil : Stencil = float4(0.000000, 255.000000, 0.000000, 0.000000);
+shared float4 gFacetCentre : FacetCentre;
+shared float4 gShadowCommonParam0123 : ShadowCommonParam0123;
+shared float4 gShadowParam14151617 : ShadowParam14151617;
+shared float4 gShadowParam18192021 : ShadowParam18192021;
+shared float4 gShadowParam0123 : ShadowParam0123;
+shared float4 gShadowParam4567 : ShadowParam4567;
+shared float4 gShadowParam891113 : ShadowParam891113;
+shared float4x4 gShadowMatrix : ShadowMatrix;
+shared texture ShadowZTextureDir;
+shared sampler gShadowZSamplerDir = 
+sampler_state
+{
+    Texture = <ShadowZTextureDir>;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+    MipFilter = POINT;
+    MinFilter = POINT;
+    MagFilter = POINT;
+};
+shared texture ShadowZTextureDirVS;
+shared sampler gShadowZSamplerDirVS = 
+sampler_state
+{
+    Texture = <ShadowZTextureDirVS>;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+    MipFilter = POINT;
+    MinFilter = POINT;
+    MagFilter = POINT;
+};
+shared texture ShadowZTextureCache;
+shared sampler gShadowZSamplerCache = 
+sampler_state
+{
+    Texture = <ShadowZTextureCache>;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+    MipFilter = POINT;
+    MinFilter = POINT;
+    MagFilter = POINT;
+};
+shared texture ShadowTextureLUT;
+shared sampler gShadowSamplerLUT = 
+sampler_state
+{
+    Texture = <ShadowTextureLUT>;
+    AddressU = WRAP;
+    AddressV = WRAP;
+    MipFilter = POINT;
+    MinFilter = LINEAR;
+    MagFilter = LINEAR;
+};
+
+//Locals
+texture HeightMapTexture;
+sampler HeightMapSampler = 
+sampler_state
+{
+    Texture = <HeightMapTexture>;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+    AddressW = CLAMP;
+    MipFilter = POINT;
+    MinFilter = POINT;
+    MagFilter = POINT;
+};
+float shadowmap_res : ShadowMapResolution = 1280.000000;
+float2 facetMask[4] : facetMask = 
+{
+    float2(-1.000000, 0.000000), 
+    float2(1.000000, 0.000000), 
+    float2(0.000000, -1.000000), 
+    float2(0.000000, 1.000000)
+};
+float specularFactor : WaterSpecular = 0.000000;
+float specularColorFactor : WaterSpecularColor = 0.000000;
+float3 LuminanceConstants : LuminanceConstants = float3(0.212500, 0.715400, 0.072100);
+float4 waterRenderSimParam : waterRenderSimParam;
+float2 currentResolution : CurrentResolution = float2(1280.000000, 1024.000000);
+float3 sunDirection : sunDirection;
+float3 sunColour : sunColour;
+float4 waterColour : waterColour;
+float4 bottomSkyColour : bottomSkyColour;
+float waterReflectionScale : waterReflectionScale;
+float4 viewProj : viewProj;
+float4x4 HeightMapTransformMtx : HeightMapTransformMtx;
+texture waternormalmaptexture;
+sampler SurfaceTextureSampler = 
+sampler_state
+{
+    Texture = <waternormalmaptexture>;
+    AddressU = WRAP;
+    AddressV = WRAP;
+    AddressW = CLAMP;
+    MipFilter = LINEAR;
+    MinFilter = LINEAR;
+    MagFilter = LINEAR;
+};
+texture reflectiontexture;
+sampler ReflectTextureSampler = 
+sampler_state
+{
+    Texture = <reflectiontexture>;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+    AddressW = CLAMP;
+    MipFilter = POINT;
+    MinFilter = LINEAR;
+    MagFilter = LINEAR;
+};
+texture depthbuffertexture;
+sampler DepthBufferSampler = 
+sampler_state
+{
+    Texture = <depthbuffertexture>;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+    AddressW = CLAMP;
+    MipFilter = POINT;
+    MinFilter = POINT;
+    MagFilter = POINT;
+};
+
+//Vertex shaders
+VertexShader VS_Water
+<
+    string HeightMapSampler      = "parameter register(0)";
+    string HeightMapTransformMtx = "parameter register(64)";
+    string gViewInverse          = "parameter register(12)";
+    string gWorld                = "parameter register(0)";
+    string gWorldViewProj        = "parameter register(8)";
+    string waterRenderSimParam   = "parameter register(68)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   sampler2D HeightMapSampler;
+    //   row_major float4x4 HeightMapTransformMtx;
+    //   row_major float4x4 gViewInverse;
+    //   row_major float4x4 gWorld;
+    //   row_major float4x4 gWorldViewProj;
+    //   float4 waterRenderSimParam;
+    //
+    //
+    // Registers:
+    //
+    //   Name                  Reg   Size
+    //   --------------------- ----- ----
+    //   gWorld                c0       4
+    //   gWorldViewProj        c8       4
+    //   gViewInverse          c12      4
+    //   HeightMapTransformMtx c64      4
+    //   waterRenderSimParam   c68      1
+    //   HeightMapSampler      s0       1
+    //
+    
+        vs_3_0
+        def c4, 2, -2, 1, 10
+        def c5, 1, -2, -1, 0
+        def c6, 9.99999975e-006, 64, 16, -1000
+        def c7, 0.75, 0.25, 100, 2000
+        def c13, 0.899999976, 0.00499999989, 0.5, 0
+        dcl_position v0
+        dcl_normal v1
+        dcl_color v2
+        dcl_2d s0
+        dcl_position o0
+        dcl_texcoord o1
+        dcl_texcoord1 o2
+        dcl_texcoord2 o3
+        dcl_texcoord3 o4
+        dcl_texcoord4 o5
+        mul r0.xyz, c1, v0.y
+        mad r0.xyz, v0.x, c0, r0
+        mad r0.xyz, v0.z, c2, r0
+        add r0.xyz, r0, c3
+        add r1, r0.zxyz, c5.xyyx
+        mul r2.xy, r1.z, c65
+        mad r1.yz, r1.y, c64.xxyw, r2.xxyw
+        mad r1.yz, r1.w, c66.xxyw, r1
+        add r1.yz, r1, c67.xxyw
+        mad r2.xy, r1.yzzw, c5.xzzw, c5.wxzw
+        mul r1.yzw, r0.y, c65.xxyz
+        mad r1.yzw, r0.x, c64.xxyz, r1
+        mad r1.yzw, r1.x, c66.xxyz, r1
+        add r0.w, r1.x, -c68.z
+        add r0.w, r0.w, c5.y
+        mul_sat o1.w, r0.w, c13.z
+        add r1.xyz, r1.yzww, c67
+        mad r1.xyz, r1, c5.xzxw, c5.wxww
+        add r3.xz, r2.yyxw, -r1.yyxw
+        mov r2.zw, c5.w
+        texldl r2, r2, s0
+        mov r1.w, c5.w
+        texldl r4, r1.xyww, s0
+        add r0.w, r2.x, -r4.x
+        mul r3.y, r0.w, c4.w
+        add r2.yzw, r0.xxyz, c4.xxyz
+        mul r4.yz, r2.z, c65.xxyw
+        mad r2.yz, r2.y, c64.xxyw, r4
+        mad r2.yz, r2.w, c66.xxyw, r2
+        add r2.yz, r2, c67.xxyw
+        mad r5.xy, r2.yzzw, c5.xzzw, c5.wxzw
+        add r6.yz, -r1.xxyw, r5.xxyw
+        mov r5.zw, c5.w
+        texldl r5, r5, s0
+        add r0.w, -r4.x, r5.x
+        min r1.w, r2.x, r5.x
+        mul r6.x, r0.w, c4.w
+        mul r2.xyz, r3.yzxw, r6.zxyw
+        mad r2.xyz, r3, r6, -r2
+        add r2.xyz, r2, c6.x
+        dp3 r0.w, r2, r2
+        rsq r0.w, r0.w
+        add r4.yzw, r0.xxyz, -c5.xyyz
+        mul r5.xy, r4.z, c65
+        mad r4.yz, r4.y, c64.xxyw, r5.xxyw
+        mad r4.yz, r4.w, c66.xxyw, r4
+        add r4.yz, r4, c67.xxyw
+        mad r5.xy, r4.yzzw, c5.xzzw, c5.wxzw
+        add r7.yz, -r1.xxyw, r5.xxyw
+        mov r5.zw, c5.w
+        texldl r5, r5, s0
+        add r2.w, -r4.x, r5.x
+        mul r7.x, r2.w, c4.w
+        mul r4.yzw, r6.xxyz, r7.xzxy
+        mad r4.yzw, r6.xzxy, r7.xxyz, -r4
+        add r4.yzw, r4, c6.x
+        nrm r6.xyz, r4.yzww
+        mad r2.xyz, r2, r0.w, r6
+        add r4.yzw, r0.xxyz, c4.xyxz
+        add o3.xyz, r0, c5.wwxw
+        mul r0.xy, r4.z, c65
+        mad r0.xy, r4.y, c64, r0
+        mad r0.xy, r4.w, c66, r0
+        add r0.xy, r0, c67
+        mad r0.xy, r0, c5.xzzw, c5.wxzw
+        add r6.yz, -r1.xxyw, r0.xxyw
+        mov r0.zw, c5.w
+        texldl r0, r0, s0
+        add r0.y, -r4.x, r0.x
+        min r0.x, r5.x, r0.x
+        min r0.x, r1.w, r0.x
+        min r0.x, r4.x, r0.x
+        add r0.z, r1.z, -r4.x
+        mul_sat r0.z, r0.z, c6.w
+        add r0.z, -r0.z, c5.x
+        mul r0.z, r0.z, c7.z
+        min r0.z, r0.z, c5.x
+        min o5.w, r1.z, r0.x
+        mov o3.w, r1.z
+        mul r6.x, r0.y, c4.w
+        mul r0.xyw, r7.xyzz, r6.zxzy
+        mad r0.xyw, r7.zxzy, r6.xyzz, -r0
+        add r0.xyw, r0, c6.x
+        dp3 r1.x, r0.xyww, r0.xyww
+        rsq r1.x, r1.x
+        mad r0.xyw, r0, r1.x, r2.xyzz
+        mul r1.xyz, r3, r6
+        mad r1.xyz, r6.zxyw, r3.yzxw, -r1
+        add r1.xyz, r1, c6.x
+        dp3 r1.w, r1, r1
+        rsq r1.w, r1.w
+        mad r0.xyw, r1.xyzz, r1.w, r0
+        add r0.xyw, r0, c6.x
+        dp3 r1.x, r0.xyww, r0.xyww
+        rsq r1.x, r1.x
+        mul o5.xyz, r0.xyww, r1.x
+        mul r0.x, v2.x, v2.x
+        mul r0.x, r0.x, r0.x
+        mul r0.x, r0.x, c6.z
+        min r0.x, r0.x, c5.x
+        pow r0.y, v1_abs.z, c6.y
+        add r0.y, -r0.y, c5.x
+        mul r0.x, r0.x, r0.y
+        max r0.x, r0.x, c5.w
+        mad r0.x, r0.x, c7.x, c7.y
+        mul r0.x, r0.z, r0.x
+        mul o2.w, r0.x, v2.z
+        mov r0.x, c6.x
+        add r0.xy, r0.x, c14
+        mov r0.z, c6.x
+        nrm r1.xyz, r0
+        mov r0.xy, c15
+        mov r0.z, c68.z
+        add r0.xyz, r0, -c3
+        add r0.w, c14.z, c14.z
+        max r0.w, r0_abs.w, c7.w
+        mad r0.xyz, r1, r0.w, r0
+        mul r0.yw, r0.y, c9
+        mad r0.xy, r0.x, c8.ywzw, r0.ywzw
+        mad r0.xy, r0.z, c10.ywzw, r0
+        add r0.xy, r0, c11.ywzw
+        rcp r0.y, r0.y
+        mul r0.z, r0.x, r0.y
+        mad r0.x, r0.x, r0.y, c5.z
+        abs r0.y, c14.z
+        slt r0.y, c13.x, r0.y
+        mad r0.x, r0.y, r0.x, -r0.z
+        add r0.y, -r0.x, c5.z
+        abs r0.z, c12.z
+        slt r0.z, c13.y, r0.z
+        mad o4.w, r0.z, r0.y, r0.x
+        mul r0, c9, v0.y
+        mad r0, v0.x, c8, r0
+        mad r0, v0.z, c10, r0
+        add r0, r0, c11
+        mov o0, r0
+        mov o1.xyz, r0.xyww
+        mov o2.xyz, v1
+        mov o4.xyz, c15
+    
+    // approximately 150 instruction slots used (10 texture, 140 arithmetic)
+};
+
+//Pixel shaders
+PixelShader PixelShader0 = NULL;
+
+PixelShader PS_Water
+<
+    string DepthBufferSampler    = "parameter register(2)";
+    string ReflectTextureSampler = "parameter register(1)";
+    string SurfaceTextureSampler = "parameter register(0)";
+    string bottomSkyColour       = "parameter register(72)";
+    string globalScalars         = "parameter register(39)";
+    string viewProj              = "parameter register(74)";
+    string waterColour           = "parameter register(66)";
+    string waterReflectionScale  = "parameter register(73)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   sampler2D DepthBufferSampler;
+    //   sampler2D ReflectTextureSampler;
+    //   sampler2D SurfaceTextureSampler;
+    //   float4 bottomSkyColour;
+    //   float4 globalScalars;
+    //   float4 viewProj;
+    //   float4 waterColour;
+    //   float waterReflectionScale;
+    //
+    //
+    // Registers:
+    //
+    //   Name                  Reg   Size
+    //   --------------------- ----- ----
+    //   globalScalars         c39      1
+    //   waterColour           c66      1
+    //   bottomSkyColour       c72      1
+    //   waterReflectionScale  c73      1
+    //   viewProj              c74      1
+    //   SurfaceTextureSampler s0       1
+    //   ReflectTextureSampler s1       1
+    //   DepthBufferSampler    s2       1
+    //
+    
+        ps_3_0
+        def c0, -0.5, 0.5, 0.25, 0
+        def c1, 0.00200000009, 0.0511999987, 9.99999975e-006, 1
+        def c2, 0.00039999999, 1, 0.00999999978, 0.256000012
+        def c3, 0.0299999993, 1, -1, 0.125
+        def c4, 0.600000024, 0.200000003, 0, 0
+        def c5, 1.00001001, 1, 0, 9.99999975e-006
+        dcl_texcoord v0.xyz
+        dcl_texcoord1 v1.xyz
+        dcl_texcoord2 v2.xyz
+        dcl_texcoord3 v3.xyz
+        dcl_2d s0
+        dcl_2d s1
+        dcl_2d s2
+        mul r0.xy, c1.x, v2
+        texld r0, r0, s0
+        add r0.xy, r0.zwzw, c0.x
+        mul r0.xy, r0, c1.y
+        mov r1.xyz, v2
+        add r1.xyz, r1, -v3
+        dp3 r0.z, r1, r1
+        add r1.xyz, r1, c1.z
+        nrm r2.xyz, r1
+        mad r0.z, r0.z, -c2.x, c2.y
+        max r1.x, r0.z, c0.w
+        add r0.z, -r1.x, c1.w
+        mul r0.xy, r0, r0.z
+        rcp r0.z, v1.z
+        mul r0.z, r1.x, r0.z
+        mad r0.xy, v1, r0.z, r0
+        mul r0.zw, c2.z, v2.xyxy
+        texld r1, r0.zwzw, s0
+        add r0.zw, r1, c0.x
+        mad r0.xy, r0.zwzw, c2.w, r0
+        add r0.xy, r0, c1.z
+        mov r0.z, c5.x
+        nrm r1.xyz, r0
+        mad r0.xyz, r2, c5.yyzw, c5.w
+        dp3 r0.w, r2, r1
+        dp3 r0.z, r0, r0
+        rsq r0.z, r0.z
+        mul r2.xy, r0, r0.z
+        mov r2.zw, c3.xyyz
+        mul r1, r1.xyyx, r2.yyxz
+        mad r0.xy, r1.zwzw, r2.wxzw, r1
+        mul r0.z, c3.x, v0.z
+        rcp r0.z, r0.z
+        mul r0.z, r0.z, c0.y
+        rcp r1.x, v0.z
+        mul r1.xyz, r1.x, v0.xyxw
+        mad r1.xyz, r1, c0.xxyw, c0.y
+        mad r2.xy, r0, r0.z, r1
+        texld r1, r1.zyzw, s2
+        mov r2.zw, c0.w
+        texldl r2, r2, s1
+        mul r0.xyz, r2, c73.x
+        add r1.y, -c74.x, c74.y
+        rcp r1.y, r1.y
+        mad r1.x, c74.y, -r1.y, r1.x
+        mul r1.y, r1.y, c74.y
+        mul r1.y, r1.y, c74.x
+        rcp r1.x, r1.x
+        mad r1.x, -r1.y, r1.x, -v0.z
+        mov r1.yz, c0
+        mul r1.z, r1.z, c66.w
+        mul r1.z, r1.x, r1.z
+        cmp r1.x, r1.x, r1.z, c0.w
+        pow r2.x, r1_abs.x, c0.z
+        add_sat r1.x, r2.x, c3.w
+        rcp r1.z, r1.x
+        mul r0.xyz, r0, r1.z
+        add r1.z, r0.w, c1.w
+        cmp r0.w, -r0.w, r1.z, c1.w
+        mul r1.z, r0_abs.w, r0_abs.w
+        mul r1.z, r1.z, r1.z
+        mul r0.w, r0_abs.w, r1.z
+        mad r0.w, r0.w, c4.x, c4.y
+        mul r0.w, r1.x, r0.w
+        mov oC0.w, r1.x
+        mul r0.w, r0.w, c0.y
+        mul r0.xyz, r0, r0.w
+        mul r0.w, r1.y, c72.w
+        mad r0.xyz, c66, r0.w, r0
+        mul oC0.xyz, r0, c39.y
+    
+    // approximately 77 instruction slots used (5 texture, 72 arithmetic)
+};
+
+PixelShader PS_LitWater
+<
+    string DepthBufferSampler    = "parameter register(2)";
+    string ReflectTextureSampler = "parameter register(1)";
+    string SurfaceTextureSampler = "parameter register(0)";
+    string bottomSkyColour       = "parameter register(73)";
+    string currentResolution     = "parameter register(66)";
+    string gDirectionalColour    = "parameter register(18)";
+    string gDirectionalLight     = "parameter register(17)";
+    string gFacetCentre          = "parameter register(54)";
+    string gLightAmbient0        = "parameter register(37)";
+    string gLightAmbient1        = "parameter register(38)";
+    string gShadowMatrix         = "parameter register(60)";
+    string gShadowParam0123      = "parameter register(57)";
+    string gShadowParam14151617  = "parameter register(56)";
+    string gShadowParam18192021  = "parameter register(53)";
+    string gShadowParam4567      = "parameter register(58)";
+    string gShadowParam891113    = "parameter register(59)";
+    string gShadowZSamplerDir    = "parameter register(15)";
+    string gViewInverse          = "parameter register(12)";
+    string globalFogColor        = "parameter register(42)";
+    string globalScalars         = "parameter register(39)";
+    string viewProj              = "parameter register(75)";
+    string waterColour           = "parameter register(72)";
+    string waterReflectionScale  = "parameter register(74)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   sampler2D DepthBufferSampler;
+    //   sampler2D ReflectTextureSampler;
+    //   sampler2D SurfaceTextureSampler;
+    //   float4 bottomSkyColour;
+    //   float2 currentResolution;
+    //   float4 gDirectionalColour;
+    //   float4 gDirectionalLight;
+    //   float4 gFacetCentre;
+    //   float4 gLightAmbient0;
+    //   float4 gLightAmbient1;
+    //   row_major float4x4 gShadowMatrix;
+    //   float4 gShadowParam0123;
+    //   float4 gShadowParam14151617;
+    //   float4 gShadowParam18192021;
+    //   float4 gShadowParam4567;
+    //   float4 gShadowParam891113;
+    //   sampler2D gShadowZSamplerDir;
+    //   row_major float4x4 gViewInverse;
+    //   float4 globalFogColor;
+    //   float4 globalScalars;
+    //   float4 viewProj;
+    //   float4 waterColour;
+    //   float waterReflectionScale;
+    //
+    //
+    // Registers:
+    //
+    //   Name                  Reg   Size
+    //   --------------------- ----- ----
+    //   gViewInverse          c12      4
+    //   gDirectionalLight     c17      1
+    //   gDirectionalColour    c18      1
+    //   gLightAmbient0        c37      1
+    //   gLightAmbient1        c38      1
+    //   globalScalars         c39      1
+    //   globalFogColor        c42      1
+    //   gShadowParam18192021  c53      1
+    //   gFacetCentre          c54      1
+    //   gShadowParam14151617  c56      1
+    //   gShadowParam0123      c57      1
+    //   gShadowParam4567      c58      1
+    //   gShadowParam891113    c59      1
+    //   gShadowMatrix         c60      4
+    //   currentResolution     c66      1
+    //   waterColour           c72      1
+    //   bottomSkyColour       c73      1
+    //   waterReflectionScale  c74      1
+    //   viewProj              c75      1
+    //   SurfaceTextureSampler s0       1
+    //   ReflectTextureSampler s1       1
+    //   DepthBufferSampler    s2       1
+    //   gShadowZSamplerDir    s15      1
+    //
+    
+        ps_3_0
+        def c0, 0.125, 0.00200000009, 0.0511999987, 9.99999975e-006
+        def c1, 0.00039999999, 0.00111111114, 1, 0
+        def c2, 0.00999999978, 0.0454545468, 0.256000012, 1.02400005
+        def c3, -0.5, 0.5, 1, 0.25
+        def c4, 0.116363637, 0.465454549, 1.125, 0.0199999996
+        def c5, 0.0500000007, 9.99999975e-006, 1.00001001, 0.0299999993
+        def c6, 1, -1, 0.00499999989, 1.33333337
+        def c7, -500, 0.25, 1000, 0.5
+        def c8, 9.99999975e-005, -511, 512.000122, 1.5
+        def c9, 0.0833333358, 9, 10, 3
+        def c10, -0.500005007, 0.5, 0.600000024, 0.200000003
+        def c11, 1, 0, 9.99999975e-006, -2
+        def c12, 1, -1, 0, -0
+        def c13, -0.321940005, -0.932614982, -0.791558981, -0.597710013
+        def c16, 0.507430971, 0.0644249991, 0.896420002, 0.412458003
+        def c19, 0.519456029, 0.767022014, 0.185461, -0.893123984
+        def c20, 0.962339997, -0.194983006, 0.473434001, -0.480026007
+        def c21, -0.69591397, 0.457136989, -0.203345001, 0.620715976
+        def c22, -0.326211989, -0.405809999, -0.840143979, -0.0735799968
+        dcl_texcoord v0
+        dcl_texcoord1 v1
+        dcl_texcoord2 v2
+        dcl_texcoord3 v3
+        dcl_texcoord4 v4.xyw
+        dcl_2d s0
+        dcl_2d s1
+        dcl_2d s2
+        dcl_2d s15
+        mov r0.xy, v2
+        mov r1, v2
+        add r1.xyz, r1, -v3
+        dp3 r0.w, r1, r1
+        add r1.xyz, r1, c0.w
+        nrm r2.xyz, r1
+        mad r1.xy, r0.w, -c1, c1.z
+        max r0.w, r1.x, c1.w
+        mul r0.z, r0.w, v2.z
+        dp3 r1.x, c14, r0
+        add r3.xyz, -r0, c15
+        dp3 r0.x, r3, r3
+        rsq r0.x, r0.x
+        rcp r0.x, r0.x
+        add r3.xyz, -r1.x, -c54
+        cmp r3.yzw, r3.xxyz, c1.z, c1.w
+        mov r3.x, c3.z
+        dp4 r4.x, r3, c57
+        dp4 r4.y, r3, c58
+        dp4 r5.x, r3, c59
+        dp4 r5.y, r3, c56
+        mul r3.xyz, c61.xyww, v2.y
+        mad r3.xyz, v2.x, c60.xyww, r3
+        mad r3.xyz, r0.z, c62.xyww, r3
+        add r3.xyz, r3, c63.xyww
+        mad r0.yz, r3.xxyw, r4.xxyw, r5.xxyw
+        mov r3.y, c53.y
+        mad r1.xz, r3.y, c22.xyyw, r0.yyzw
+        texld r4, r1.xzzw, s15
+        add r1.x, r3.z, -r4.x
+        cmp r1.x, r1.x, c1.z, c1.w
+        mad r3.xw, r3.y, c22.zyzw, r0.yyzz
+        texld r4, r3.xwzw, s15
+        add r1.z, r3.z, -r4.x
+        cmp r1.z, r1.z, c1.z, c1.w
+        add r1.x, r1.x, r1.z
+        mad r3.xw, r3.y, c21.xyzy, r0.yyzz
+        texld r4, r3.xwzw, s15
+        add r1.z, r3.z, -r4.x
+        cmp r1.z, r1.z, c1.z, c1.w
+        add r1.x, r1.x, r1.z
+        mad r3.xw, r3.y, c21.zyzw, r0.yyzz
+        texld r4, r3.xwzw, s15
+        add r1.z, r3.z, -r4.x
+        cmp r1.z, r1.z, c1.z, c1.w
+        add r1.x, r1.x, r1.z
+        mad r3.xw, r3.y, c20.xyzy, r0.yyzz
+        texld r4, r3.xwzw, s15
+        add r1.z, r3.z, -r4.x
+        cmp r1.z, r1.z, c1.z, c1.w
+        add r1.x, r1.x, r1.z
+        mad r3.xw, r3.y, c20.zyzw, r0.yyzz
+        texld r4, r3.xwzw, s15
+        add r1.z, r3.z, -r4.x
+        cmp r1.z, r1.z, c1.z, c1.w
+        add r1.x, r1.x, r1.z
+        mad r3.xw, r3.y, c19.xyzy, r0.yyzz
+        texld r4, r3.xwzw, s15
+        add r1.z, r3.z, -r4.x
+        cmp r1.z, r1.z, c1.z, c1.w
+        add r1.x, r1.x, r1.z
+        mad r3.xw, r3.y, c19.zyzw, r0.yyzz
+        texld r4, r3.xwzw, s15
+        add r1.z, r3.z, -r4.x
+        cmp r1.z, r1.z, c1.z, c1.w
+        add r1.x, r1.x, r1.z
+        mad r3.xw, r3.y, c16.xyzy, r0.yyzz
+        texld r4, r3.xwzw, s15
+        add r1.z, r3.z, -r4.x
+        cmp r1.z, r1.z, c1.z, c1.w
+        add r1.x, r1.x, r1.z
+        mad r3.xw, r3.y, c16.zyzw, r0.yyzz
+        texld r4, r3.xwzw, s15
+        add r1.z, r3.z, -r4.x
+        cmp r1.z, r1.z, c1.z, c1.w
+        add r1.x, r1.x, r1.z
+        mad r3.xw, r3.y, c13.xyzy, r0.yyzz
+        mad r0.yz, r3.y, c13.xzww, r0
+        texld r4, r0.yzzw, s15
+        add r0.y, r3.z, -r4.x
+        cmp r0.y, r0.y, c1.z, c1.w
+        texld r4, r3.xwzw, s15
+        add r0.z, r3.z, -r4.x
+        cmp r0.z, r0.z, c1.z, c1.w
+        add r0.z, r1.x, r0.z
+        add r0.y, r0.y, r0.z
+        rcp r0.z, c53.w
+        mul r0.z, r0.x, r0.z
+        add r0.x, r0.x, -c53.w
+        cmp r1.xz, r0.x, c12.xyyw, c12.zyww
+        mul r0.x, r0.z, r0.z
+        mul r0.x, r0.x, c8.w
+        mad r0.x, r0.y, c9.x, r0.x
+        add r0.y, r1.z, r0.x
+        cmp_sat r0.x, r0.y, r0.x, r1.x
+        mul r0.yz, c0.y, v2.xxyw
+        texld r3, r0.yzzw, s0
+        add r3, r3.zwzw, c3.x
+        mul r3, r3, c0.z
+        add r0.y, -r0.w, c3.z
+        mul r3, r3, r0.y
+        rcp r0.y, v1.z
+        mul r0.y, r0.w, r0.y
+        mad r3, v1.xyxy, r0.y, r3
+        mul r0.yz, c2.x, v2.xxyw
+        texld r4, r0.yzzw, s0
+        add r4, r4.zwzw, c3.x
+        mad r3, r4, c2.zzww, r3
+        mul r0.yz, c2.y, v2.xxyw
+        texld r4, r0.yzzw, s0
+        add r4, r4.zwzw, c3.x
+        mul r4, r0.w, r4
+        mul r0.y, r0.w, c5.x
+        mad r3, r4, c4.xxyy, r3
+        add r0.z, r1.w, -v4.w
+        mad r1.xz, v1.w, c7.xyyw, c7.zyww
+        mul_sat r0.z, r0.z, r1.x
+        add r0.z, -r0.z, c3.z
+        mul r0.z, r1.y, r0.z
+        mul r0.z, r0.z, v1.w
+        cmp r0.z, r1.y, r0.z, c1.w
+        lrp r1.xy, r0.z, v4, r3.zwzw
+        add r4.xy, r1, c0.w
+        mov r4.z, c5.z
+        dp3 r0.w, r4, r4
+        rsq r0.w, r0.w
+        mul r1.xyw, r4.xyzz, r0.w
+        mad r0.w, r0.w, c10.x, c10.y
+        mov r4.xyz, c38
+        mad r4.xyz, r4, r0.w, c37
+        dp3 r0.w, r2, r1.xyww
+        add r0.w, r0.w, r0.w
+        mad r5.xyz, r1.xyww, -r0.w, r2
+        dp3 r0.w, r1.xyww, -c17
+        add r0.w, r0.w, -c3.w
+        mul_sat r0.w, r0.w, c6.w
+        dp3_sat r1.x, -c17, r5
+        add r1.x, r1.x, c8.x
+        pow r1.y, r0_abs.z, c3.w
+        mad r1.w, r1.y, c8.y, c8.z
+        mad r1.y, r1.y, -c9.y, c9.z
+        pow r2.w, r1.x, r1.w
+        mul r5.xyz, c18.w, c18
+        mul r6.xyz, r2.w, r5
+        mul r5.xyz, r0.w, r5
+        mul r5.xyz, r0.x, r5
+        mul r6.xyz, r0.x, r6
+        mul r6.xyz, r6, c17.w
+        rcp r0.x, c66.y
+        mov r7.y, -r0.x
+        rcp r7.xz, c66.x
+        add r7.xyz, r7, v0.xyxw
+        rcp r0.x, v0.z
+        mul r7.xyz, r7, r0.x
+        mad r7.xyz, r7, c3.xxyw, c3.y
+        texld r8, r7.zyzw, s2
+        add r0.x, -c75.x, c75.y
+        rcp r0.x, r0.x
+        mad r0.w, c75.y, -r0.x, r8.x
+        mul r0.x, r0.x, c75.y
+        mul r0.x, r0.x, c75.x
+        rcp r0.w, r0.w
+        mad r0.x, -r0.x, r0.w, -v0.z
+        pow r0.w, v0_abs.z, c4.z
+        mul_sat r0.w, r0.w, c4.w
+        add r0.w, r0.w, c5.x
+        rcp r0.w, r0.w
+        mul_sat r0.w, r0.x, r0.w
+        cmp r0.x, r0.x, r0.x, c3.z
+        mul r0.x, r0.x, c72.w
+        mul r0.x, r0.x, c3.w
+        pow r1.x, r0_abs.x, c3.w
+        add_sat r0.x, r1.x, c0.x
+        add r0.w, -r0.w, c3.z
+        mul r0.w, r0.w, r0.w
+        mul r8.xyz, r2, r0.w
+        mad r3.xy, r8, c3.x, r3
+        mul r3.z, r8.z, c3.x
+        add r3.xyz, r3, c5.yyzw
+        nrm r8.xyz, r3
+        mad r3.xyz, r2, c11.xxyw, c11.z
+        dp3 r0.w, r2, r8
+        dp3 r1.x, r3, r3
+        rsq r1.x, r1.x
+        mul r2.xy, r3, r1.x
+        mov r2.zw, c6.xyxy
+        mul r3, r8.xyyx, r2.yyxz
+        mad r1.xw, r3.zyzw, r2.wyzx, r3.xyzy
+        mul r2.x, c5.w, v0.z
+        rcp r2.x, r2.x
+        mul r2.x, r2.x, c3.y
+        max r3.x, c11.w, -r2.x
+        mad r2.xy, r1.xwzw, r3.x, r7
+        add r1.x, c3.z, v3.w
+        mad r0.y, r1.x, c3.y, r0.y
+        add r0.y, r0.y, c6.z
+        add r1.x, r2.y, -r0.y
+        cmp r2.z, r1.x, r2.y, r0.y
+        mov r2.w, c1.w
+        texldl r2, r2.xzww, s1
+        mul r3.xyz, r2, c74.x
+        mov r1.x, c74.x
+        mad r2.xyz, r2, -r1.x, c42
+        mad r2.xyz, v0.w, r2, r3
+        mad r1.xyw, r6.xyzz, r1.y, r2.xyzz
+        rcp r0.y, r0.x
+        mul r1.xyw, r1, r0.y
+        mul r2.xyz, r5, c5.x
+        mov r0.y, c3.y
+        mul r0.y, r0.y, c73.w
+        mad r2.xyz, c72, r0.y, r2
+        add r0.y, r0.w, c3.z
+        cmp r0.y, -r0.w, r0.y, c3.z
+        mul r0.w, r0_abs.y, r0_abs.y
+        mul r0.w, r0.w, r0.w
+        mul r0.y, r0_abs.y, r0.w
+        mad r0.y, r0.y, c10.z, c10.w
+        mul r0.y, r0.x, r0.y
+        mov oC0.w, r0.x
+        mul r0.x, r0.y, c3.y
+        mad r0.xyw, r0.x, r1, r2.xyzz
+        mul r1.xy, c5.x, v2
+        texld r2, r1, s0
+        mad r1.xy, r2, r1.z, c3.w
+        mul r1.xzw, r5.xyyz, r1.x
+        mul r2.xyz, r4, r1.y
+        mul r2.xyz, r2, c9.w
+        mad r1.xyz, r1.xzww, c9.w, r2
+        lrp r2.xyz, r0.z, r1, r0.xyww
+        mul oC0.xyz, r2, c39.y
+    
+    // approximately 243 instruction slots used (19 texture, 224 arithmetic)
+};
+
+PixelShader PS_Black
+<
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+        ps_3_0
+        def c0, 0, 0, 0, 0
+        mov oC0, c0.x
+    
+    // approximately 1 instruction slot used
+};
+
+technique water
+{
+    pass p0
+    {
+        CullMode = NONE;
+        AlphaBlendEnable = true;
+        AlphaTestEnable = false;
+
+        VertexShader = VS_Water;
+        PixelShader = PS_Water;
+    }
+    pass p1
+    {
+        CullMode = NONE;
+        AlphaBlendEnable = true;
+        AlphaTestEnable = false;
+
+        VertexShader = VS_Water;
+        PixelShader = PS_LitWater;
+    }
+    pass p2
+    {
+        CullMode = NONE;
+        AlphaBlendEnable = false;
+        AlphaTestEnable = false;
+
+        VertexShader = VS_Water;
+        PixelShader = PS_Black;
+    }
+}
+

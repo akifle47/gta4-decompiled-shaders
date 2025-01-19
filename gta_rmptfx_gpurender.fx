@@ -1,0 +1,1240 @@
+//Globals
+shared float4 gAllGlobals[64] : AllGlobals;
+shared float4x4 gWorld : World;
+shared float4x4 gWorldView : WorldView;
+shared float4x4 gWorldViewProj : WorldViewProjection;
+shared float4x4 gViewInverse : ViewInverse;
+shared texture stippletexture;
+shared sampler StippleTexture = 
+sampler_state
+{
+    Texture = <stippletexture>;
+    MinFilter = POINT;
+    MagFilter = POINT;
+    MipFilter = POINT;
+    AddressU = WRAP;
+    AddressV = WRAP;
+};
+shared float4 gDepthFxParams : DepthFxParams = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 gDirectionalLight : DirectionalLight;
+shared float4 gDirectionalColour : DirectionalColour;
+shared float4 gLightPosX : LightPositionX;
+shared float4 gLightPosY : LightPositionY;
+shared float4 gLightPosZ : LightPositionZ;
+shared float4 gLightDirX : LightDirX;
+shared float4 gLightDirY : LightDirY;
+shared float4 gLightDirZ : LightDirZ;
+shared float4 gLightFallOff : LightFallOff;
+shared float4 gLightConeScale : LightConeScale;
+shared float4 gLightConeOffset : LightConeOffset;
+shared float4 gLightColR : LightColR;
+shared float4 gLightColG : LightColG;
+shared float4 gLightColB : LightColB;
+shared float4 gLightPointPosX : LightPointPositionX;
+shared float4 gLightPointPosY : LightPointPositionY;
+shared float4 gLightPointPosZ : LightPointPositionZ;
+shared float4 gLightPointColR : LightPointColR;
+shared float4 gLightPointColG : LightPointColG;
+shared float4 gLightPointColB : LightPointColB;
+shared float4 gLightPointFallOff : LightPointFallOff;
+shared float4 gLightDir2X : LightDir2X;
+shared float4 gLightDir2Y : LightDir2Y;
+shared float4 gLightDir2Z : LightDir2Z;
+shared float4 gLightConeScale2 : LightConeScale2;
+shared float4 gLightConeOffset2 : LightConeOffset2;
+shared float4 gLightAmbient0 : LightAmbientColor0<string UIWidget = "Ambient Light Color 0"; string Space = "material";> = float4(0.000000, 0.000000, 0.000000, 1.000000);
+shared float4 gLightAmbient1 : LightAmbientColor1<string UIWidget = "Ambient Light Color 1"; string Space = "material";> = float4(0.000000, 0.000000, 0.000000, 1.000000);
+shared float4 globalScalars : globalScalars = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 globalScalars2 : globalScalars2 = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 gAspectRatio : gAspectRatio = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 globalScreenSize : globalScreenSize = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 globalFogParams : globalFogParams = float4(1600.000000, 9000000.000000, 0.010000, 1.000000);
+shared float4 globalFogColor : globalFogColor = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 globalFogColorN : globalFogColorN = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 gDayNightEffects : globalDayNightEffects = float4(1.000000, 0.000000, 1.000000, 0.000000);
+shared float gInvColorExpBias : ColorExpBias = 1.000000;
+shared float4 colorize : Colorize = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 stencil : Stencil = float4(0.000000, 255.000000, 0.000000, 0.000000);
+shared float4 gFacetCentre : FacetCentre;
+shared float4 gShadowCommonParam0123 : ShadowCommonParam0123;
+shared float4 gShadowParam14151617 : ShadowParam14151617;
+shared float4 gShadowParam18192021 : ShadowParam18192021;
+shared float4 gShadowParam0123 : ShadowParam0123;
+shared float4 gShadowParam4567 : ShadowParam4567;
+shared float4 gShadowParam891113 : ShadowParam891113;
+shared float4x4 gShadowMatrix : ShadowMatrix;
+shared texture ShadowZTextureDir;
+shared sampler gShadowZSamplerDir = 
+sampler_state
+{
+    Texture = <ShadowZTextureDir>;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+    MipFilter = POINT;
+    MinFilter = POINT;
+    MagFilter = POINT;
+};
+shared texture ShadowZTextureDirVS;
+shared sampler gShadowZSamplerDirVS = 
+sampler_state
+{
+    Texture = <ShadowZTextureDirVS>;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+    MipFilter = POINT;
+    MinFilter = POINT;
+    MagFilter = POINT;
+};
+shared texture ShadowZTextureCache;
+shared sampler gShadowZSamplerCache = 
+sampler_state
+{
+    Texture = <ShadowZTextureCache>;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+    MipFilter = POINT;
+    MinFilter = POINT;
+    MagFilter = POINT;
+};
+shared texture ShadowTextureLUT;
+shared sampler gShadowSamplerLUT = 
+sampler_state
+{
+    Texture = <ShadowTextureLUT>;
+    AddressU = WRAP;
+    AddressV = WRAP;
+    MipFilter = POINT;
+    MinFilter = LINEAR;
+    MagFilter = LINEAR;
+};
+shared float4 NearFarPlane : NearFarPlane;
+shared float4 gInvScreenSize : InvScreenSize;
+shared texture DepthMap;
+shared sampler DepthMapTexSampler = 
+sampler_state
+{
+    Texture = <DepthMap>;
+    MinFilter = POINT;
+    MagFilter = POINT;
+    MipFilter = NONE;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+};
+
+//Locals
+float shadowmap_res : ShadowMapResolution = 1280.000000;
+float2 facetMask[4] : facetMask = 
+{
+    float2(-1.000000, 0.000000), 
+    float2(1.000000, 0.000000), 
+    float2(0.000000, -1.000000), 
+    float2(0.000000, 1.000000)
+};
+float gSoftness : gSoftness<string UIName = "Softness Fade : Controls how much soft particles fade out as objects become close to them ;"; float UIMin = 0.000000; float UIMax = 1000.000000; float UIStep = 0.010000;> = 2.000000;
+float HybridAdd : HybridAdd = 1.000000;
+texture DiffuseTex2;
+sampler DiffuseTexSampler<string UIName = "Texture Map";> = 
+sampler_state
+{
+    Texture = <DiffuseTex2>;
+    MinFilter = ANISOTROPIC;
+    MagFilter = LINEAR;
+    MipFilter = LINEAR;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+};
+float HybridAddRatio : HybridAddRatio<string UIName = "Hybrid Add Ratio"; float UIMin = 0.000000; float UIMax = 1.000000; float UIStep = 0.010000; string UIHint = "Keyframeable";> = 0.000000;
+float HDRIntensityMultiplier : HDRIntensityMultiplier<string UIName = "HDR Intensity Multiplier"; float UIMin = 0.000000; float UIMax = 255.000000; float UIStep = 0.010000; string UIHint = "Keyframeable";> = 1.000000;
+float gMotionBlur : MotionBlur;
+float4 gRadius : Radius;
+float2 gLifeFade : LifeFade;
+bool gUseDirectional : UseDirectional;
+float4 gTextureAnimation : TextureAnimation;
+float4 gColorTint : ColorTint;
+float4 gColorTintPhase2 : ColorTintPhase2;
+texture DiffuseTex;
+sampler TextureSampler<string UIName = "Diffuse Texture";> = 
+sampler_state
+{
+    Texture = <DiffuseTex>;
+    AddressU = WRAP;
+    AddressV = WRAP;
+    AddressW = WRAP;
+    MipFilter = LINEAR;
+    MinFilter = ANISOTROPIC;
+    MagFilter = LINEAR;
+};
+texture PositionTex;
+sampler PositionTexSampler = 
+sampler_state
+{
+    Texture = <PositionTex>;
+    MinFilter = POINT;
+    MagFilter = POINT;
+    MipFilter = NONE;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+};
+texture VelocityTex;
+sampler VelocityTexSampler = 
+sampler_state
+{
+    Texture = <VelocityTex>;
+    MinFilter = POINT;
+    MagFilter = POINT;
+    MipFilter = NONE;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+};
+int gControlLight : ControlLight = 0;
+float4 gRainDebug : RainDebug = float4(1.000000, 1.000000, 1.000000, 1.000000);
+float gWrapScale : WrapScale<string UIName = "Wrap Scale : Controls how strong sun light hits particle ( 0 - no direct light , 1 - all direct light)"; float UIMin = 0.000000; float UIMax = 1.000000; float UIStep = 0.010000;> = 0.700000;
+float gWrapBias : WrapBias<string UIName = "Wrap Bias : Controls how sun light spreads over surface ( 0 - no extra spread, 1- spreads all over surface) "; float UIMin = 0.000000; float UIMax = 1.000000; float UIStep = 0.010000;> = 0.300000;
+float gDiffuse : Diffuse<string UIName = "Diffuse : Controls the amount of lighting on surface, color also controls this ( 0 - no light, 1- light)"; float UIMin = 0.000000; float UIMax = 2.000000; float UIStep = 0.010000;> = 1.000000;
+float gAmbientAmount : AmbientAmount<string UIName = "Ambient Scale : Controls how much double ambient lighting  to alpy to surface"; float UIMin = 0.000000; float UIMax = 2.000000; float UIStep = 0.010000;> = 0.300000;
+
+//Vertex shaders
+VertexShader VS_TransformRainVertexLitVS
+<
+    string gAmbientAmount     = "parameter register(72)";
+    string gColorTint         = "parameter register(67)";
+    string gColorTintPhase2   = "parameter register(68)";
+    string gDiffuse           = "parameter register(71)";
+    string gDirectionalColour = "parameter register(18)";
+    string gDirectionalLight  = "parameter register(17)";
+    string gLightAmbient0     = "parameter register(37)";
+    string gLightAmbient1     = "parameter register(38)";
+    string gLightColB         = "parameter register(31)";
+    string gLightColG         = "parameter register(30)";
+    string gLightColR         = "parameter register(29)";
+    string gLightConeOffset   = "parameter register(27)";
+    string gLightConeScale    = "parameter register(26)";
+    string gLightDirX         = "parameter register(22)";
+    string gLightDirY         = "parameter register(23)";
+    string gLightDirZ         = "parameter register(24)";
+    string gLightFallOff      = "parameter register(25)";
+    string gLightPosX         = "parameter register(19)";
+    string gLightPosY         = "parameter register(20)";
+    string gLightPosZ         = "parameter register(21)";
+    string gMotionBlur        = "parameter register(64)";
+    string gRadius            = "parameter register(65)";
+    string gTextureAnimation  = "parameter register(66)";
+    string gViewInverse       = "parameter register(12)";
+    string gWorldView         = "parameter register(4)";
+    string gWorldViewProj     = "parameter register(8)";
+    string gWrapBias          = "parameter register(70)";
+    string gWrapScale         = "parameter register(69)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   float gAmbientAmount;
+    //   float4 gColorTint;
+    //   float4 gColorTintPhase2;
+    //   float gDiffuse;
+    //   float4 gDirectionalColour;
+    //   float4 gDirectionalLight;
+    //   float4 gLightAmbient0;
+    //   float4 gLightAmbient1;
+    //   float4 gLightColB;
+    //   float4 gLightColG;
+    //   float4 gLightColR;
+    //   float4 gLightConeOffset;
+    //   float4 gLightConeScale;
+    //   float4 gLightDirX;
+    //   float4 gLightDirY;
+    //   float4 gLightDirZ;
+    //   float4 gLightFallOff;
+    //   float4 gLightPosX;
+    //   float4 gLightPosY;
+    //   float4 gLightPosZ;
+    //   float gMotionBlur;
+    //   float4 gRadius;
+    //   float4 gTextureAnimation;
+    //   row_major float4x4 gViewInverse;
+    //   row_major float4x4 gWorldView;
+    //   row_major float4x4 gWorldViewProj;
+    //   float gWrapBias;
+    //   float gWrapScale;
+    //
+    //
+    // Registers:
+    //
+    //   Name               Reg   Size
+    //   ------------------ ----- ----
+    //   gWorldView         c4       4
+    //   gWorldViewProj     c8       4
+    //   gViewInverse       c12      4
+    //   gDirectionalLight  c17      1
+    //   gDirectionalColour c18      1
+    //   gLightPosX         c19      1
+    //   gLightPosY         c20      1
+    //   gLightPosZ         c21      1
+    //   gLightDirX         c22      1
+    //   gLightDirY         c23      1
+    //   gLightDirZ         c24      1
+    //   gLightFallOff      c25      1
+    //   gLightConeScale    c26      1
+    //   gLightConeOffset   c27      1
+    //   gLightColR         c29      1
+    //   gLightColG         c30      1
+    //   gLightColB         c31      1
+    //   gLightAmbient0     c37      1
+    //   gLightAmbient1     c38      1
+    //   gMotionBlur        c64      1
+    //   gRadius            c65      1
+    //   gTextureAnimation  c66      1
+    //   gColorTint         c67      1
+    //   gColorTintPhase2   c68      1
+    //   gWrapScale         c69      1
+    //   gWrapBias          c70      1
+    //   gDiffuse           c71      1
+    //   gAmbientAmount     c72      1
+    //
+    
+        vs_3_0
+        def c0, 0, 0.5, -0.5, 0.699999988
+        def c1, -10, 9.99999975e-006, 1, -0.100000001
+        def c2, 1.11111116, 0.200000003, 0, 0
+        dcl_texcoord v0
+        dcl_texcoord1 v1
+        dcl_texcoord2 v2
+        dcl_position o0
+        dcl_color o1
+        dcl_texcoord o2.xy
+        dcl_texcoord1 o3.xyz
+        if_ge -v1_abs.w, v1_abs.w
+          mov r0.xy, c0
+          mad r0.xyz, c65.x, r0.xxyw, v0
+          add r0.w, c0.z, v2.x
+          nrm r1.xyz, v1
+          add r2.xyz, -r0.yzxw, c15.yzxw
+          dp3 r1.w, r2, r2
+          rsq r1.w, r1.w
+          mul r2.xyz, r2, r1.w
+          mul r3.xyz, r1.zxyw, r2
+          mad r2.xyz, r1.yzxw, r2.yzxw, -r3
+          nrm r3.xyz, r2
+          mul r2.xyz, c64.x, v1
+          mad r1.xyz, c65.x, r1, r2
+          mul r2.xyz, r3, c65.x
+          add r1.w, c0.w, -v2.y
+          mul r1.xyz, -r1, r1.w
+          mad r1.xyz, r0.w, r2, r1
+          nrm r2.xyz, r1
+          add r0.xyz, r0, r1
+          mul r1, r0.y, c9
+          mad r1, r0.x, c8, r1
+          mad r1, r0.z, c10, r1
+          add o0, r1, c11
+          mov r1.xyz, c67
+          mov o3.xyz, r0
+          mov r0.w, c67.w
+          mov r3.x, v2.x
+          mov r1.w, r2.y
+          mov r2.w, r2.z
+        else
+          mov r4.xy, c0
+          mad r4, c65.z, r4.xxyx, v0
+          add r3.zw, c0.z, v2.xyxy
+          nrm r5.xyz, c12
+          mul r5.xyz, r5, c65.z
+          nrm r6.xyz, -c13
+          mul r6.xyz, r6, c65.z
+          mul r6.xyz, r3.w, r6
+          mad r5.xyz, r3.z, r5, r6
+          nrm r2.xyz, r5
+          add r0.xyz, r4, r5
+          mul r5, r0.y, c9
+          mad r5, r0.x, c8, r5
+          mad r5, r0.z, c10, r5
+          add o0, r5, c11
+          mad r3.z, r4.w, c66.x, -c66.y
+          frc r3.w, r3.z
+          add r4.x, r3.z, -r3.w
+          slt r3.z, r3.z, -r3.z
+          slt r3.w, -r3.w, r3.w
+          mad r3.z, r3.z, r3.w, r4.x
+          mul_sat r3.z, r3.z, c66.z
+          mad r3.z, c66.z, v2.x, r3.z
+          add r3.x, r3.z, c1.x
+          mov r1.xyz, c68
+          mov o3.xyz, r0
+          mov r0.w, c68.w
+          mov r1.w, r2.y
+          mov r2.w, r2.z
+        endif
+        mul r4.xyz, r0.y, c5
+        mad r4.xyz, r0.x, c4, r4
+        mad r0.xyz, r0.z, c6, r4
+        add r0.xyz, r0, c7
+        mul r4.xyz, r1.w, c5
+        mad r2.xyz, r2.x, c4, r4
+        mad r2.xyz, r2.w, c6, r2
+        add r4, -r0.x, c19
+        add r5, -r0.y, c20
+        add r6, -r0.z, c21
+        mul r7, r4, r4
+        mad r7, r5, r5, r7
+        mad r7, r6, r6, r7
+        add r8, r7, c1.y
+        rsq r9.x, r8.x
+        rsq r9.y, r8.y
+        rsq r9.z, r8.z
+        rsq r9.w, r8.w
+        mov r0.z, c1.z
+        mad r7, r7, -c25, r0.z
+        max r7, r7, c0.x
+        mul r7, r7, r7
+        mad r7, r7, r7, c1.w
+        max r7, r7, c0.x
+        mul r7, r9, r7
+        mul r7, r7, c2.x
+        min r7, r7, c1.z
+        mul r8, r4, -c22
+        mad r8, r5, -c23, r8
+        mad r8, r6, -c24, r8
+        mul r8, r9, r8
+        mov r10, c26
+        mad_sat r8, r8, r10, c27
+        mul r7, r7, r8
+        mul r7, r9, r7
+        mul r4, r4, r7
+        mul r5, r5, r7
+        mul r6, r6, r7
+        mul r0.x, r7.x, c70.x
+        dp3 r0.y, r2, -c17
+        mad_sat r0.x, r0.y, c69.x, r0.x
+        mul r0.xyz, r0.x, c18
+        mul r4, r2.x, r4
+        mad r4, r2.y, r5, r4
+        mad r4, r2.z, r6, r4
+        mad_sat r4, c70.x, r7.x, r4
+        dp4 r5.x, c29, r4
+        dp4 r5.y, c30, r4
+        dp4 r5.z, c31, r4
+        mad r0.xyz, r0, c18.w, r5
+        dp3 r1.w, r2, c6
+        mad_sat r1.w, r1.w, c0.z, c0.y
+        mov r2.xyz, c38
+        mad r2.xyz, r2, r1.w, c37
+        mad r0.xyz, r2, c72.x, r0
+        mul r0.xyz, r0, c71.x
+        mul o1.xyz, r1, r0
+        add r0.xyz, c15, -v0
+        dp3 r0.x, r0, r0
+        rsq r0.x, r0.x
+        rcp r0.x, r0.x
+        mul r0.x, r0.x, c2.y
+        mul r0.y, r0.x, r0.x
+        mul r0.x, r0.x, r0.y
+        min r0.x, r0.x, c1.z
+        mul o1.w, r0.w, r0.x
+        mov r3.y, v2.y
+        mov o2.xy, r3
+    
+    // approximately 143 instruction slots used
+};
+
+VertexShader VS_2
+<
+    string PositionTexSampler = "parameter register(0)";
+    string VelocityTexSampler = "parameter register(1)";
+    string gAmbientAmount     = "parameter register(80)";
+    string gColorTint         = "parameter register(76)";
+    string gColorTintPhase2   = "parameter register(77)";
+    string gDirectionalColour = "parameter register(18)";
+    string gDirectionalLight  = "parameter register(17)";
+    string gLightAmbient0     = "parameter register(37)";
+    string gLightAmbient1     = "parameter register(38)";
+    string gLightColB         = "parameter register(31)";
+    string gLightColG         = "parameter register(30)";
+    string gLightColR         = "parameter register(29)";
+    string gLightConeOffset   = "parameter register(27)";
+    string gLightConeOffset2  = "parameter register(72)";
+    string gLightConeScale    = "parameter register(26)";
+    string gLightConeScale2   = "parameter register(71)";
+    string gLightDir2X        = "parameter register(68)";
+    string gLightDir2Y        = "parameter register(69)";
+    string gLightDir2Z        = "parameter register(70)";
+    string gLightDirX         = "parameter register(22)";
+    string gLightDirY         = "parameter register(23)";
+    string gLightDirZ         = "parameter register(24)";
+    string gLightFallOff      = "parameter register(25)";
+    string gLightPointFallOff = "parameter register(67)";
+    string gLightPointPosX    = "parameter register(64)";
+    string gLightPointPosY    = "parameter register(65)";
+    string gLightPointPosZ    = "parameter register(66)";
+    string gLightPosX         = "parameter register(19)";
+    string gLightPosY         = "parameter register(20)";
+    string gLightPosZ         = "parameter register(21)";
+    string gMotionBlur        = "parameter register(73)";
+    string gRadius            = "parameter register(74)";
+    string gTextureAnimation  = "parameter register(75)";
+    string gViewInverse       = "parameter register(12)";
+    string gWorldView         = "parameter register(4)";
+    string gWorldViewProj     = "parameter register(8)";
+    string gWrapBias          = "parameter register(79)";
+    string gWrapScale         = "parameter register(78)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   sampler2D PositionTexSampler;
+    //   sampler2D VelocityTexSampler;
+    //   float gAmbientAmount;
+    //   float4 gColorTint;
+    //   float4 gColorTintPhase2;
+    //   float4 gDirectionalColour;
+    //   float4 gDirectionalLight;
+    //   float4 gLightAmbient0;
+    //   float4 gLightAmbient1;
+    //   float4 gLightColB;
+    //   float4 gLightColG;
+    //   float4 gLightColR;
+    //   float4 gLightConeOffset;
+    //   float4 gLightConeOffset2;
+    //   float4 gLightConeScale;
+    //   float4 gLightConeScale2;
+    //   float4 gLightDir2X;
+    //   float4 gLightDir2Y;
+    //   float4 gLightDir2Z;
+    //   float4 gLightDirX;
+    //   float4 gLightDirY;
+    //   float4 gLightDirZ;
+    //   float4 gLightFallOff;
+    //   float4 gLightPointFallOff;
+    //   float4 gLightPointPosX;
+    //   float4 gLightPointPosY;
+    //   float4 gLightPointPosZ;
+    //   float4 gLightPosX;
+    //   float4 gLightPosY;
+    //   float4 gLightPosZ;
+    //   float gMotionBlur;
+    //   float4 gRadius;
+    //   float4 gTextureAnimation;
+    //   row_major float4x4 gViewInverse;
+    //   row_major float4x4 gWorldView;
+    //   row_major float4x4 gWorldViewProj;
+    //   float gWrapBias;
+    //   float gWrapScale;
+    //
+    //
+    // Registers:
+    //
+    //   Name               Reg   Size
+    //   ------------------ ----- ----
+    //   gWorldView         c4       3
+    //   gWorldViewProj     c8       4
+    //   gViewInverse       c12      4
+    //   gDirectionalLight  c17      1
+    //   gDirectionalColour c18      1
+    //   gLightPosX         c19      1
+    //   gLightPosY         c20      1
+    //   gLightPosZ         c21      1
+    //   gLightDirX         c22      1
+    //   gLightDirY         c23      1
+    //   gLightDirZ         c24      1
+    //   gLightFallOff      c25      1
+    //   gLightConeScale    c26      1
+    //   gLightConeOffset   c27      1
+    //   gLightColR         c29      1
+    //   gLightColG         c30      1
+    //   gLightColB         c31      1
+    //   gLightAmbient0     c37      1
+    //   gLightAmbient1     c38      1
+    //   gLightPointPosX    c64      1
+    //   gLightPointPosY    c65      1
+    //   gLightPointPosZ    c66      1
+    //   gLightPointFallOff c67      1
+    //   gLightDir2X        c68      1
+    //   gLightDir2Y        c69      1
+    //   gLightDir2Z        c70      1
+    //   gLightConeScale2   c71      1
+    //   gLightConeOffset2  c72      1
+    //   gMotionBlur        c73      1
+    //   gRadius            c74      1
+    //   gTextureAnimation  c75      1
+    //   gColorTint         c76      1
+    //   gColorTintPhase2   c77      1
+    //   gWrapScale         c78      1
+    //   gWrapBias          c79      1
+    //   gAmbientAmount     c80      1
+    //   PositionTexSampler s0       1
+    //   VelocityTexSampler s1       1
+    //
+    
+        vs_3_0
+        def c0, 0, 0.5, -0.5, 0.699999988
+        def c1, 0.0500000007, -10, 0.100000001, 9.99999975e-006
+        def c2, 1, 1.11111116, 0.200000003, 0
+        dcl_position v0
+        dcl_texcoord v1
+        dcl_2d s0
+        dcl_2d s1
+        dcl_position o0
+        dcl_color o1
+        dcl_texcoord o2.xy
+        dcl_texcoord1 o3.xyz
+        texldl r0, v0, s0
+        texldl r1, v0, s1
+        if_ge -r1_abs.w, r1_abs.w
+          mov r2.xy, c0
+          mad r2.xyz, c74.x, r2.xxyw, r0
+          add r1.w, c0.z, v1.x
+          nrm r3.xyz, r1
+          add r4.xyz, -r2.yzxw, c15.yzxw
+          dp3 r2.w, r4, r4
+          rsq r2.w, r2.w
+          mul r4.xyz, r4, r2.w
+          mul r5.xyz, r3.zxyw, r4
+          mad r4.xyz, r3.yzxw, r4.yzxw, -r5
+          nrm r5.xyz, r4
+          mul r1.xyz, r1, c73.x
+          mad r1.xyz, c74.x, r3, r1
+          mul r3.xyz, r5, c74.x
+          add r2.w, c0.w, -v1.y
+          mul r1.xyz, -r1, r2.w
+          mad r1.xyz, r1.w, r3, r1
+          nrm r3.xyz, r1
+          add r1.xyz, r2, r1
+          mul r2, r1.y, c9
+          mad r2, r1.x, c8, r2
+          mad r2, r1.z, c10, r2
+          add o0, r2, c11
+          mov r2.x, c1.x
+          add r1.w, r2.x, c76.w
+          mov r2.xyz, c76
+          mov o3.xyz, r1
+          mov r4.x, v1.x
+        else
+          mov r5.xy, c0
+          mad r5, c74.z, r5.xxyx, r0
+          add r4.zw, c0.z, v1.xyxy
+          nrm r6.xyz, c12
+          mul r6.xyz, r6, c74.z
+          nrm r7.xyz, -c13
+          mul r7.xyz, r7, c74.z
+          mul r7.xyz, r4.w, r7
+          mad r6.xyz, r4.z, r6, r7
+          nrm r3.xyz, r6
+          add r1.xyz, r5, r6
+          mul r6, r1.y, c9
+          mad r6, r1.x, c8, r6
+          mad r6, r1.z, c10, r6
+          add o0, r6, c11
+          mad r0.w, r5.w, c75.x, -c75.y
+          frc r2.w, r0.w
+          add r3.w, r0.w, -r2.w
+          slt r0.w, r0.w, -r0.w
+          slt r2.w, -r2.w, r2.w
+          mad r0.w, r0.w, r2.w, r3.w
+          mul_sat r0.w, r0.w, c75.z
+          mad r0.w, c75.z, v1.x, r0.w
+          add r4.x, r0.w, c1.y
+          mov r4.z, c1.z
+          add r1.w, r4.z, c77.w
+          mov r2.xyz, c77
+          mov o3.xyz, r1
+        endif
+        add r5, -r1.x, c19
+        add r6, -r1.y, c20
+        add r7, -r1.z, c21
+        mul r8, r5, r5
+        mad r8, r6, r6, r8
+        mad r8, r7, r7, r8
+        add r9, r8, c1.w
+        rsq r10.x, r9.x
+        rsq r10.y, r9.y
+        rsq r10.z, r9.z
+        rsq r10.w, r9.w
+        mov r9.x, c2.x
+        mad r8, r8, -c25, r9.x
+        max r8, r8, c0.x
+        mul r8, r8, r8
+        mad r8, r8, r8, -c1.z
+        max r8, r8, c0.x
+        mul r8, r8, c2.y
+        min r8, r8, c2.x
+        mov r11.x, r5.x
+        mov r11.y, r6.x
+        mov r11.z, r7.x
+        add r9.yzw, r11.xxyz, c1.w
+        nrm r11.xyz, r9.yzww
+        mov r12.x, r5.y
+        mov r12.y, r6.y
+        mov r12.z, r7.y
+        add r9.yzw, r12.xxyz, c1.w
+        nrm r12.xyz, r9.yzww
+        mov r7.x, r5.z
+        mov r7.y, r6.z
+        add r5.xyz, r7, c1.w
+        nrm r13.xyz, r5
+        mov r7.x, r5.w
+        mov r7.y, r6.w
+        add r5.xyz, r7.xyww, c1.w
+        nrm r6.xyz, r5
+        mov r5.x, r11.x
+        mov r5.y, r12.x
+        mov r5.z, r13.x
+        mov r5.w, r6.x
+        mul r7, r5, -c22
+        mov r14.x, r11.y
+        mov r14.y, r12.y
+        mov r14.z, r13.y
+        mov r14.w, r6.y
+        mad r7, r14, -c23, r7
+        mov r13.x, r11.z
+        mov r13.y, r12.z
+        mov r13.w, r6.z
+        mad r6, r13, -c24, r7
+        mov r7, c26
+        mad_sat r6, r6, r7, c27
+        mul r6, r8, r6
+        mul r6, r10, r6
+        mul r5, r5, r6
+        mul r7, r14, r6
+        mul r6, r13, r6
+        add r8, -r1.x, c64
+        add r10, -r1.y, c65
+        add r11, -r1.z, c66
+        mul r12, r8, r8
+        mad r12, r10, r10, r12
+        mad r12, r11, r11, r12
+        add r13, r12, c1.w
+        rsq r14.x, r13.x
+        rsq r14.y, r13.y
+        rsq r14.z, r13.z
+        rsq r14.w, r13.w
+        mad r9, r12, -c67, r9.x
+        max r9, r9, c0.x
+        mul r9, r9, r9
+        mad r9, r9, r9, -c1.z
+        max r9, r9, c0.x
+        mul r9, r9, c2.y
+        min r9, r9, c2.x
+        mov r1.x, r8.x
+        mov r1.y, r10.x
+        mov r1.z, r11.x
+        add r1.xyz, r1, c1.w
+        nrm r12.xyz, r1
+        mov r1.x, r8.y
+        mov r1.y, r10.y
+        mov r1.z, r11.y
+        add r1.xyz, r1, c1.w
+        nrm r13.xyz, r1
+        mov r11.x, r8.z
+        mov r11.y, r10.z
+        add r1.xyz, r11, c1.w
+        nrm r15.xyz, r1
+        mov r11.x, r8.w
+        mov r11.y, r10.w
+        add r1.xyz, r11.xyww, c1.w
+        nrm r8.xyz, r1
+        mov r10.x, r12.x
+        mov r10.y, r13.x
+        mov r10.z, r15.x
+        mov r10.w, r8.x
+        mul r11, r10, -c68
+        mov r16.x, r12.y
+        mov r16.y, r13.y
+        mov r16.z, r15.y
+        mov r16.w, r8.y
+        mad r11, r16, -c69, r11
+        mov r15.x, r12.z
+        mov r15.y, r13.z
+        mov r15.w, r8.z
+        mad r8, r15, -c70, r11
+        mov r11, c71
+        mad_sat r8, r8, r11, c72
+        mul r8, r9, r8
+        mul r8, r14, r8
+        mul r9, r10, r8
+        mul r10, r16, r8
+        mul r11, r15, r8
+        mul r0.w, r8.x, c79.x
+        dp3 r1.x, r3, -c17
+        mad_sat r0.w, r1.x, c78.x, r0.w
+        mul r1.xyz, r0.w, c18
+        mul r5, r3.x, r5
+        mad r5, r3.y, r7, r5
+        mad r5, r3.z, r6, r5
+        mad_sat r5, c79.x, r8.x, r5
+        dp4 r6.x, c29, r5
+        dp4 r6.y, c30, r5
+        dp4 r6.z, c31, r5
+        mad r5.xyz, r1, c18.w, r6
+        dp3 r0.w, r3, c6
+        mad_sat r0.w, r0.w, c0.z, c0.y
+        mov r6.xyz, c38
+        mad r6.xyz, r6, r0.w, c37
+        mad r5.xyz, r6, c80.x, r5
+        mul r7, r3.x, r9
+        mad r7, r3.y, r10, r7
+        mad r3, r3.z, r11, r7
+        mad_sat r3, c79.x, r8.x, r3
+        dp4 r7.x, c29, r3
+        dp4 r7.y, c30, r3
+        dp4 r7.z, c31, r3
+        mad r1.xyz, r1, c18.w, r7
+        mad r1.xyz, r6, c80.x, r1
+        add r1.xyz, r5, r1
+        mul o1.xyz, r2, r1
+        add r0.xyz, -r0, c15
+        dp3 r0.x, r0, r0
+        rsq r0.x, r0.x
+        rcp r0.x, r0.x
+        mul r0.x, r0.x, c2.z
+        mul r0.y, r0.x, r0.x
+        mul r0.x, r0.x, r0.y
+        min r0.x, r0.x, c2.x
+        mul o1.w, r1.w, r0.x
+        mov r4.y, v1.y
+        mov o2.xy, r4
+    
+    // approximately 247 instruction slots used (4 texture, 243 arithmetic)
+};
+
+VertexShader VS_3
+<
+    string gAmbientAmount     = "parameter register(80)";
+    string gColorTint         = "parameter register(76)";
+    string gColorTintPhase2   = "parameter register(77)";
+    string gDirectionalColour = "parameter register(18)";
+    string gDirectionalLight  = "parameter register(17)";
+    string gLightAmbient0     = "parameter register(37)";
+    string gLightAmbient1     = "parameter register(38)";
+    string gLightColB         = "parameter register(31)";
+    string gLightColG         = "parameter register(30)";
+    string gLightColR         = "parameter register(29)";
+    string gLightConeOffset   = "parameter register(27)";
+    string gLightConeOffset2  = "parameter register(72)";
+    string gLightConeScale    = "parameter register(26)";
+    string gLightConeScale2   = "parameter register(71)";
+    string gLightDir2X        = "parameter register(68)";
+    string gLightDir2Y        = "parameter register(69)";
+    string gLightDir2Z        = "parameter register(70)";
+    string gLightDirX         = "parameter register(22)";
+    string gLightDirY         = "parameter register(23)";
+    string gLightDirZ         = "parameter register(24)";
+    string gLightFallOff      = "parameter register(25)";
+    string gLightPointFallOff = "parameter register(67)";
+    string gLightPointPosX    = "parameter register(64)";
+    string gLightPointPosY    = "parameter register(65)";
+    string gLightPointPosZ    = "parameter register(66)";
+    string gLightPosX         = "parameter register(19)";
+    string gLightPosY         = "parameter register(20)";
+    string gLightPosZ         = "parameter register(21)";
+    string gMotionBlur        = "parameter register(73)";
+    string gRadius            = "parameter register(74)";
+    string gTextureAnimation  = "parameter register(75)";
+    string gViewInverse       = "parameter register(12)";
+    string gWorldView         = "parameter register(4)";
+    string gWorldViewProj     = "parameter register(8)";
+    string gWrapBias          = "parameter register(79)";
+    string gWrapScale         = "parameter register(78)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   float gAmbientAmount;
+    //   float4 gColorTint;
+    //   float4 gColorTintPhase2;
+    //   float4 gDirectionalColour;
+    //   float4 gDirectionalLight;
+    //   float4 gLightAmbient0;
+    //   float4 gLightAmbient1;
+    //   float4 gLightColB;
+    //   float4 gLightColG;
+    //   float4 gLightColR;
+    //   float4 gLightConeOffset;
+    //   float4 gLightConeOffset2;
+    //   float4 gLightConeScale;
+    //   float4 gLightConeScale2;
+    //   float4 gLightDir2X;
+    //   float4 gLightDir2Y;
+    //   float4 gLightDir2Z;
+    //   float4 gLightDirX;
+    //   float4 gLightDirY;
+    //   float4 gLightDirZ;
+    //   float4 gLightFallOff;
+    //   float4 gLightPointFallOff;
+    //   float4 gLightPointPosX;
+    //   float4 gLightPointPosY;
+    //   float4 gLightPointPosZ;
+    //   float4 gLightPosX;
+    //   float4 gLightPosY;
+    //   float4 gLightPosZ;
+    //   float gMotionBlur;
+    //   float4 gRadius;
+    //   float4 gTextureAnimation;
+    //   row_major float4x4 gViewInverse;
+    //   row_major float4x4 gWorldView;
+    //   row_major float4x4 gWorldViewProj;
+    //   float gWrapBias;
+    //   float gWrapScale;
+    //
+    //
+    // Registers:
+    //
+    //   Name               Reg   Size
+    //   ------------------ ----- ----
+    //   gWorldView         c4       3
+    //   gWorldViewProj     c8       4
+    //   gViewInverse       c12      4
+    //   gDirectionalLight  c17      1
+    //   gDirectionalColour c18      1
+    //   gLightPosX         c19      1
+    //   gLightPosY         c20      1
+    //   gLightPosZ         c21      1
+    //   gLightDirX         c22      1
+    //   gLightDirY         c23      1
+    //   gLightDirZ         c24      1
+    //   gLightFallOff      c25      1
+    //   gLightConeScale    c26      1
+    //   gLightConeOffset   c27      1
+    //   gLightColR         c29      1
+    //   gLightColG         c30      1
+    //   gLightColB         c31      1
+    //   gLightAmbient0     c37      1
+    //   gLightAmbient1     c38      1
+    //   gLightPointPosX    c64      1
+    //   gLightPointPosY    c65      1
+    //   gLightPointPosZ    c66      1
+    //   gLightPointFallOff c67      1
+    //   gLightDir2X        c68      1
+    //   gLightDir2Y        c69      1
+    //   gLightDir2Z        c70      1
+    //   gLightConeScale2   c71      1
+    //   gLightConeOffset2  c72      1
+    //   gMotionBlur        c73      1
+    //   gRadius            c74      1
+    //   gTextureAnimation  c75      1
+    //   gColorTint         c76      1
+    //   gColorTintPhase2   c77      1
+    //   gWrapScale         c78      1
+    //   gWrapBias          c79      1
+    //   gAmbientAmount     c80      1
+    //
+    
+        vs_3_0
+        def c0, 0, 0.5, -0.5, 0.699999988
+        def c1, -10, 9.99999975e-006, 1, -0.100000001
+        def c2, 1.11111116, 0.200000003, 0, 0
+        dcl_texcoord v0
+        dcl_texcoord1 v1
+        dcl_texcoord2 v2
+        dcl_position o0
+        dcl_color o1
+        dcl_texcoord o2.xy
+        dcl_texcoord1 o3.xyz
+        if_ge -v1_abs.w, v1_abs.w
+          mov r0.xy, c0
+          mad r0.xyz, c74.x, r0.xxyw, v0
+          add r0.w, c0.z, v2.x
+          nrm r1.xyz, v1
+          add r2.xyz, -r0.yzxw, c15.yzxw
+          dp3 r1.w, r2, r2
+          rsq r1.w, r1.w
+          mul r2.xyz, r2, r1.w
+          mul r3.xyz, r1.zxyw, r2
+          mad r2.xyz, r1.yzxw, r2.yzxw, -r3
+          nrm r3.xyz, r2
+          mul r2.xyz, c73.x, v1
+          mad r1.xyz, c74.x, r1, r2
+          mul r2.xyz, r3, c74.x
+          add r1.w, c0.w, -v2.y
+          mul r1.xyz, -r1, r1.w
+          mad r1.xyz, r0.w, r2, r1
+          nrm r2.xyz, r1
+          add r0.xyz, r0, r1
+          mul r1, r0.y, c9
+          mad r1, r0.x, c8, r1
+          mad r1, r0.z, c10, r1
+          add o0, r1, c11
+          mov r1.xyz, c76
+          mov o3.xyz, r0
+          mov r0.w, c76.w
+          mov r3.x, v2.x
+        else
+          mov r4.xy, c0
+          mad r4, c74.z, r4.xxyx, v0
+          add r3.zw, c0.z, v2.xyxy
+          nrm r5.xyz, c12
+          mul r5.xyz, r5, c74.z
+          nrm r6.xyz, -c13
+          mul r6.xyz, r6, c74.z
+          mul r6.xyz, r3.w, r6
+          mad r5.xyz, r3.z, r5, r6
+          nrm r2.xyz, r5
+          add r0.xyz, r4, r5
+          mul r5, r0.y, c9
+          mad r5, r0.x, c8, r5
+          mad r5, r0.z, c10, r5
+          add o0, r5, c11
+          mad r1.w, r4.w, c75.x, -c75.y
+          frc r2.w, r1.w
+          add r3.z, r1.w, -r2.w
+          slt r1.w, r1.w, -r1.w
+          slt r2.w, -r2.w, r2.w
+          mad r1.w, r1.w, r2.w, r3.z
+          mul_sat r1.w, r1.w, c75.z
+          mad r1.w, c75.z, v2.x, r1.w
+          add r3.x, r1.w, c1.x
+          mov r1.xyz, c77
+          mov o3.xyz, r0
+          mov r0.w, c77.w
+        endif
+        add r4, -r0.x, c19
+        add r5, -r0.y, c20
+        add r6, -r0.z, c21
+        mul r7, r4, r4
+        mad r7, r5, r5, r7
+        mad r7, r6, r6, r7
+        add r8, r7, c1.y
+        rsq r9.x, r8.x
+        rsq r9.y, r8.y
+        rsq r9.z, r8.z
+        rsq r9.w, r8.w
+        mov r3.z, c1.z
+        mad r7, r7, -c25, r3.z
+        max r7, r7, c0.x
+        mul r7, r7, r7
+        mad r7, r7, r7, c1.w
+        max r7, r7, c0.x
+        mul r7, r7, c2.x
+        min r7, r7, c1.z
+        mov r8.x, r4.x
+        mov r8.y, r5.x
+        mov r8.z, r6.x
+        add r8.xyz, r8, c1.y
+        nrm r10.xyz, r8
+        mov r8.x, r4.y
+        mov r8.y, r5.y
+        mov r8.z, r6.y
+        add r8.xyz, r8, c1.y
+        nrm r11.xyz, r8
+        mov r6.x, r4.z
+        mov r6.y, r5.z
+        add r4.xyz, r6, c1.y
+        nrm r8.xyz, r4
+        mov r6.x, r4.w
+        mov r6.y, r5.w
+        add r4.xyz, r6.xyww, c1.y
+        nrm r5.xyz, r4
+        mov r4.x, r10.x
+        mov r4.y, r11.x
+        mov r4.z, r8.x
+        mov r4.w, r5.x
+        mul r6, r4, -c22
+        mov r12.x, r10.y
+        mov r12.y, r11.y
+        mov r12.z, r8.y
+        mov r12.w, r5.y
+        mad r6, r12, -c23, r6
+        mov r8.x, r10.z
+        mov r8.y, r11.z
+        mov r8.w, r5.z
+        mad r5, r8, -c24, r6
+        mov r6, c26
+        mad_sat r5, r5, r6, c27
+        mul r5, r7, r5
+        mul r5, r9, r5
+        mul r4, r4, r5
+        mul r6, r12, r5
+        mul r5, r8, r5
+        add r7, -r0.x, c64
+        add r8, -r0.y, c65
+        add r9, -r0.z, c66
+        mul r10, r7, r7
+        mad r10, r8, r8, r10
+        mad r10, r9, r9, r10
+        add r11, r10, c1.y
+        rsq r12.x, r11.x
+        rsq r12.y, r11.y
+        rsq r12.z, r11.z
+        rsq r12.w, r11.w
+        mad r10, r10, -c67, r3.z
+        max r10, r10, c0.x
+        mul r10, r10, r10
+        mad r10, r10, r10, c1.w
+        max r10, r10, c0.x
+        mul r10, r10, c2.x
+        min r10, r10, c1.z
+        mov r0.x, r7.x
+        mov r0.y, r8.x
+        mov r0.z, r9.x
+        add r0.xyz, r0, c1.y
+        nrm r11.xyz, r0
+        mov r0.x, r7.y
+        mov r0.y, r8.y
+        mov r0.z, r9.y
+        add r0.xyz, r0, c1.y
+        nrm r13.xyz, r0
+        mov r9.x, r7.z
+        mov r9.y, r8.z
+        add r0.xyz, r9, c1.y
+        nrm r14.xyz, r0
+        mov r9.x, r7.w
+        mov r9.y, r8.w
+        add r0.xyz, r9.xyww, c1.y
+        nrm r7.xyz, r0
+        mov r8.x, r11.x
+        mov r8.y, r13.x
+        mov r8.z, r14.x
+        mov r8.w, r7.x
+        mul r9, r8, -c68
+        mov r15.x, r11.y
+        mov r15.y, r13.y
+        mov r15.z, r14.y
+        mov r15.w, r7.y
+        mad r9, r15, -c69, r9
+        mov r14.x, r11.z
+        mov r14.y, r13.z
+        mov r14.w, r7.z
+        mad r7, r14, -c70, r9
+        mov r9, c71
+        mad_sat r7, r7, r9, c72
+        mul r7, r10, r7
+        mul r7, r12, r7
+        mul r8, r8, r7
+        mul r9, r15, r7
+        mul r10, r14, r7
+        mul r0.x, r7.x, c79.x
+        dp3 r0.y, r2, -c17
+        mad_sat r0.x, r0.y, c78.x, r0.x
+        mul r0.xyz, r0.x, c18
+        mul r4, r2.x, r4
+        mad r4, r2.y, r6, r4
+        mad r4, r2.z, r5, r4
+        mad_sat r4, c79.x, r7.x, r4
+        dp4 r5.x, c29, r4
+        dp4 r5.y, c30, r4
+        dp4 r5.z, c31, r4
+        mad r4.xyz, r0, c18.w, r5
+        dp3 r1.w, r2, c6
+        mad_sat r1.w, r1.w, c0.z, c0.y
+        mov r5.xyz, c38
+        mad r5.xyz, r5, r1.w, c37
+        mad r4.xyz, r5, c80.x, r4
+        mul r6, r2.x, r8
+        mad r6, r2.y, r9, r6
+        mad r2, r2.z, r10, r6
+        mad_sat r2, c79.x, r7.x, r2
+        dp4 r6.x, c29, r2
+        dp4 r6.y, c30, r2
+        dp4 r6.z, c31, r2
+        mad r0.xyz, r0, c18.w, r6
+        mad r0.xyz, r5, c80.x, r0
+        add r0.xyz, r4, r0
+        mul o1.xyz, r1, r0
+        add r0.xyz, c15, -v0
+        dp3 r0.x, r0, r0
+        rsq r0.x, r0.x
+        rcp r0.x, r0.x
+        mul r0.x, r0.x, c2.y
+        mul r0.y, r0.x, r0.x
+        mul r0.x, r0.x, r0.y
+        min r0.x, r0.x, c1.z
+        mul o1.w, r0.w, r0.x
+        mov r3.y, v2.y
+        mov o2.xy, r3
+    
+    // approximately 241 instruction slots used
+};
+
+//Pixel shaders
+PixelShader PixelShader0 = NULL;
+
+PixelShader PS_VRainDraw
+<
+    string DiffuseTexSampler = "parameter register(0)";
+    string TextureSampler    = "parameter register(1)";
+    string gInvColorExpBias  = "parameter register(46)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   sampler2D DiffuseTexSampler;
+    //   sampler2D TextureSampler;
+    //   float gInvColorExpBias;
+    //
+    //
+    // Registers:
+    //
+    //   Name              Reg   Size
+    //   ----------------- ----- ----
+    //   gInvColorExpBias  c46      1
+    //   DiffuseTexSampler s0       1
+    //   TextureSampler    s1       1
+    //
+    
+        ps_3_0
+        def c0, 0, 1, 10, 0
+        dcl_color v0
+        dcl_texcoord v1.xy
+        dcl_2d s0
+        dcl_2d s1
+        add r0.xy, c0.zxzw, v1
+        texld r0, r0, s0
+        mul r0, r0, v0
+        mov r1.xy, c0
+        mad r1, c46.x, r1.xxxy, r1.yyyx
+        mul r0, r0, r1
+        texld r2, v1, s1
+        mul r2, r2, v0
+        mul r1, r1, r2
+        cmp oC0, v1.x, r1, r0
+    
+    // approximately 10 instruction slots used (2 texture, 8 arithmetic)
+};
+
+technique draw_Rain
+{
+    pass p0
+    {
+        CullMode = NONE;
+
+        VertexShader = VS_TransformRainVertexLitVS;
+        PixelShader = PS_VRainDraw;
+    }
+}
+
+technique draw_Rain_VERTEXTEX
+{
+    pass p0
+    {
+        CullMode = NONE;
+
+        VertexShader = VS_2;
+        PixelShader = PS_VRainDraw;
+    }
+}
+
+technique draw_Rain_R2VB
+{
+    pass p0
+    {
+        CullMode = NONE;
+
+        VertexShader = VS_3;
+        PixelShader = PS_VRainDraw;
+    }
+}
+

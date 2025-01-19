@@ -1,0 +1,404 @@
+//Globals
+shared float4 gAllGlobals[64] : AllGlobals;
+shared float4x3 gBoneMtx[48] : WorldMatrixArray;
+shared float4x4 gWorld : World;
+shared float4x4 gWorldView : WorldView;
+shared float4x4 gWorldViewProj : WorldViewProjection;
+shared float4x4 gViewInverse : ViewInverse;
+shared texture stippletexture;
+shared sampler StippleTexture = 
+sampler_state
+{
+    Texture = <stippletexture>;
+    MinFilter = POINT;
+    MagFilter = POINT;
+    MipFilter = POINT;
+    AddressU = WRAP;
+    AddressV = WRAP;
+};
+shared float4 gDepthFxParams : DepthFxParams = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 gDirectionalLight : DirectionalLight;
+shared float4 gDirectionalColour : DirectionalColour;
+shared float4 gLightPosX : LightPositionX;
+shared float4 gLightPosY : LightPositionY;
+shared float4 gLightPosZ : LightPositionZ;
+shared float4 gLightDirX : LightDirX;
+shared float4 gLightDirY : LightDirY;
+shared float4 gLightDirZ : LightDirZ;
+shared float4 gLightFallOff : LightFallOff;
+shared float4 gLightConeScale : LightConeScale;
+shared float4 gLightConeOffset : LightConeOffset;
+shared float4 gLightColR : LightColR;
+shared float4 gLightColG : LightColG;
+shared float4 gLightColB : LightColB;
+shared float4 gLightPointPosX : LightPointPositionX;
+shared float4 gLightPointPosY : LightPointPositionY;
+shared float4 gLightPointPosZ : LightPointPositionZ;
+shared float4 gLightPointColR : LightPointColR;
+shared float4 gLightPointColG : LightPointColG;
+shared float4 gLightPointColB : LightPointColB;
+shared float4 gLightPointFallOff : LightPointFallOff;
+shared float4 gLightDir2X : LightDir2X;
+shared float4 gLightDir2Y : LightDir2Y;
+shared float4 gLightDir2Z : LightDir2Z;
+shared float4 gLightConeScale2 : LightConeScale2;
+shared float4 gLightConeOffset2 : LightConeOffset2;
+shared float4 gLightAmbient0 : LightAmbientColor0<string UIWidget = "Ambient Light Color 0"; string Space = "material";> = float4(0.000000, 0.000000, 0.000000, 1.000000);
+shared float4 gLightAmbient1 : LightAmbientColor1<string UIWidget = "Ambient Light Color 1"; string Space = "material";> = float4(0.000000, 0.000000, 0.000000, 1.000000);
+shared float4 globalScalars : globalScalars = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 globalScalars2 : globalScalars2 = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 gAspectRatio : gAspectRatio = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 globalScreenSize : globalScreenSize = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 globalFogParams : globalFogParams = float4(1600.000000, 9000000.000000, 0.010000, 1.000000);
+shared float4 globalFogColor : globalFogColor = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 globalFogColorN : globalFogColorN = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 gDayNightEffects : globalDayNightEffects = float4(1.000000, 0.000000, 1.000000, 0.000000);
+shared float gInvColorExpBias : ColorExpBias = 1.000000;
+shared float4 colorize : Colorize = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 stencil : Stencil = float4(0.000000, 255.000000, 0.000000, 0.000000);
+shared float4 gFacetCentre : FacetCentre;
+shared float4 gShadowCommonParam0123 : ShadowCommonParam0123;
+shared float4 gShadowParam14151617 : ShadowParam14151617;
+shared float4 gShadowParam18192021 : ShadowParam18192021;
+shared float4 gShadowParam0123 : ShadowParam0123;
+shared float4 gShadowParam4567 : ShadowParam4567;
+shared float4 gShadowParam891113 : ShadowParam891113;
+shared float4x4 gShadowMatrix : ShadowMatrix;
+shared texture ShadowZTextureDir;
+shared sampler gShadowZSamplerDir = 
+sampler_state
+{
+    Texture = <ShadowZTextureDir>;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+    MipFilter = POINT;
+    MinFilter = POINT;
+    MagFilter = POINT;
+};
+shared texture ShadowZTextureDirVS;
+shared sampler gShadowZSamplerDirVS = 
+sampler_state
+{
+    Texture = <ShadowZTextureDirVS>;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+    MipFilter = POINT;
+    MinFilter = POINT;
+    MagFilter = POINT;
+};
+shared texture ShadowZTextureCache;
+shared sampler gShadowZSamplerCache = 
+sampler_state
+{
+    Texture = <ShadowZTextureCache>;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+    MipFilter = POINT;
+    MinFilter = POINT;
+    MagFilter = POINT;
+};
+shared texture ShadowTextureLUT;
+shared sampler gShadowSamplerLUT = 
+sampler_state
+{
+    Texture = <ShadowTextureLUT>;
+    AddressU = WRAP;
+    AddressV = WRAP;
+    MipFilter = POINT;
+    MinFilter = LINEAR;
+    MagFilter = LINEAR;
+};
+
+//Locals
+texture DiffuseTex;
+sampler TextureSampler<string UIName = "Diffuse Texture";> = 
+sampler_state
+{
+    Texture = <DiffuseTex>;
+    AddressU = WRAP;
+    AddressV = WRAP;
+    AddressW = WRAP;
+    MipFilter = LINEAR;
+    MinFilter = ANISOTROPIC;
+    MagFilter = LINEAR;
+};
+float shadowmap_res : ShadowMapResolution = 1280.000000;
+float2 facetMask[4] : facetMask = 
+{
+    float2(-1.000000, 0.000000), 
+    float2(1.000000, 0.000000), 
+    float2(0.000000, -1.000000), 
+    float2(0.000000, 1.000000)
+};
+float3 LuminanceConstants : LuminanceConstants = float3(0.212500, 0.715400, 0.072100);
+float4x4 matGrassTransform : matGrassTransform0;
+float4 plantColor : plantColor0;
+float3 vecCameraPos : vecCameraPos0;
+float2 fadeAlphaDist : fadeAlphaDist0;
+texture grassTexture0;
+sampler TextureGrassSampler = 
+sampler_state
+{
+    Texture = <grassTexture0>;
+    AddressU = WRAP;
+    AddressV = WRAP;
+    AddressW = WRAP;
+    MipFilter = LINEAR;
+    MinFilter = ANISOTROPIC;
+    MagFilter = LINEAR;
+};
+
+//Vertex shaders
+VertexShader VS_TransformUnlit
+<
+    string fadeAlphaDist     = "parameter register(209)";
+    string gWorld            = "parameter register(0)";
+    string gWorldViewProj    = "parameter register(8)";
+    string matGrassTransform = "parameter register(64)";
+    string plantColor        = "parameter register(68)";
+    string vecCameraPos      = "parameter register(208)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   float2 fadeAlphaDist;
+    //   row_major float4x4 gWorld;
+    //   row_major float4x4 gWorldViewProj;
+    //   row_major float4x4 matGrassTransform;
+    //   float4 plantColor;
+    //   float3 vecCameraPos;
+    //
+    //
+    // Registers:
+    //
+    //   Name              Reg   Size
+    //   ----------------- ----- ----
+    //   gWorld            c0       3
+    //   gWorldViewProj    c8       4
+    //   matGrassTransform c64      4
+    //   plantColor        c68      1
+    //   vecCameraPos      c208     1
+    //   fadeAlphaDist     c209     1
+    //
+    
+        vs_3_0
+        def c3, 9.99999975e-006, 0, 0, 0
+        dcl_position v0
+        dcl_normal v1
+        dcl_color v2
+        dcl_texcoord v3
+        dcl_position o0
+        dcl_color o1
+        dcl_texcoord o2
+        dcl_texcoord1 o3
+        mul r0.xyz, c1, v1.y
+        mad r0.xyz, v1.x, c0, r0
+        mad r0.xyz, v1.z, c2, r0
+        add r0.xyz, r0, c3.x
+        dp3 r0.w, r0, r0
+        rsq r0.w, r0.w
+        mul o2.xyz, r0, r0.w
+        mul r0.xyz, c65, v0.y
+        mad r0.xyz, v0.x, c64, r0
+        mad r0.xyz, v0.z, c66, r0
+        add r0.xyz, r0, c67
+        add r1.xy, r0, -c208
+        mul r1.xy, r1, r1
+        add r0.w, r1.y, r1.x
+        mad_sat r0.w, r0.w, c209.y, c209.x
+        mul r1, c68, v2
+        mul o1.w, r0.w, r1.w
+        mov o1.xyz, r1
+        mul r1, r0.y, c9
+        mad r1, r0.x, c8, r1
+        mad r1, r0.z, c10, r1
+        mov o3.xyz, r0
+        add o0, r1, c11
+        mov o2.w, v3.x
+        mov o3.w, v3.y
+    
+    // approximately 25 instruction slots used
+};
+
+//Pixel shaders
+PixelShader PixelShader0 = NULL;
+
+PixelShader PS_TexturedUnlit
+<
+    string TextureGrassSampler = "parameter register(0)";
+    string globalScalars       = "parameter register(39)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   sampler2D TextureGrassSampler;
+    //   float4 globalScalars;
+    //
+    //
+    // Registers:
+    //
+    //   Name                Reg   Size
+    //   ------------------- ----- ----
+    //   globalScalars       c39      1
+    //   TextureGrassSampler s0       1
+    //
+    
+        ps_3_0
+        dcl_color v0
+        dcl_texcoord v1.w
+        dcl_texcoord1 v2.w
+        dcl_2d s0
+        mov r0.x, v1.w
+        mov r0.y, v2.w
+        texld r0, r0, s0
+        mul r0, r0, v0
+        mul oC0.xyz, r0, c39.y
+        mov oC0.w, r0.w
+    
+    // approximately 6 instruction slots used (1 texture, 5 arithmetic)
+};
+
+PixelShader PS_DeferredTexturedUnlit
+<
+    string StippleTexture      = "parameter register(10)";
+    string TextureGrassSampler = "parameter register(0)";
+    string stencil             = "parameter register(52)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   sampler2D StippleTexture;
+    //   sampler2D TextureGrassSampler;
+    //   float4 stencil;
+    //
+    //
+    // Registers:
+    //
+    //   Name                Reg   Size
+    //   ------------------- ----- ----
+    //   stencil             c52      1
+    //   TextureGrassSampler s0       1
+    //   StippleTexture      s10      1
+    //
+    
+        ps_3_0
+        def c0, 0, -1, -0, 9.99999975e-006
+        def c1, 3.99600005, 4, 0.125, 0.25
+        def c2, 0.5, 0, 1, 0.25
+        dcl_color v0.w
+        dcl_texcoord v1
+        dcl_texcoord1 v2.w
+        dcl vPos.xy
+        dcl_2d s0
+        dcl_2d s10
+        mov r0.x, v1.w
+        mov r0.y, v2.w
+        texld r0, r0, s0
+        mul r0.w, r0.w, v0.w
+        mov_sat r1.x, r0.w
+        mul r1.x, r1.x, c1.x
+        frc r1.y, r1.x
+        mul r1.z, r1.y, c1.y
+        frc r1.w, r1.z
+        add r2.xy, r1.zxzw, -r1.wyzw
+        mul r1.xy, c1.z, vPos
+        frc r1.xy, r1_abs
+        cmp r1.xy, vPos, r1, -r1
+        mul r1.xy, r1, c1.w
+        mad r1.xy, r2, c1.w, r1
+        mov r1.zw, c0.x
+        texldl r1, r1, s10
+        cmp r1, -r1.y, c0.y, c0.z
+        texkill r1
+        add r1.xyz, c0.w, v1
+        dp3 r1.w, r1, r1
+        rsq r1.w, r1.w
+        mad r1.xyz, r1, r1.w, -c0.y
+        mul oC1.xyz, r1, c2.x
+        mov oC0, r0
+        mov oC1.w, r0.w
+        mad oC2, r0.w, c2.yyyz, c2.ywzy
+        mov r0.yz, c0
+        mul oC3, -r0.yzzz, c52.x
+    
+    // approximately 30 instruction slots used (3 texture, 27 arithmetic)
+};
+
+technique draw
+{
+    pass p0
+    {
+        VertexShader = VS_TransformUnlit;
+        PixelShader = PS_TexturedUnlit;
+    }
+}
+
+technique unlit_draw
+{
+    pass p0
+    {
+        VertexShader = VS_TransformUnlit;
+        PixelShader = PS_TexturedUnlit;
+    }
+}
+
+technique deferred_draw
+{
+    pass p0
+    {
+        AlphaBlendEnable = true;
+        AlphaTestEnable = false;
+
+        VertexShader = VS_TransformUnlit;
+        PixelShader = PS_DeferredTexturedUnlit;
+    }
+}
+
+technique deferred_drawskinned
+{
+    pass p0
+    {
+        AlphaBlendEnable = false;
+        AlphaTestEnable = false;
+
+        VertexShader = VS_TransformUnlit;
+        PixelShader = PS_DeferredTexturedUnlit;
+    }
+}
+
+technique deferredalphaclip_draw
+{
+    pass p0
+    {
+        AlphaBlendEnable = true;
+        AlphaTestEnable = false;
+
+        VertexShader = VS_TransformUnlit;
+        PixelShader = PS_DeferredTexturedUnlit;
+    }
+}
+
+technique deferredalphaclip_drawskinned
+{
+    pass p0
+    {
+        AlphaBlendEnable = false;
+        AlphaTestEnable = false;
+
+        VertexShader = VS_TransformUnlit;
+        PixelShader = PS_DeferredTexturedUnlit;
+    }
+}
+

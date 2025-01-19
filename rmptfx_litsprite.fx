@@ -1,0 +1,544 @@
+//Globals
+shared float4 gAllGlobals[64] : AllGlobals;
+shared float4x4 gWorld : World;
+shared float4x4 gWorldView : WorldView;
+shared float4x4 gWorldViewProj : WorldViewProjection;
+shared float4x4 gViewInverse : ViewInverse;
+shared float4 gLightPosDir[4] : Position<string Object = "PointDirLight"; string Space = "World";> = 
+{
+    float4(1403.000000, 1441.000000, 1690.000000, 0.000000), 
+    float4(0.000000, 0.000000, 0.000000, 0.000000), 
+    float4(0.000000, 0.000000, 0.000000, 0.000000), 
+    float4(0.000000, 0.000000, 0.000000, 0.000000)
+};
+shared float4 gLightDir[4] : Direction<string Object = "Light Direction"; string Space = "World";> = 
+{
+    float4(0.000000, 0.000000, -1.000000, 0.000000), 
+    float4(0.000000, 0.000000, 0.000000, 0.000000), 
+    float4(0.000000, 0.000000, 0.000000, 0.000000), 
+    float4(0.000000, 0.000000, 0.000000, 0.000000)
+};
+shared float4 gLightColor[4] : Diffuse<string UIName = "Diffuse Light Color"; string Object = "LightPos";> = 
+{
+    float4(1.000000, 1.000000, 1.000000, 1.000000), 
+    float4(0.000000, 0.000000, 0.000000, 0.000000), 
+    float4(0.000000, 0.000000, 0.000000, 0.000000), 
+    float4(0.000000, 0.000000, 0.000000, 0.000000)
+};
+shared float4 gLightType : LightType<string UIName = "The type of each light source";> = float4(0.000000, 0.000000, 0.000000, 0.000000);
+shared float4 gLightAmbient : Ambient<string UIWidget = "Ambient Light Color"; string Space = "material";> = float4(0.000000, 0.000000, 0.000000, 1.000000);
+shared float gInvColorExpBias : ColorExpBias;
+shared float4 gForcedColor : ForcedColor = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared float4 gAspectRatio : AspectRatio = float4(1.000000, 1.000000, 1.000000, 1.000000);
+shared texture DepthMap;
+shared sampler DepthMapTexSampler = 
+sampler_state
+{
+    Texture = <DepthMap>;
+    MinFilter = POINT;
+    MagFilter = POINT;
+    MipFilter = NONE;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+};
+
+//Locals
+float gBiasToCamera : BiasToCamera<string UIName = "Move particle closer to camera"; float UIMin = 0.000000; float UIMax = 1000.000000; float UIStep = 0.010000;> = 0.000000;
+float Billboard : Billboard;
+float HybridAdd : HybridAdd;
+texture DiffuseTex2;
+sampler DiffuseTexSampler<string UIName = "Texture Map";> = 
+sampler_state
+{
+    Texture = <DiffuseTex2>;
+    MinFilter = LINEAR;
+    MagFilter = LINEAR;
+    MipFilter = NONE;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+};
+float HybridAddRatio : HybridAddRatio<string UIName = "Hybrid Add Ratio"; float UIMin = 0.000000; float UIMax = 1.000000; float UIStep = 0.010000; string UIHint = "Keyframeable";> = 0.000000;
+float4 ScreenRez : ScreenRez;
+texture NormalMapTex;
+sampler NormalMapTexSampler<string UIName = "Normal Map";> = 
+sampler_state
+{
+    Texture = <NormalMapTex>;
+    MinFilter = LINEAR;
+    MagFilter = LINEAR;
+    MipFilter = NONE;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+};
+texture FrameMap;
+sampler FrameMapTexSampler = 
+sampler_state
+{
+    Texture = <FrameMap>;
+    MinFilter = LINEAR;
+    MagFilter = LINEAR;
+    MipFilter = NONE;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+};
+float3 LightColor : LightColor<string UIName = "Light Color"; float UIMin = 0.000000; float UIMax = 1.000000; float UIStep = 0.010000;> = float3(0.782000, 0.792500, 0.060000);
+float3 LightDir : LightDir<string UIName = "Light Dir"; float UIMin = -1.000000; float UIMax = 1.000000; float UIStep = 0.010000;> = float3(-0.500000, -0.500000, 0.000000);
+float ghorizScale : ghorizScale<string UIName = "Horizontal Warp Scale"; float UIMin = 0.000000; float UIMax = 2000.000000; float UIStep = 0.010000;> = 0.000000;
+float gvertScale : gvertScale<string UIName = "Horizontal Warp Scale"; float UIMin = 0.000000; float UIMax = 2000.000000; float UIStep = 0.010000;> = 0.220000;
+float gIntensity : gIntensity<string UIName = "Horizontal Warp Scale"; float UIMin = -1000.000000; float UIMax = 2000.000000; float UIStep = 0.010000;> = 1.000000;
+float gPower : gPower<string UIName = "Horizontal Warp Scale"; float UIMin = -1000.000000; float UIMax = 2000.000000; float UIStep = 0.010000;> = 1.000000;
+float gNormalScale : gNormalScale<string UIName = "Horizontal Warp Scale"; float UIMin = -1000.000000; float UIMax = 2000.000000; float UIStep = 0.010000;> = 1.000000;
+float gZdampen : gZdampen<string UIName = "Horizontal Warp Scale"; float UIMin = -1000.000000; float UIMax = 2000.000000; float UIStep = 0.010000;> = 0.000000;
+float gHeatHaze : gHeatHaze<string UIName = "HeatHazeFactor"; float UIMin = -1000.000000; float UIMax = 2000.000000; float UIStep = 0.010000;> = 0.000000;
+float gHeatPhase : gHeatPhase<string UIName = "HeatPhaseFactor"; float UIMin = -1000.000000; float UIMax = 2000.000000; float UIStep = 0.010000;> = 0.000000;
+
+//Vertex shaders
+VertexShader VS_TransformSprite0
+<
+    string Billboard  = "parameter register(64)";
+    string LightDir   = "parameter register(65)";
+    string gWorldView = "parameter register(4)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   float Billboard;
+    //   float3 LightDir;
+    //   row_major float4x4 gWorldView;
+    //
+    //
+    // Registers:
+    //
+    //   Name         Reg   Size
+    //   ------------ ----- ----
+    //   gWorldView   c4       3
+    //   Billboard    c64      1
+    //   LightDir     c65      1
+    //
+    
+        vs_3_0
+        def c0, 6.28318548, -3.14159274, 1, 0
+        def c1, 0.159154937, -0.159154937, 0.5, 0
+        dcl_position v0
+        dcl_normal v1
+        dcl_color v2
+        dcl_texcoord v3
+        dcl_texcoord1 v4
+        dcl_texcoord2 v5
+        dcl_texcoord3 v6
+        dcl_texcoord4 v7
+        dcl_color o0
+        dcl_position o1
+        dcl_texcoord o2
+        dcl_texcoord1 o3
+        dcl_texcoord2 o4
+        dcl_texcoord3 o5
+        dcl_texcoord4 o6
+        dcl_texcoord5 o7.xyz
+        mad r0.xy, v1.z, c1, c1.z
+        frc r0.xy, r0
+        mad r0.xy, r0, c0.x, c0.y
+        sincos r1.xy, r0.y
+        sincos r2.xy, r0.x
+        nrm r0.xyz, c65
+        mul r3.xyz, -r0.y, c5
+        mad r0.xyw, -r0.x, c4.xyzz, r3.xyzz
+        mad r0.xyz, -r0.z, c6, r0.xyww
+        mul r1.yzw, r1.xyyx, r0.xyxy
+        mad r1.x, r0.x, r1.x, -r1.y
+        add r1.y, r1.w, r1.z
+        add r1.xy, -r0, r1
+        slt r0.w, -v1_abs.z, v1_abs.z
+        mad o7.xy, r0.w, r1, r0
+        mov o7.z, r0.z
+        mul r0.xyz, r2.yyxw, v1.yxyw
+        mad r1.x, v1.x, r2.x, -r0.x
+        add r1.y, r0.z, r0.y
+        abs r0.x, c64.x
+        slt r0.x, -r0.x, r0.x
+        mov r1.zw, c1.w
+        mul r0, r1, r0.x
+        mad r0, v0.xyxw, c0.zzwz, r0
+        add r1.xy, r0, c0.z
+        mov o1, r0
+        mul o4.zw, r1.xyxy, c1.z
+        mov o0, v2
+        mov o2, v3
+        mov o3, v4
+        mul o4.xy, c0.zwzw, v5.z
+        mov o5, v6
+        mov o6, v7
+    
+    // approximately 49 instruction slots used
+};
+
+VertexShader VS_TransformSprite1
+<
+    string Billboard      = "parameter register(65)";
+    string LightDir       = "parameter register(66)";
+    string gAspectRatio   = "parameter register(48)";
+    string gBiasToCamera  = "parameter register(64)";
+    string gViewInverse   = "parameter register(12)";
+    string gWorldView     = "parameter register(4)";
+    string gWorldViewProj = "parameter register(8)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   float Billboard;
+    //   float3 LightDir;
+    //   float4 gAspectRatio;
+    //   float gBiasToCamera;
+    //   row_major float4x4 gViewInverse;
+    //   row_major float4x4 gWorldView;
+    //   row_major float4x4 gWorldViewProj;
+    //
+    //
+    // Registers:
+    //
+    //   Name           Reg   Size
+    //   -------------- ----- ----
+    //   gWorldView     c4       3
+    //   gWorldViewProj c8       4
+    //   gViewInverse   c12      4
+    //   gAspectRatio   c48      1
+    //   gBiasToCamera  c64      1
+    //   Billboard      c65      1
+    //   LightDir       c66      1
+    //
+    
+        vs_3_0
+        def c0, 0.100000001, 0.159154937, -0.159154937, 0.5
+        def c1, 6.28318548, -3.14159274, 0, 1
+        dcl_position v0
+        dcl_normal v1
+        dcl_color v2
+        dcl_texcoord v3
+        dcl_texcoord1 v4
+        dcl_texcoord2 v5
+        dcl_texcoord3 v6
+        dcl_texcoord4 v7
+        dcl_color o0
+        dcl_position o1
+        dcl_texcoord o2
+        dcl_texcoord1 o3
+        dcl_texcoord2 o4
+        dcl_texcoord3 o5
+        dcl_texcoord4 o6
+        dcl_texcoord5 o7.xyz
+        mad r0.xy, v1.z, c0.yzzw, c0.w
+        frc r0.xy, r0
+        mad r0.xy, r0, c1.x, c1.y
+        sincos r1.xy, r0.y
+        sincos r2.xy, r0.x
+        nrm r0.xyz, c66
+        mul r3.xyz, -r0.y, c5
+        mad r0.xyw, -r0.x, c4.xyzz, r3.xyzz
+        mad r0.xyz, -r0.z, c6, r0.xyww
+        mul r1.yzw, r1.xyyx, r0.xyxy
+        mad r1.x, r0.x, r1.x, -r1.y
+        add r1.y, r1.w, r1.z
+        add r1.xy, -r0, r1
+        slt r0.w, -v1_abs.z, v1_abs.z
+        mad o7.xy, r0.w, r1, r0
+        mov o7.z, r0.z
+        mul r0.xyz, r2.yyxw, v1.yxyw
+        mad r1.x, v1.x, r2.x, -r0.x
+        add r1.y, r0.z, r0.y
+        mul r0.xy, r1, c48
+        abs r0.z, c65.x
+        slt r0.z, -r0.z, r0.z
+        mul r0.xy, r0, r0.z
+        mov r1.x, c0.x
+        mul r1.x, r1.x, c64.x
+        lrp r2.xyz, r1.x, c15, v0
+        mul r1, r2.y, c9
+        mad r1, r2.x, c8, r1
+        mad r1, r2.z, c10, r1
+        add r1, r1, c11
+        mov r0.zw, c1.z
+        add r0, r0, r1
+        rcp r1.x, r0.w
+        mul o4.zw, r0.xyxy, r1.x
+        mov o1, r0
+        mov o0, v2
+        mov o2, v3
+        mov o3, v4
+        mul o4.xy, c1.wzzw, v5.z
+        mov o5, v6
+        mov o6, v7
+    
+    // approximately 57 instruction slots used
+};
+
+//Pixel shaders
+PixelShader PixelShader0 = NULL;
+
+PixelShader PS_ScreenTest
+<
+    string DiffuseTexSampler   = "parameter register(0)";
+    string FrameMapTexSampler  = "parameter register(2)";
+    string HybridAdd           = "parameter register(64)";
+    string LightColor          = "parameter register(65)";
+    string NormalMapTexSampler = "parameter register(1)";
+    string gIntensity          = "parameter register(68)";
+    string gNormalScale        = "parameter register(70)";
+    string gPower              = "parameter register(69)";
+    string gZdampen            = "parameter register(71)";
+    string ghorizScale         = "parameter register(66)";
+    string gvertScale          = "parameter register(67)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   sampler2D DiffuseTexSampler;
+    //   sampler2D FrameMapTexSampler;
+    //   float HybridAdd;
+    //   float3 LightColor;
+    //   sampler2D NormalMapTexSampler;
+    //   float gIntensity;
+    //   float gNormalScale;
+    //   float gPower;
+    //   float gZdampen;
+    //   float ghorizScale;
+    //   float gvertScale;
+    //
+    //
+    // Registers:
+    //
+    //   Name                Reg   Size
+    //   ------------------- ----- ----
+    //   HybridAdd           c64      1
+    //   LightColor          c65      1
+    //   ghorizScale         c66      1
+    //   gvertScale          c67      1
+    //   gIntensity          c68      1
+    //   gPower              c69      1
+    //   gNormalScale        c70      1
+    //   gZdampen            c71      1
+    //   DiffuseTexSampler   s0       1
+    //   NormalMapTexSampler s1       1
+    //   FrameMapTexSampler  s2       1
+    //
+    
+        ps_3_0
+        def c0, 2, -1, 0.159154937, 0.5
+        def c1, 6.28318548, -3.14159274, 0, 0
+        dcl_color v0
+        dcl_texcoord v1.xy
+        dcl_texcoord1 v2.xy
+        dcl_texcoord2 v3.yzw
+        dcl_texcoord3 v4.x
+        dcl_texcoord5 v5.xyz
+        dcl_2d s0
+        dcl_2d s1
+        dcl_2d s2
+        mad r0.x, v3.y, c0.z, c0.w
+        frc r0.x, r0.x
+        mad r0.x, r0.x, c1.x, c1.y
+        sincos r1.xy, r0.x
+        texld r0, v2, s1
+        mad r0.xyz, r0, c0.x, c0.y
+        mul r1.zw, r0.xyxy, c70.x
+        mul r2.x, r1.y, r1.w
+        mad r2.x, r1.z, r1.x, -r2.x
+        dp2add r1.x, r1.zwzw, r1.yxzw, c1.z
+        rcp r1.y, c66.x
+        mov_sat r1.zw, v3
+        mad r2.x, r2.x, r1.y, r1.z
+        rcp r1.y, c67.x
+        mad r2.y, r1.x, -r1.y, r1.w
+        texld r1, r2, s2
+        mul r0.w, r0.z, c71.x
+        mul r0.xyz, r0.xyww, c68.x
+        mov r0.w, -r0.y
+        dp3 r0.x, r0.xwzw, v5
+        pow r1.w, r0_abs.x, c69.x
+        mul r0.xyz, r1.w, c65
+        mad r0.xyz, r1, v0, r0
+        texld r1, v1, s0
+        mul r0.w, r1.w, v0.w
+        mul r1.xyz, r0, r0.w
+        abs r2.x, c64.x
+        add r2.y, -c0.y, -v4.x
+        mul r1.w, r0.w, r2.y
+        cmp oC0, -r2.x, r0, r1
+    
+    // approximately 40 instruction slots used (3 texture, 37 arithmetic)
+};
+
+PixelShader PS_HeatHaze
+<
+    string DiffuseTexSampler  = "parameter register(0)";
+    string FrameMapTexSampler = "parameter register(1)";
+    string HybridAdd          = "parameter register(64)";
+    string gHeatHaze          = "parameter register(65)";
+    string gHeatPhase         = "parameter register(66)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   sampler2D DiffuseTexSampler;
+    //   sampler2D FrameMapTexSampler;
+    //   float HybridAdd;
+    //   float gHeatHaze;
+    //   float gHeatPhase;
+    //
+    //
+    // Registers:
+    //
+    //   Name               Reg   Size
+    //   ------------------ ----- ----
+    //   HybridAdd          c64      1
+    //   gHeatHaze          c65      1
+    //   gHeatPhase         c66      1
+    //   DiffuseTexSampler  s0       1
+    //   FrameMapTexSampler s1       1
+    //
+    
+        ps_3_0
+        def c0, 1, 0.5, 0.159154937, 0
+        def c1, 6.28318548, -3.14159274, 0, 0
+        dcl_color v0
+        dcl_texcoord v1.xy
+        dcl_texcoord2 v2.zw
+        dcl_texcoord3 v3.x
+        dcl_2d s0
+        dcl_2d s1
+        mov r0.z, v2.z
+        add r0.x, r0.z, v3.x
+        mul r0.x, r0.x, c65.x
+        mad r0.x, r0.x, c0.z, c0.y
+        frc r0.x, r0.x
+        mad r0.x, r0.x, c1.x, c1.y
+        sincos r1.xy, r0.x
+        rcp r0.x, c66.x
+        mul r0.y, r1.y, r0.x
+        add r0.zw, c0.x, v2
+        mad r2.x, r0.z, c0.y, r0.y
+        mad r0.y, r0.w, -c0.y, c0.x
+        mad r2.y, r1.x, -r0.x, r0.y
+        texld r0, r2, s1
+        mul r0.xyz, r0, v0
+        texld r1, v1, s0
+        mul r0.w, r1.w, v0.w
+        mul r1.xyz, r0, r0.w
+        abs r2.x, c64.x
+        add r2.y, c0.x, -v3.x
+        mul r1.w, r0.w, r2.y
+        cmp oC0, -r2.x, r0, r1
+    
+    // approximately 29 instruction slots used (2 texture, 27 arithmetic)
+};
+
+PixelShader PS_LitSprite
+<
+    string DiffuseTexSampler   = "parameter register(0)";
+    string HybridAdd           = "parameter register(64)";
+    string LightColor          = "parameter register(65)";
+    string NormalMapTexSampler = "parameter register(1)";
+> =
+asm
+{
+    //
+    // Generated by Microsoft (R) HLSL Shader Compiler 9.26.952.2844
+    //
+    // Parameters:
+    //
+    //   sampler2D DiffuseTexSampler;
+    //   float HybridAdd;
+    //   float3 LightColor;
+    //   sampler2D NormalMapTexSampler;
+    //
+    //
+    // Registers:
+    //
+    //   Name                Reg   Size
+    //   ------------------- ----- ----
+    //   HybridAdd           c64      1
+    //   LightColor          c65      1
+    //   DiffuseTexSampler   s0       1
+    //   NormalMapTexSampler s1       1
+    //
+    
+        ps_3_0
+        def c0, 2, -1, 1, 0
+        dcl_color v0
+        dcl_texcoord v1
+        dcl_texcoord1 v2.xy
+        dcl_texcoord2 v3.x
+        dcl_texcoord3 v4.x
+        dcl_texcoord5 v5.xyz
+        dcl_2d s0
+        dcl_2d s1
+        texld r0, v2, s1
+        mad r0.xyz, r0, c0.x, c0.y
+        dp3_sat r0.x, r0, v5
+        mul r0.xyz, r0.x, c65
+        texld r1, v1, s0
+        texld r2, v1.zwzw, s0
+        mov_sat r0.w, v3.x
+        lrp r3, r0.w, r2, r1
+        mul r1, r3, v0
+        mad r1.xyz, r0, r3, r1
+        mul r0.xyz, r1.w, r1
+        abs r2.x, c64.x
+        add r2.y, c0.z, -v4.x
+        mul r0.w, r1.w, r2.y
+        cmp oC0, -r2.x, r1, r0
+    
+    // approximately 15 instruction slots used (3 texture, 12 arithmetic)
+};
+
+technique screenTest
+{
+    pass p0
+    {
+        VertexShader = VS_TransformSprite0;
+        PixelShader = PS_ScreenTest;
+    }
+}
+
+technique heat_haze
+{
+    pass p0
+    {
+        VertexShader = VS_TransformSprite1;
+        PixelShader = PS_HeatHaze;
+    }
+}
+
+technique draw
+{
+    pass p0
+    {
+        VertexShader = VS_TransformSprite1;
+        PixelShader = PS_LitSprite;
+    }
+}
+
+technique unlit_draw
+{
+    pass p0
+    {
+        VertexShader = VS_TransformSprite1;
+        PixelShader = PS_LitSprite;
+    }
+}
+
