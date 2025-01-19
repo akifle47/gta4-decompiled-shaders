@@ -493,7 +493,7 @@ asm
     // approximately 27 instruction slots used
 };
 
-VertexShader VS_VehicleShadowDepth
+VertexShader VS_ShadowDepth
 <
     string gShadowMatrix = "parameter register(60)";
     string gWorld        = "parameter register(0)";
@@ -2249,7 +2249,7 @@ technique wd_draw
 {
     pass p0
     {
-        VertexShader = VS_VehicleShadowDepth;
+        VertexShader = VS_ShadowDepth;
         PixelShader = PS_ShadowDepth;
     }
 }
@@ -2267,7 +2267,7 @@ technique wd_masked_draw
 {
     pass p0
     {
-        VertexShader = VS_VehicleShadowDepth;
+        VertexShader = VS_ShadowDepth;
         PixelShader = PS_ShadowDepthMasked;
     }
 }
