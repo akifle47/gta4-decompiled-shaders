@@ -110,7 +110,7 @@ float AlphaRange : AlphaRange = 3.035714;
 float MipMapLod : MipMapLod;
 
 //Vertex shaders
-VertexShader VS_Blit0
+VertexShader VS_Blit1
 <
 > =
 asm
@@ -137,7 +137,7 @@ asm
     // approximately 5 instruction slots used
 };
 
-VertexShader VS_Blit1
+VertexShader VS_Blit2
 <
 > =
 asm
@@ -392,7 +392,7 @@ technique draw
         AlphaBlendEnable = false;
         AlphaTestEnable = false;
 
-        VertexShader = VS_Blit0;
+        VertexShader = VS_Blit1;
         PixelShader = PS_BlitBlur4Outputs;
     }
 }
@@ -407,7 +407,7 @@ technique drawBlit
         AlphaBlendEnable = false;
         AlphaTestEnable = false;
 
-        VertexShader = VS_Blit0;
+        VertexShader = VS_Blit1;
         PixelShader = PS_BlitBlur4Outputs;
     }
 }
@@ -422,7 +422,7 @@ technique drawBlur
         AlphaBlendEnable = false;
         AlphaTestEnable = false;
 
-        VertexShader = VS_Blit1;
+        VertexShader = VS_Blit2;
         PixelShader = PS_BlitBlur;
     }
 }
@@ -437,7 +437,7 @@ technique drawBlitX2
         AlphaBlendEnable = false;
         AlphaTestEnable = false;
 
-        VertexShader = VS_Blit1;
+        VertexShader = VS_Blit2;
         PixelShader = PS_Blit;
     }
 }
@@ -452,7 +452,7 @@ technique drawDepth
         AlphaBlendEnable = false;
         AlphaTestEnable = false;
 
-        VertexShader = VS_Blit1;
+        VertexShader = VS_Blit2;
         PixelShader = PS_BlitDepth;
     }
 }
@@ -467,7 +467,7 @@ technique drawCutOut
         AlphaBlendEnable = false;
         AlphaTestEnable = false;
 
-        VertexShader = VS_Blit0;
+        VertexShader = VS_Blit1;
         PixelShader = PS_BlitCutout;
     }
 }

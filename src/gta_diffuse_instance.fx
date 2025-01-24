@@ -1027,7 +1027,7 @@ asm
     // approximately 149 instruction slots used (15 texture, 134 arithmetic)
 };
 
-PixelShader PS_ShadowDepthInst
+PixelShader PS_ShadowDepth
 <
     string StippleTexture = "parameter register(10)";
     string TextureSampler = "parameter register(0)";
@@ -1085,7 +1085,7 @@ asm
     // approximately 21 instruction slots used (3 texture, 18 arithmetic)
 };
 
-PixelShader PS_ShadowDepthMaskedInst
+PixelShader PS_ShadowDepthMasked
 <
     string StippleTexture = "parameter register(10)";
     string TextureSampler = "parameter register(0)";
@@ -1554,7 +1554,7 @@ technique wd_draw
     pass p0
     {
         VertexShader = VS_ShadowDepthInst;
-        PixelShader = PS_ShadowDepthInst;
+        PixelShader = PS_ShadowDepth;
     }
 }
 
@@ -1563,7 +1563,7 @@ technique wd_drawskinned
     pass p0
     {
         VertexShader = VS_ShadowDepthInst;
-        PixelShader = PS_ShadowDepthInst;
+        PixelShader = PS_ShadowDepth;
     }
 }
 
@@ -1572,7 +1572,7 @@ technique wd_masked_draw
     pass p0
     {
         VertexShader = VS_ShadowDepthInst;
-        PixelShader = PS_ShadowDepthMaskedInst;
+        PixelShader = PS_ShadowDepthMasked;
     }
 }
 
@@ -1581,7 +1581,7 @@ technique wd_masked_drawskinned
     pass p0
     {
         VertexShader = VS_ShadowDepthInst;
-        PixelShader = PS_ShadowDepthMaskedInst;
+        PixelShader = PS_ShadowDepthMasked;
     }
 }
 

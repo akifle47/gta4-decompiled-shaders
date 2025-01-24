@@ -1901,7 +1901,7 @@ asm
     // approximately 42 instruction slots used (3 texture, 39 arithmetic)
 };
 
-PixelShader PS_ShadowDepth
+PixelShader PS_VehicleTexturedUnlit
 <
     string TextureSampler  = "parameter register(0)";
     string globalScalars   = "parameter register(39)";
@@ -2051,7 +2051,7 @@ technique unlit_draw
     pass p0
     {
         VertexShader = VS_VehicleShadowDepth;
-        PixelShader = PS_ShadowDepth;
+        PixelShader = PS_VehicleTexturedUnlit;
     }
 }
 
@@ -2060,7 +2060,7 @@ technique unlit_drawskinned
     pass p0
     {
         VertexShader = VS_VehicleShadowDepthSkin;
-        PixelShader = PS_ShadowDepth;
+        PixelShader = PS_VehicleTexturedUnlit;
     }
 }
 

@@ -120,7 +120,7 @@ float2 facetMask[4] : facetMask =
 };
 
 //Vertex shaders
-VertexShader VS_TransformCascadeGen
+VertexShader VS_ShadowDepth
 <
     string gShadowMatrix = "parameter register(60)";
     string gWorld        = "parameter register(0)";
@@ -233,7 +233,7 @@ asm
 //Pixel shaders
 PixelShader PixelShader0 = NULL;
 
-PixelShader PS_CascadeGen
+PixelShader PS_ShadowDepth
 <
 > =
 asm
@@ -255,8 +255,8 @@ technique unlit_draw
         AlphaBlendEnable = false;
         AlphaTestEnable = false;
 
-        VertexShader = VS_TransformCascadeGen;
-        PixelShader = PS_CascadeGen;
+        VertexShader = VS_ShadowDepth;
+        PixelShader = PS_ShadowDepth;
     }
 }
 
@@ -268,7 +268,7 @@ technique unlit_drawskinned
         AlphaTestEnable = false;
 
         VertexShader = VS_TransformCascadeGenSkin;
-        PixelShader = PS_CascadeGen;
+        PixelShader = PS_ShadowDepth;
     }
 }
 
