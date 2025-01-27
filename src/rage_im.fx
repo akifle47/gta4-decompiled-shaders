@@ -1,12 +1,8 @@
-//Globals
-shared float4 gAllGlobals[64] : AllGlobals;
-shared float4x4 gWorld : World;
-shared float4x4 gWorldView : WorldView;
-shared float4x4 gWorldViewProj : WorldViewProjection;
-shared float4x4 gViewInverse : ViewInverse;
-shared float gInvColorExpBias : ColorExpBias;
-shared float4 gForcedColor : ForcedColor = float4(1.000000, 1.000000, 1.000000, 1.000000);
-shared float4 gAspectRatio : AspectRatio = float4(1.000000, 1.000000, 1.000000, 1.000000);
+#define NO_SKINNING
+#define NO_LIGHTING
+#define NO_SHADOWS
+#define PAD_FORCED_COLOR
+#include "common.fxh"
 
 //Locals
 float4 TexelSize : TexelSize = float4(0.000000, 0.000000, 0.000000, 0.000000);

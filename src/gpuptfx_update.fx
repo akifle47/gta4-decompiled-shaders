@@ -1,36 +1,8 @@
-//Globals
-shared float4 gAllGlobals[64] : AllGlobals;
-shared float4x3 gBoneMtx[48] : WorldMatrixArray;
-shared float4x4 gWorld : World;
-shared float4x4 gWorldView : WorldView;
-shared float4x4 gWorldViewProj : WorldViewProjection;
-shared float4x4 gViewInverse : ViewInverse;
-shared float4 gLightPosDir[4] : Position<string Object = "PointDirLight"; string Space = "World";> = 
-{
-    float4(1403.000000, 1441.000000, 1690.000000, 0.000000), 
-    float4(0.000000, 0.000000, 0.000000, 0.000000), 
-    float4(0.000000, 0.000000, 0.000000, 0.000000), 
-    float4(0.000000, 0.000000, 0.000000, 0.000000)
-};
-shared float4 gLightDir[4] : Direction<string Object = "Light Direction"; string Space = "World";> = 
-{
-    float4(0.000000, 0.000000, -1.000000, 0.000000), 
-    float4(0.000000, 0.000000, 0.000000, 0.000000), 
-    float4(0.000000, 0.000000, 0.000000, 0.000000), 
-    float4(0.000000, 0.000000, 0.000000, 0.000000)
-};
-shared float4 gLightColor[4] : Diffuse<string UIName = "Diffuse Light Color"; string Object = "LightPos";> = 
-{
-    float4(1.000000, 1.000000, 1.000000, 1.000000), 
-    float4(0.000000, 0.000000, 0.000000, 0.000000), 
-    float4(0.000000, 0.000000, 0.000000, 0.000000), 
-    float4(0.000000, 0.000000, 0.000000, 0.000000)
-};
-shared float4 gLightType : LightType<string UIName = "The type of each light source";> = float4(0.000000, 0.000000, 0.000000, 0.000000);
-shared float4 gLightAmbient : Ambient<string UIWidget = "Ambient Light Color"; string Space = "material";> = float4(0.000000, 0.000000, 0.000000, 1.000000);
-shared float gInvColorExpBias : ColorExpBias;
-shared float4 gForcedColor : ForcedColor = float4(1.000000, 1.000000, 1.000000, 1.000000);
-shared float4 gAspectRatio : AspectRatio = float4(1.000000, 1.000000, 1.000000, 1.000000);
+#define NO_LIGHTING
+#define NO_SHADOWS
+#define PAD_FORCED_COLOR
+#define PAD_LIGHT_CONSTANTS
+#include "common.fxh"
 
 //Locals
 texture ParticlePosXY;

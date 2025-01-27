@@ -1,3 +1,5 @@
+#define NO_SKINNING
+#include "common.fxh"
 //Globals
 shared float4 gAllGlobals[64] : AllGlobals;
 shared float4x4 gWorld : World;

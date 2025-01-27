@@ -1,57 +1,9 @@
-//Globals
-shared float4 gAllGlobals[64] : AllGlobals;
-shared float4x4 gWorld : World;
-shared float4x4 gWorldView : WorldView;
-shared float4x4 gWorldViewProj : WorldViewProjection;
-shared float4x4 gViewInverse : ViewInverse;
-shared float gInvColorExpBias : ColorExpBias;
-shared float4 gForcedColor : ForcedColor = float4(1.000000, 1.000000, 1.000000, 1.000000);
-shared float4 gAspectRatio : AspectRatio = float4(1.000000, 1.000000, 1.000000, 1.000000);
-shared float4x4 gCameraMatrix : CameraMatrix;
-shared float4 gShadowmap_ShadowColor0 : Shadowmap_ShadowColor0 = float4(1.000000, 1.000000, 1.000000, 0.723000);
-shared float4 gShadowmap_PixelSize0 : Shadowmap_PixelSize0;
-shared float gGeometryScale : GeometryScale;
-shared float2 gShadowCollectorTexelSize : ShadowCollectorTexelSize;
-shared float3 gPointLightPosition : PointLightPosition;
-shared float gPointLightAttenuation : PointLightAttenuation;
-shared float gLightAttenuationEnd : LightAttenuationEnd;
-shared texture DepthTexture0;
-shared sampler DepthTextureSampler0 = 
-sampler_state
-{
-    Texture = <DepthTexture0>;
-    AddressU = CLAMP;
-    AddressV = CLAMP;
-    AddressW = CLAMP;
-    MipFilter = NONE;
-    MinFilter = ANISOTROPIC;
-    MagFilter = ANISOTROPIC;
-    MipMapLodBias = 16.000000;
-};
-shared texture CubeShadowMap;
-shared sampler CubeShadowMapSampler = 
-sampler_state
-{
-    Texture = <CubeShadowMap>;
-    AddressU = CLAMP;
-    AddressV = CLAMP;
-    AddressW = CLAMP;
-    MipFilter = NONE;
-    MinFilter = POINT;
-    MagFilter = POINT;
-};
-shared texture ShadowCollectorTex;
-shared sampler ShadowCollectorSampler = 
-sampler_state
-{
-    Texture = <ShadowCollectorTex>;
-    AddressU = WRAP;
-    AddressV = WRAP;
-    AddressW = WRAP;
-    MipFilter = NONE;
-    MinFilter = LINEAR;
-    MagFilter = LINEAR;
-};
+#define NO_SKINNING
+#define NO_LIGHTING
+#define NO_SHADOWS
+#define PAD_FORCED_COLOR
+#define FAST_MIPMAP_AND_PTFX_COLLISION
+#include "common.fxh"
 
 //Locals
 texture AmbientOccTex;
