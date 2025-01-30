@@ -90,7 +90,7 @@ shared float4x4 gViewInverse : ViewInverse : register(c12);
     shared float4 gForcedColor : ForcedColor : register(c47) = float4(1.000000, 1.000000, 1.000000, 1.000000);
     shared float4 gAspectRatio : AspectRatio : register(c48) = float4(1.000000, 1.000000, 1.000000, 1.000000);
 #else
-    shared float4 gAspectRatio : AspectRatio : register(c47) = float4(1.000000, 1.000000, 1.000000, 1.000000);
+    shared float4 gAspectRatio : gAspectRatio : register(c47) = float4(1.000000, 1.000000, 1.000000, 1.000000);
 #endif
 
 #ifndef NO_LIGHTING
