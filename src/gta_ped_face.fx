@@ -1,7 +1,6 @@
 #define NO_SHADOWS
 #include "common.fxh"
 
-//Locals
 texture BaseTexture;
 sampler baseTextureSampler = 
 sampler_state

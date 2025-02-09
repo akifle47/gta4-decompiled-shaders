@@ -1,7 +1,5 @@
 #include "common.fxh"
 
-//Locals
-float shadowmap_res : ShadowMapResolution = 1280.000000;
 texture HemiCubeTexture;
 sampler HemiCubeSampler = 
 sampler_state
@@ -26,34 +24,34 @@ sampler_state
     MinFilter = POINT;
     MagFilter = POINT;
 };
-float4 clearcol : ClearfColour = float4(0.000000, 0.000000, 0.000000, 1.000000);
-float4 hemi_params : HemiCubeParams = float4(0.000000, 0.000000, 0.000000, 0.000000);
+float4 clearcol : ClearfColour = float4(0.0, 0.0, 0.0, 1.0);
+float4 hemi_params : HemiCubeParams = float4(0.0, 0.0, 0.0, 0.0);
 float hemi_res : HemiCubeResolution = 1024.000000;
 float hemi_range : HemiCubeDepthRange = 16.000000;
 float hemi_near : HemiCubeNear = 0.010000;
 float hemi_bias : HemiCubeBias = -0.025000;
 float sampleAngle[16] : sampleAngle = 
 {
-    0.000000, 
-    90.000000, 
-    225.000000, 
-    170.000000, 
+    0.0, 
+    90.0, 
+    225.0, 
+    170.0, 
     327.500000, 
-    286.000000, 
-    41.000000, 
-    133.000000, 
-    11.000000, 
-    83.000000, 
-    234.000000, 
-    181.000000, 
-    333.000000, 
-    286.000000, 
-    47.000000, 
+    286.0, 
+    41.0, 
+    133.0, 
+    11.0, 
+    83.0, 
+    234.0, 
+    181.0, 
+    333.0, 
+    286.0, 
+    47.0, 
     141.000000
 };
 float sampleScale[16] : sampleScale = 
 {
-    1.000000, 
+    1.0, 
     0.750000, 
     0.500000, 
     0.875000, 

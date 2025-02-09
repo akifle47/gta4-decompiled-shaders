@@ -1,27 +1,8 @@
+#define FACET_MASK
+#define DIFFUSE_TEXTURE
+#define LUMINANCE_CONSTANTS
 #include "common.fxh"
 
-//Locals
-texture DiffuseTex;
-sampler TextureSampler<string UIName = "Diffuse Texture";> = 
-sampler_state
-{
-    Texture = <DiffuseTex>;
-    AddressU = WRAP;
-    AddressV = WRAP;
-    AddressW = WRAP;
-    MipFilter = LINEAR;
-    MinFilter = ANISOTROPIC;
-    MagFilter = LINEAR;
-};
-float shadowmap_res : ShadowMapResolution = 1280.000000;
-float2 facetMask[4] : facetMask = 
-{
-    float2(-1.000000, 0.000000), 
-    float2(1.000000, 0.000000), 
-    float2(0.000000, -1.000000), 
-    float2(0.000000, 1.000000)
-};
-float3 LuminanceConstants : LuminanceConstants = float3(0.212500, 0.715400, 0.072100);
 float4x4 matGrassTransform : matGrassTransform0;
 float4 plantColor : plantColor0;
 float3 vecCameraPos : vecCameraPos0;

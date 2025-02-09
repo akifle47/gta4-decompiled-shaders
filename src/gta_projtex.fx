@@ -1,59 +1,12 @@
+#define DRAWBUCKET_DECAL
+#define DIFFUSE_TEXTURE
+#define VEHICLE_DAMAGE
+#define FACET_MASK
+#define DEPTH_SHIFT_SCALE
+#define SPECULAR
+#define PARALLAX
+#define LUMINANCE_CONSTANTS
 #include "common.fxh"
-
-//Locals
-int drawBucket : __rage_drawbucket<int Bucket = 2;> = 2;
-texture DiffuseTex;
-sampler TextureSampler<string UIName = "Diffuse Texture";> = 
-sampler_state
-{
-    Texture = <DiffuseTex>;
-    AddressU = WRAP;
-    AddressV = WRAP;
-    AddressW = WRAP;
-    MipFilter = LINEAR;
-    MinFilter = ANISOTROPIC;
-    MagFilter = LINEAR;
-};
-texture damagetexture;
-sampler DamageSampler = 
-sampler_state
-{
-    Texture = <damagetexture>;
-    AddressU = CLAMP;
-    AddressV = CLAMP;
-    AddressW = CLAMP;
-    MipFilter = POINT;
-    MinFilter = POINT;
-    MagFilter = POINT;
-};
-bool switchOn : switchOn = true;
-float BoundRadius : BoundRadius;
-float shadowmap_res : ShadowMapResolution = 1280.000000;
-float2 facetMask[4] : facetMask = 
-{
-    float2(-1.000000, 0.000000), 
-    float2(1.000000, 0.000000), 
-    float2(0.000000, -1.000000), 
-    float2(0.000000, 1.000000)
-};
-float zShiftScale : zShiftScale = 0.002000;
-float parallaxScaleBias : ParallaxScaleBias<string UIName = "Parallax ScaleBias"; float UIMin = 0.010000; float UIMax = 1.000000; float UIStep = 0.010000;> = 0.030000;
-float specularFactor : Specular<string UIName = "Specular Falloff"; float UIMin = 0.000000; float UIMax = 2000.000000; float UIStep = 0.100000;> = 100.000000;
-float specularColorFactor : SpecularColor<string UIName = "Specular Intensity"; float UIMin = 0.000000; float UIMax = 1.000000; float UIStep = 0.010000;> = 1.000000;
-float bumpiness : Bumpiness<string UIWidget = "slider"; float UIMin = 0.000000; float UIMax = 200.000000; float UIStep = 0.010000; string UIName = "Bumpiness";> = 1.000000;
-float3 LuminanceConstants : LuminanceConstants = float3(0.212500, 0.715400, 0.072100);
-texture BumpTex;
-sampler BumpSampler<string UIName = "Bump [RGB] + Height [A] Texture"; string UIHint = "normalmap+heightmap";> = 
-sampler_state
-{
-    Texture = <BumpTex>;
-    AddressU = WRAP;
-    AddressV = WRAP;
-    AddressW = WRAP;
-    MipFilter = LINEAR;
-    MinFilter = LINEAR;
-    MagFilter = LINEAR;
-};
 
 //Vertex shaders
 VertexShader VS_Transform

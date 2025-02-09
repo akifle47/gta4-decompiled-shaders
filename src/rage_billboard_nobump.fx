@@ -1,27 +1,8 @@
+#define DIFFUSE_TEXTURE
+#define FACET_MASK
+#define LUMINANCE_CONSTANTS
 #include "common.fxh"
 
-//Locals
-texture DiffuseTex;
-sampler TextureSampler<string UIName = "Diffuse Texture";> = 
-sampler_state
-{
-    Texture = <DiffuseTex>;
-    AddressU = WRAP;
-    AddressV = WRAP;
-    AddressW = WRAP;
-    MipFilter = LINEAR;
-    MinFilter = ANISOTROPIC;
-    MagFilter = LINEAR;
-};
-float shadowmap_res : ShadowMapResolution = 1280.000000;
-float2 facetMask[4] : facetMask = 
-{
-    float2(-1.000000, 0.000000), 
-    float2(1.000000, 0.000000), 
-    float2(0.000000, -1.000000), 
-    float2(0.000000, 1.000000)
-};
-float3 LuminanceConstants : LuminanceConstants = float3(0.212500, 0.715400, 0.072100);
 texture imposterTexture;
 sampler imposterSampler<string UIName = "Diffuse Billboard Texture";> = 
 sampler_state
@@ -49,37 +30,37 @@ sampler_state
 };
 float3 imposterDir[8] : imposterDir = 
 {
-    float3(1.000000, 0.000000, 0.000000), 
-    float3(0.577350, 0.577350, -0.577350), 
-    float3(0.000000, 1.000000, 0.000000), 
-    float3(-0.577350, 0.577350, -0.577350), 
-    float3(-1.000000, 0.000000, 0.000000), 
-    float3(-0.577350, -0.577350, -0.577350), 
-    float3(0.000000, -1.000000, 0.000000), 
-    float3(0.577350, -0.577350, -0.577350)
+    float3(1.0, 0.0, 0.0), 
+    float3(0.577350259, 0.577350259, -0.577350259), 
+    float3(0.0, 1.0, 0.0), 
+    float3(-0.577350259, 0.577350259, -0.577350259), 
+    float3(-1.0, 0.0, 0.0), 
+    float3(-0.577350259, -0.577350259, -0.577350259), 
+    float3(0.0, -1.0, 0.0), 
+    float3(0.577350259, -0.577350259, -0.577350259)
 };
-float3 imposterWorldX : imposterWorldX = float3(1.000000, 0.000000, 0.000000);
-float3 imposterWorldY : imposterWorldY = float3(0.000000, 1.000000, 0.000000);
-float3 imposterWorldZ : imposterWorldZ = float3(0.000000, 0.000000, 1.000000);
-float4 g_ImposterSize : g_ImposterSize = float4(128.000000, 8.000000, 16.000000, 0.015625);
+float3 imposterWorldX : imposterWorldX = float3(1, 0, 0);
+float3 imposterWorldY : imposterWorldY = float3(0, 1, 0);
+float3 imposterWorldZ : imposterWorldZ = float3(0, 0, 1);
+float4 g_ImposterSize : g_ImposterSize = float4(128, 8, 16, 0.015625);
 float3 normTable[16] : normTable = 
 {
-    float3(0.000000, 0.000000, 0.000000), 
-    float3(0.000000, 0.000000, -1.000000), 
-    float3(0.000000, 0.500000, -0.866025), 
-    float3(0.433013, -0.250000, -0.866025), 
-    float3(-0.433013, -0.250000, -0.866025), 
-    float3(0.000000, 0.939693, 0.342020), 
-    float3(0.813798, 0.469846, -0.342020), 
-    float3(0.813798, -0.469846, 0.342020), 
-    float3(0.000000, -0.939693, -0.342020), 
-    float3(-0.813798, -0.469846, 0.342020), 
-    float3(-0.813798, 0.469846, -0.342020), 
-    float3(-0.433013, 0.250000, 0.866025), 
-    float3(0.433013, 0.250000, 0.866025), 
-    float3(0.000000, -0.500000, -0.866025), 
-    float3(0.000000, 0.000000, 1.000000), 
-    float3(0.000000, 0.000000, 0.000000)
+    float3(0.0, 0.0, 0.0), 
+    float3(0.0, 0.0, -1.0), 
+    float3(0.0, 0.5, -0.866025388), 
+    float3(0.433012694, -0.25, -0.866025388), 
+    float3(-0.433012694, -0.25, -0.866025388), 
+    float3(0.0, 0.939692616, 0.342020154), 
+    float3(0.813797653, 0.469846308, -0.342020154), 
+    float3(0.813797653, -0.469846308, 0.342020154), 
+    float3(0.0, -0.939692616, -0.342020154), 
+    float3(-0.813797653, -0.469846308, 0.342020154), 
+    float3(-0.813797653, 0.469846308, -0.342020154), 
+    float3(-0.433012694, 0.25, 0.866025388), 
+    float3(0.433012694, 0.25, 0.866025388), 
+    float3(0.0, -0.5, -0.866025388), 
+    float3(0.0, 0.0, 1), 
+    float3(0.0, 0.0, 0.0)
 };
 
 //Vertex shaders

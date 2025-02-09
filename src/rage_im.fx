@@ -4,8 +4,7 @@
 #define PAD_FORCED_COLOR
 #include "common.fxh"
 
-//Locals
-float4 TexelSize : TexelSize = float4(0.000000, 0.000000, 0.000000, 0.000000);
+float4 TexelSize : TexelSize = float4(0.0, 0.0, 0.0, 0.0);
 texture DiffuseTex;
 sampler TextureSampler : DiffuseTex <string UIName = "Diffuse Texture";>;
 texture TransparentDstMap;

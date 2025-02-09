@@ -1,7 +1,5 @@
 #include "common.fxh"
 
-//Locals
-float shadowmap_res : ShadowMapResolution = 1280.000000;
 float4 dShadowParam0123 : dShadowParam0123;
 float4 dShadowParam4567 : dShadowParam4567;
 float4 dShadowParam891113 : dShadowParam891113;
@@ -25,6 +23,7 @@ float4 gDeferredProjParams : deferredProjectionParams;
 float4 gDeferredLightShaftParams : deferredLightShaftParams;
 float4 gDeferredLightVolumeParams : deferredLightVolumeParams;
 float4x4 gDeferredInverseViewProjMatrix : deferredLightInverseViewProjMatrix;
+
 texture deferredLightTexture;
 sampler gDeferredLightSampler = 
 sampler_state
@@ -58,6 +57,7 @@ sampler_state
     MagFilter = LINEAR;
     MipFilter = LINEAR;
 };
+
 texture gbufferTexture0;
 sampler GBufferTextureSampler0 = 
 sampler_state
@@ -113,7 +113,8 @@ sampler_state
     MagFilter = POINT;
     MipFilter = POINT;
 };
-float4 dReflectionParams : ReflectionParams = float4(0.006667, 0.000000, 0.000000, 0.000000);
+
+float4 dReflectionParams : ReflectionParams = float4(0.00666666683, 0.0, 0.0, 0.0);
 texture ParabTexture;
 sampler ParabSampler = 
 sampler_state
@@ -125,6 +126,7 @@ sampler_state
     MagFilter = LINEAR;
     MipFilter = LINEAR;
 };
+//unused
 texture importanceBufferTexture;
 sampler importanceBufferSampler = 
 sampler_state
@@ -136,6 +138,7 @@ sampler_state
     MagFilter = POINT;
     MipFilter = POINT;
 };
+//unused
 texture accumulationBufferTexture0;
 sampler accumulationBufferSampler0 = 
 sampler_state
@@ -147,6 +150,7 @@ sampler_state
     MagFilter = POINT;
     MipFilter = POINT;
 };
+//unused
 texture accumulationBufferTexture1;
 sampler accumulationBufferSampler1 = 
 sampler_state
@@ -158,6 +162,7 @@ sampler_state
     MagFilter = POINT;
     MipFilter = POINT;
 };
+
 texture depthSourceTexture;
 sampler depthSourceSampler = 
 sampler_state
@@ -169,6 +174,7 @@ sampler_state
     MagFilter = POINT;
     MipFilter = POINT;
 };
+
 float2 poisson12[12] : poisson12 = 
 {
     float2(-0.326212, -0.405810), 
@@ -186,20 +192,20 @@ float2 poisson12[12] : poisson12 =
 };
 float2 vol_offsets[12] : vol_offsets = 
 {
-    float2(0.000000, -0.700000), 
+    float2(0.0, -0.700000), 
     float2(0.500000, 0.500000), 
     float2(-0.500000, 0.500000), 
-    float2(1.000000, -1.000000), 
-    float2(0.000000, 1.500000), 
-    float2(-1.000000, -1.000000), 
-    float2(-4.000000, 0.000000), 
-    float2(-2.500000, -3.000000), 
-    float2(2.500000, -3.000000), 
-    float2(4.000000, 0.000000), 
-    float2(2.500000, 3.000000), 
-    float2(-2.500000, 3.000000)
+    float2(1.0, -1.0), 
+    float2(0.0, 1.500000), 
+    float2(-1.0, -1.0), 
+    float2(-4.0, 0.0), 
+    float2(-2.500000, -3.0), 
+    float2(2.500000, -3.0), 
+    float2(4.0, 0.0), 
+    float2(2.500000, 3.0), 
+    float2(-2.500000, 3.0)
 };
-float4 debugLightColour : debugLightColour = float4(1.000000, 1.000000, 1.000000, 1.000000);
+float4 debugLightColour : debugLightColour = float4(1.0, 1.0, 1.0, 1.0);
 
 //Vertex shaders
 VertexShader VS_ScreenTransformS

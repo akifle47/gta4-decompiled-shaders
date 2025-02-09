@@ -1,11 +1,10 @@
 #define NO_SHADOWS
+#define LUMINANCE_CONSTANTS
 #include "common.fxh"
 
-//Locals
-float3 LuminanceConstants : LuminanceConstants = float3(0.212500, 0.715400, 0.072100);
 float4 mirrorParams : mirrorParams;
 texture reflectiontexture;
-sampler ReflectTextureSampler = 
+sampler ReflectTextureSampler =
 sampler_state
 {
     Texture = <reflectiontexture>;
@@ -17,7 +16,7 @@ sampler_state
     MagFilter = LINEAR;
 };
 texture normbuffertexture;
-sampler NormBufferSampler = 
+sampler NormBufferSampler =
 sampler_state
 {
     Texture = <normbuffertexture>;

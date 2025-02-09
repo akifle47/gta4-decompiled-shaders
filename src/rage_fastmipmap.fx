@@ -2,10 +2,54 @@
 #define NO_LIGHTING
 #define NO_SHADOWS
 #define PAD_FORCED_COLOR
-#define FAST_MIPMAP_AND_PTFX_COLLISION
 #include "common.fxh"
 
-//Locals
+shared float4x4 gCameraMatrix : CameraMatrix;
+shared float4 gShadowmap_ShadowColor0 : Shadowmap_ShadowColor0 = float4(1.0, 1.0, 1.0, 0.723000);
+shared float4 gShadowmap_PixelSize0 : Shadowmap_PixelSize0;
+shared float gGeometryScale : GeometryScale;
+shared float2 gShadowCollectorTexelSize : ShadowCollectorTexelSize;
+shared float3 gPointLightPosition : PointLightPosition;
+shared float gPointLightAttenuation : PointLightAttenuation;
+shared float gLightAttenuationEnd : LightAttenuationEnd;
+shared texture DepthTexture0;
+shared sampler DepthTextureSampler0 : register(s15) = 
+sampler_state
+{
+    Texture = <DepthTexture0>;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+    AddressW = CLAMP;
+    MipFilter = NONE;
+    MinFilter = ANISOTROPIC;
+    MagFilter = ANISOTROPIC;
+    MipMapLodBias = 16.000000;
+};
+shared texture CubeShadowMap;
+shared sampler CubeShadowMapSampler = 
+sampler_state
+{
+    Texture = <CubeShadowMap>;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+    AddressW = CLAMP;
+    MipFilter = NONE;
+    MinFilter = POINT;
+    MagFilter = POINT;
+};
+shared texture ShadowCollectorTex;
+shared sampler ShadowCollectorSampler = 
+sampler_state
+{
+    Texture = <ShadowCollectorTex>;
+    AddressU = WRAP;
+    AddressV = WRAP;
+    AddressW = WRAP;
+    MipFilter = NONE;
+    MinFilter = LINEAR;
+    MagFilter = LINEAR;
+};
+
 texture AmbientOccTex;
 sampler AmbientOccSampler = 
 sampler_state
@@ -58,7 +102,7 @@ sampler_state
     MagFilter = LINEAR;
 };
 float4 TexelSize : TexelSize;
-float AlphaRange : AlphaRange = 3.035714;
+float AlphaRange : AlphaRange = 3.03571439;
 float MipMapLod : MipMapLod;
 
 //Vertex shaders

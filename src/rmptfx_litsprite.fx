@@ -6,7 +6,6 @@
 #define PTX_DEPTH_MAP
 #include "common.fxh"
 
-//Locals
 float gBiasToCamera : BiasToCamera<string UIName = "Move particle closer to camera"; float UIMin = 0.000000; float UIMax = 1000.000000; float UIStep = 0.010000;> = 0.000000;
 float Billboard : Billboard;
 float HybridAdd : HybridAdd;
@@ -46,7 +45,7 @@ sampler_state
     AddressV = CLAMP;
 };
 float3 LightColor : LightColor<string UIName = "Light Color"; float UIMin = 0.000000; float UIMax = 1.000000; float UIStep = 0.010000;> = float3(0.782000, 0.792500, 0.060000);
-float3 LightDir : LightDir<string UIName = "Light Dir"; float UIMin = -1.000000; float UIMax = 1.000000; float UIStep = 0.010000;> = float3(-0.500000, -0.500000, 0.000000);
+float3 LightDir : LightDir<string UIName = "Light Dir"; float UIMin = -1.000000; float UIMax = 1.000000; float UIStep = 0.010000;> = float3(-0.500000, -0.500000, 0.0);
 float ghorizScale : ghorizScale<string UIName = "Horizontal Warp Scale"; float UIMin = 0.000000; float UIMax = 2000.000000; float UIStep = 0.010000;> = 0.000000;
 float gvertScale : gvertScale<string UIName = "Horizontal Warp Scale"; float UIMin = 0.000000; float UIMax = 2000.000000; float UIStep = 0.010000;> = 0.220000;
 float gIntensity : gIntensity<string UIName = "Horizontal Warp Scale"; float UIMin = -1000.000000; float UIMax = 2000.000000; float UIStep = 0.010000;> = 1.000000;

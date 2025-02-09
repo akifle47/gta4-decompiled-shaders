@@ -1,51 +1,10 @@
+#define DRAWBUCKET_ALPHA
+#define DIFFUSE_TEXTURE
+#define FACET_MASK
+#define ENVIRONMENT_MAP
+#define NORMAL_MAP
+#define LUMINANCE_CONSTANTS
 #include "common.fxh"
-
-//Locals
-int drawBucket : __rage_drawbucket<int Bucket = 1;> = 1;
-texture DiffuseTex;
-sampler TextureSampler<string UIName = "Diffuse Texture";> = 
-sampler_state
-{
-    Texture = <DiffuseTex>;
-    AddressU = WRAP;
-    AddressV = WRAP;
-    AddressW = WRAP;
-    MipFilter = LINEAR;
-    MinFilter = ANISOTROPIC;
-    MagFilter = LINEAR;
-};
-float shadowmap_res : ShadowMapResolution = 1280.000000;
-float2 facetMask[4] : facetMask = 
-{
-    float2(-1.000000, 0.000000), 
-    float2(1.000000, 0.000000), 
-    float2(0.000000, -1.000000), 
-    float2(0.000000, 1.000000)
-};
-float bumpiness : Bumpiness<string UIWidget = "slider"; float UIMin = 0.000000; float UIMax = 200.000000; float UIStep = 0.010000; string UIName = "Bumpiness";> = 1.000000;
-float reflectivePower : Reflectivity<string UIName = "Reflectivity"; float UIMin = -10.000000; float UIMax = 100.000000; float UIStep = 0.100000;> = 0.450000;
-float3 LuminanceConstants : LuminanceConstants = float3(0.212500, 0.715400, 0.072100);
-texture BumpTex;
-sampler BumpSampler<string UIName = "Bump Texture"; string UIHint = "normalmap";> = 
-sampler_state
-{
-    Texture = <BumpTex>;
-    AddressU = WRAP;
-    AddressV = WRAP;
-    AddressW = WRAP;
-    MinFilter = ANISOTROPIC;
-    MagFilter = LINEAR;
-    MipFilter = LINEAR;
-};
-texture EnvironmentTex;
-sampler EnvironmentSampler<string UIName = "Environment Texture"; string ResourceType = "Cube";> = 
-sampler_state
-{
-    Texture = <EnvironmentTex>;
-    MinFilter = ANISOTROPIC;
-    MagFilter = LINEAR;
-    MipFilter = LINEAR;
-};
 
 //Vertex shaders
 VertexShader VS_Transform

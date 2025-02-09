@@ -1,236 +1,190 @@
-//macros prefixed with "PAD_" are for unused constants that are only here for completeness
+//do not add any new variables to existing effects or change the names or order of existing ones otherwise all vanilla drawables using them will no longer be compatible
+#include "common_globals.fxh"
 
-//Globals
-shared float4 gAllGlobals[64] : AllGlobals : register(c0);
-
-#ifndef NO_SKINNING
-    shared float4x3 gBoneMtx[48] : WorldMatrixArray : register(c64);
+#ifdef ANIMATED
+    float3 globalAnimUV0 : globalAnimUV0 = float3(1.0, 0.0, 0.0);
+    float3 globalAnimUV1 : globalAnimUV1 = float3(0.0, 1.0, 0.0);
 #endif
 
-shared float4x4 gWorld : World : register(c0);
-shared float4x4 gWorldView : WorldView : register(c4);
-shared float4x4 gWorldViewProj : WorldViewProjection : register(c8);
-shared float4x4 gViewInverse : ViewInverse : register(c12);
-
-#ifndef NO_LIGHTING
-    shared texture stippletexture;
-    shared sampler StippleTexture : register(s10) = 
-    sampler_state
-    {
-        Texture = <stippletexture>;
-        MinFilter = POINT;
-        MagFilter = POINT;
-        MipFilter = POINT;
-        AddressU = WRAP;
-        AddressV = WRAP;
-    };
-
-    shared float4 gDepthFxParams : DepthFxParams : register(c16) = float4(1.000000, 1.000000, 1.000000, 1.000000);
-    shared float4 gDirectionalLight : DirectionalLight : register(c17);
-    shared float4 gDirectionalColour : DirectionalColour : register(c18);
-    shared float4 gLightPosX : LightPositionX : register(c19);
-    shared float4 gLightPosY : LightPositionY : register(c20);
-    shared float4 gLightPosZ : LightPositionZ : register(c21);
-    shared float4 gLightDirX : LightDirX : register(c22);
-    shared float4 gLightDirY : LightDirY : register(c23);
-    shared float4 gLightDirZ : LightDirZ : register(c24);
-    shared float4 gLightFallOff : LightFallOff : register(c25);
-    shared float4 gLightConeScale : LightConeScale : register(c26);
-    shared float4 gLightConeOffset : LightConeOffset : register(c27);
-    shared float4 gLightColR : LightColR : register(c29);
-    shared float4 gLightColG : LightColG : register(c30);
-    shared float4 gLightColB : LightColB : register(c31);
-    shared float4 gLightPointPosX : LightPointPositionX : register(c32);
-    shared float4 gLightPointPosY : LightPointPositionY : register(c33);
-    shared float4 gLightPointPosZ : LightPointPositionZ : register(c34);
-    shared float4 gLightPointColR : LightPointColR  : register(c35);
-    shared float4 gLightPointColG : LightPointColG  : register(c64);
-    shared float4 gLightPointColB : LightPointColB  : register(c65);
-    shared float4 gLightPointFallOff : LightPointFallOff  : register(c36);
-    shared float4 gLightDir2X : LightDir2X : register(c67);
-    shared float4 gLightDir2Y : LightDir2Y : register(c68);
-    shared float4 gLightDir2Z : LightDir2Z : register(c69);
-    shared float4 gLightConeScale2 : LightConeScale2   : register(c70);
-    shared float4 gLightConeOffset2 : LightConeOffset2 : register(c71);
-    shared float4 gLightAmbient0 : LightAmbientColor0 : register(c37) <string UIWidget = "Ambient Light Color 0"; string Space = "material";> = float4(0.000000, 0.000000, 0.000000, 1.000000);
-    shared float4 gLightAmbient1 : LightAmbientColor1 : register(c38) <string UIWidget = "Ambient Light Color 1"; string Space = "material";> = float4(0.000000, 0.000000, 0.000000, 1.000000);
-    
-    shared float4 globalScalars  : globalScalars  : register(c39) = float4(1.000000, 1.000000, 1.000000, 1.000000);
-    shared float4 globalScalars2 : globalScalars2 : register(c40) = float4(1.000000, 1.000000, 1.000000, 1.000000);
+#ifdef DRAWBUCKET_ALPHA
+    int drawBucket : __rage_drawbucket<int Bucket = 1;> = 1;
 #endif
 
-#ifdef PAD_LIGHT_CONSTANTS
-    shared float4 gLightPosDir[4] : Position<string Object = "PointDirLight"; string Space = "World";> = 
-    {
-        float4(1403.000000, 1441.000000, 1690.000000, 0.000000), 
-        float4(0.000000, 0.000000, 0.000000, 0.000000), 
-        float4(0.000000, 0.000000, 0.000000, 0.000000), 
-        float4(0.000000, 0.000000, 0.000000, 0.000000)
-    };
-    shared float4 gLightDir[4] : Direction<string Object = "Light Direction"; string Space = "World";> = 
-    {
-        float4(0.000000, 0.000000, -1.000000, 0.000000), 
-        float4(0.000000, 0.000000, 0.000000, 0.000000), 
-        float4(0.000000, 0.000000, 0.000000, 0.000000), 
-        float4(0.000000, 0.000000, 0.000000, 0.000000)
-    };
-    shared float4 gLightColor[4] : Diffuse<string UIName = "Diffuse Light Color"; string Object = "LightPos";> = 
-    {
-        float4(1.000000, 1.000000, 1.000000, 1.000000), 
-        float4(0.000000, 0.000000, 0.000000, 0.000000), 
-        float4(0.000000, 0.000000, 0.000000, 0.000000), 
-        float4(0.000000, 0.000000, 0.000000, 0.000000)
-    };
-    shared float4 gLightType : LightType<string UIName = "The type of each light source";> = float4(0.000000, 0.000000, 0.000000, 0.000000);
-    shared float4 gLightAmbient : Ambient<string UIWidget = "Ambient Light Color"; string Space = "material";> = float4(0.000000, 0.000000, 0.000000, 1.000000);
+#ifdef DRAWBUCKET_DECAL
+    int drawBucket : __rage_drawbucket<int Bucket = 2;> = 2;
 #endif
 
-#ifdef PAD_FORCED_COLOR
-    shared float gInvColorExpBias : ColorExpBias : register(c46);
-    shared float4 gForcedColor : ForcedColor : register(c47) = float4(1.000000, 1.000000, 1.000000, 1.000000);
-    shared float4 gAspectRatio : AspectRatio : register(c48) = float4(1.000000, 1.000000, 1.000000, 1.000000);
-#else
-    shared float4 gAspectRatio : gAspectRatio : register(c47) = float4(1.000000, 1.000000, 1.000000, 1.000000);
+//these draw buckets are only used in common/shaders/db but might as well still include them here for completeness
+#ifdef DRAW_BUCKET_CUTOUT
+    int drawBucket : __rage_drawbucket<int Bucket = 3;> = 3;
 #endif
 
-#ifndef NO_LIGHTING
-    shared float4 globalScreenSize : globalScreenSize : register(c44) = float4(1.000000, 1.000000, 1.000000, 1.000000);
-    shared float4 globalFogParams : globalFogParams : register(c41) = float4(1600.000000, 9000000.000000, 0.010000, 1.000000);
-    shared float4 globalFogColor : globalFogColor   : register(c42) = float4(1.000000, 1.000000, 1.000000, 1.000000);
-    shared float4 globalFogColorN : globalFogColorN : register(c43) = float4(1.000000, 1.000000, 1.000000, 1.000000);
-    shared float4 gDayNightEffects : globalDayNightEffects : register(c45) = float4(1.000000, 0.000000, 1.000000, 0.000000);
-    shared float gInvColorExpBias : ColorExpBias : register(c46) = 1.000000;
-    shared float4 colorize : Colorize : register(c51) = float4(1.000000, 1.000000, 1.000000, 1.000000);
-    shared float4 stencil : Stencil : register(c52) = float4(0.000000, 255.000000, 0.000000, 0.000000);
+#ifdef DRAW_BUCKET_EMISSIVE
+    int drawBucket : __rage_drawbucket<int Bucket = 4;> = 4;
 #endif
 
-#ifndef NO_SHADOWS
-    shared float4 gFacetCentre : FacetCentre : register(c54);
-    //not used by any shader but it is set by the renderer. values are {0.62800002, ScreenWidth, ScreenHeight, 0.0}
-    shared float4 gShadowCommonParam0123 : ShadowCommonParam0123 : register(c55);
-    shared float4 gShadowParam14151617 : ShadowParam14151617 : register(c56);
-    shared float4 gShadowParam18192021 : ShadowParam18192021 : register(c53);
-    shared float4 gShadowParam0123 : ShadowParam0123 : register(c57);
-    shared float4 gShadowParam4567 : ShadowParam4567 : register(c58);
-    shared float4 gShadowParam891113 : ShadowParam891113 : register(c59);
-    shared float4x4 gShadowMatrix : ShadowMatrix : register(c60);
-    
-    shared texture ShadowZTextureDir;
-    shared sampler gShadowZSamplerDir : register(s15) = 
-    sampler_state
-    {
-        Texture = <ShadowZTextureDir>;
-        AddressU = CLAMP;
-        AddressV = CLAMP;
-        MipFilter = POINT;
-        MinFilter = POINT;
-        MagFilter = POINT;
-    };
-    
-    shared texture ShadowZTextureDirVS;
-    shared sampler gShadowZSamplerDirVS : register(s3) = 
-    sampler_state
-    {
-        Texture = <ShadowZTextureDirVS>;
-        AddressU = CLAMP;
-        AddressV = CLAMP;
-        MipFilter = POINT;
-        MinFilter = POINT;
-        MagFilter = POINT;
-    };
-    
-    shared texture ShadowZTextureCache;
-    shared sampler gShadowZSamplerCache : register(s14) = 
-    sampler_state
-    {
-        Texture = <ShadowZTextureCache>;
-        AddressU = CLAMP;
-        AddressV = CLAMP;
-        MipFilter = POINT;
-        MinFilter = POINT;
-        MagFilter = POINT;
-    };
-    
-    //unused
-    shared texture ShadowTextureLUT;
-    shared sampler gShadowSamplerLUT = 
-    sampler_state
-    {
-        Texture = <ShadowTextureLUT>;
-        AddressU = WRAP;
-        AddressV = WRAP;
-        MipFilter = POINT;
-        MinFilter = LINEAR;
-        MagFilter = LINEAR;
-    };
+#ifdef DRAW_BUCKET_EMISSIVE_ALPHA
+    int drawBucket : __rage_drawbucket<int Bucket = 5;> = 5;
 #endif
 
-#ifdef CLIP_PLANES
-    shared float4 NearFarPlane : NearFarPlane : register(c128);
-    shared float4 gInvScreenSize : InvScreenSize : register(c129);
-#endif
-
-#ifdef PTX_DEPTH_MAP
-    shared texture DepthMap;
-    shared sampler DepthMapTexSampler : register(s12) = 
+#ifdef DIFFUSE_TEXTURE
+    texture DiffuseTex;
+    sampler TextureSampler : register(s0) <string UIName = "Diffuse Texture";> = 
     sampler_state
     {
-        Texture = <DepthMap>;
-        MinFilter = POINT;
-        MagFilter = POINT;
-        MipFilter = NONE;
-        AddressU = CLAMP;
-        AddressV = CLAMP;
-    };
-#endif
-
-#ifdef FAST_MIPMAP_AND_PTFX_COLLISION
-    shared float4x4 gCameraMatrix : CameraMatrix;
-    shared float4 gShadowmap_ShadowColor0 : Shadowmap_ShadowColor0 = float4(1.000000, 1.000000, 1.000000, 0.723000);
-    shared float4 gShadowmap_PixelSize0 : Shadowmap_PixelSize0;
-    shared float gGeometryScale : GeometryScale;
-    shared float2 gShadowCollectorTexelSize : ShadowCollectorTexelSize;
-    shared float3 gPointLightPosition : PointLightPosition;
-    shared float gPointLightAttenuation : PointLightAttenuation;
-    shared float gLightAttenuationEnd : LightAttenuationEnd;
-    shared texture DepthTexture0;
-    shared sampler DepthTextureSampler0 : register(s15) = 
-    sampler_state
-    {
-        Texture = <DepthTexture0>;
-        AddressU = CLAMP;
-        AddressV = CLAMP;
-        AddressW = CLAMP;
-        MipFilter = NONE;
-        MinFilter = ANISOTROPIC;
-        MagFilter = ANISOTROPIC;
-        MipMapLodBias = 16.000000;
-    };
-    shared texture CubeShadowMap;
-    shared sampler CubeShadowMapSampler = 
-    sampler_state
-    {
-        Texture = <CubeShadowMap>;
-        AddressU = CLAMP;
-        AddressV = CLAMP;
-        AddressW = CLAMP;
-        MipFilter = NONE;
-        MinFilter = POINT;
-        MagFilter = POINT;
-    };
-    shared texture ShadowCollectorTex;
-    shared sampler ShadowCollectorSampler = 
-    sampler_state
-    {
-        Texture = <ShadowCollectorTex>;
+        Texture = <DiffuseTex>;
         AddressU = WRAP;
         AddressV = WRAP;
         AddressW = WRAP;
-        MipFilter = NONE;
+        MipFilter = LINEAR;
+        MinFilter = ANISOTROPIC;
+        MagFilter = LINEAR;
+    };
+#endif
+
+#ifdef VEHICLE_DAMAGE
+    texture damagetexture;
+    sampler DamageSampler = 
+    sampler_state
+    {
+        Texture = <damagetexture>;
+        AddressU = CLAMP;
+        AddressV = CLAMP;
+        AddressW = CLAMP;
+        MipFilter = POINT;
+        MinFilter = POINT;
+        MagFilter = POINT;
+    };
+    bool switchOn : switchOn = false;
+    float BoundRadius : BoundRadius;
+#endif
+
+#ifndef NO_SHADOWS
+    //unused
+    float shadowmap_res : ShadowMapResolution = 1280.0;
+#endif
+
+#ifdef FACET_MASK
+    float2 facetMask[4] : facetMask : register(c208) = 
+    {
+        float2(-1.0, 0.0), 
+        float2(1.0, 0.0), 
+        float2(0.0, -1.0), 
+        float2(0.0, 1.0)
+    };
+#endif
+
+#ifdef DEPTH_SHIFT_SCALE
+    float zShiftScale : zShiftScale = 0.002000;
+#endif
+
+#ifdef DEPTH_SHIFT
+    float zShift : zShift = 0.000110;
+#endif
+
+#ifdef EMISSIVE
+    float emissiveMultiplier : EmissiveMultiplier<string UIName = "Emissive HDR Multiplier"; float UIMin = 0.0; float UIMax = 255.0; float UIStep = 0.100000;> = 1.0;
+#endif
+
+#ifdef AMBIENT_DECAL_MASK
+    float3 ambientDecalMask : AmbientDecalMask<string UIWidget = "slider"; float UIMin = 0.0; float UIMax = 1.0; float UIStep = 0.00999999978; string UIName = "ambient map mask color";> = float3(1.0, 0.0, 0.0);
+#endif
+
+#ifdef DIRT_DECAL_MASK
+    float3 dirtDecalMask : DirtDecalMask<string UIWidget = "slider"; float UIMin = 0.0; float UIMax = 1.0; float UIStep = 0.00999999978; string UIName = "dirt map mask color";> = float3(1.0, 0.0, 0.0);
+#endif
+
+#ifdef PARALLAX
+    float parallaxScaleBias : ParallaxScaleBias<string UIName = "Parallax ScaleBias"; float UIMin = 0.010000; float UIMax = 1.0; float UIStep = 0.010000;>
+    #ifdef PARALLAX_STEEP
+        = 0.005;
+    #else
+        = 0.03;
+    #endif
+#endif
+
+#ifdef SPECULAR
+    float specularFactor : Specular<string UIName = "Specular Falloff"; float UIMin = 0.0; float UIMax = 2000.0; float UIStep = 0.100000;> = 100.0;
+    #ifdef SPECULAR_COLOR_ZERO //sucks
+       float specularColorFactor : SpecularColor<string UIName = "Specular Intensity"; float UIMin = 0.0; float UIMax = 1.0; float UIStep = 0.010000;> = 0.0;
+    #else
+       float specularColorFactor : SpecularColor<string UIName = "Specular Intensity"; float UIMin = 0.0; float UIMax = 1.0; float UIStep = 0.010000;> = 1.0;
+    #endif
+#endif
+
+#ifdef SPECULAR_MAP
+    float3 specMapIntMask : SpecularMapIntensityMask<string UIWidget = "slider"; float UIMin = 0.0; float UIMax = 1.0; float UIStep = 0.010000; string UIName = "specular map intensity mask color";> = float3(1.0, 0.0, 0.0);
+#endif
+
+#ifdef NORMAL_MAP
+    float bumpiness : Bumpiness<string UIWidget = "slider"; float UIMin = 0.0; float UIMax = 200.0; float UIStep = 0.010000; string UIName = "Bumpiness";> = 1.0;
+#endif
+#ifdef PARALLAX
+    float bumpiness : Bumpiness<string UIWidget = "slider"; float UIMin = 0.0; float UIMax = 200.0; float UIStep = 0.010000; string UIName = "Bumpiness";> = 1.0;
+#endif
+
+#ifdef ENVIRONMENT_MAP
+    float reflectivePower : Reflectivity<string UIName = "Reflectivity"; float UIMin = -10.0; float UIMax = 100.0; float UIStep = 0.100000;> = 0.450000;
+#endif
+
+#ifdef LUMINANCE_CONSTANTS
+    float3 LuminanceConstants : LuminanceConstants = float3(0.212500, 0.715400, 0.072100);
+#endif
+
+#ifdef NORMAL_MAP
+    texture BumpTex;
+    sampler BumpSampler<string UIName = "Bump Texture"; string UIHint = "normalmap";> = 
+    sampler_state
+    {
+        Texture = <BumpTex>;
+        AddressU = WRAP;
+        AddressV = WRAP;
+        AddressW = WRAP;
+        MinFilter = ANISOTROPIC;
+        MagFilter = LINEAR;
+        MipFilter = LINEAR;
+    };
+#endif
+#ifdef PARALLAX
+    texture BumpTex;
+    sampler BumpSampler<string UIName = "Bump [RGB] + Height [A] Texture"; string UIHint = "normalmap+heightmap";> = 
+    sampler_state
+    {
+        Texture = <BumpTex>;
+        AddressU = WRAP;
+        AddressV = WRAP;
+        AddressW = WRAP;
+        MipFilter = LINEAR;
         MinFilter = LINEAR;
         MagFilter = LINEAR;
     };
 #endif
 
+#ifdef SPECULAR_MAP
+    texture SpecularTex;
+    sampler SpecSampler<string UIName = "Specular Texture"; string UIHint = "specularmap";> = 
+    sampler_state
+    {
+        Texture = <SpecularTex>;
+        AddressU = WRAP;
+        AddressV = WRAP;
+        AddressW = WRAP;
+        #ifndef SPECULAR_MAP_NO_FILTER
+            MipFilter = LINEAR;
+            MinFilter = ANISOTROPIC;
+            MagFilter = LINEAR;
+        #endif
+    };
+#endif
 
-//Locals
+#ifdef ENVIRONMENT_MAP
+    texture EnvironmentTex;
+    sampler EnvironmentSampler<string UIName = "Environment Texture"; string ResourceType = "Cube";> = 
+    sampler_state
+    {
+        Texture = <EnvironmentTex>;
+        MinFilter = ANISOTROPIC;
+        MagFilter = LINEAR;
+        MipFilter = LINEAR;
+    };
+#endif

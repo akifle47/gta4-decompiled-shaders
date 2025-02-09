@@ -1,7 +1,5 @@
 #include "common.fxh"
 
-//Locals
-float shadowmap_res : ShadowMapResolution = 1280.000000;
 texture ConvertTexture;
 sampler ConvertSampler = 
 sampler_state
@@ -14,7 +12,7 @@ sampler_state
     MinFilter = POINT;
     MagFilter = POINT;
 };
-float4 clearcol : ClearfColour = float4(1.000000, 0.000000, 0.000000, 0.000000);
+float4 clearcol : ClearfColour = float4(1.0, 0.0, 0.0, 0.0);
 
 //Vertex shaders
 VertexShader VS_Blit

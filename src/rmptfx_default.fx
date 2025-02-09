@@ -6,7 +6,6 @@
 #define PTX_DEPTH_MAP
 #include "common.fxh"
 
-//Locals
 float gBiasToCamera : BiasToCamera<string UIName = "Move particle closer to camera"; float UIMin = 0.000000; float UIMax = 1000.000000; float UIStep = 0.010000;> = 0.000000;
 float Billboard : Billboard;
 float HybridAdd : HybridAdd;

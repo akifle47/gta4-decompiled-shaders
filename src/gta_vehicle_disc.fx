@@ -1,67 +1,12 @@
-#include "common.fxh"
-
-//Locals
-texture DiffuseTex;
-sampler TextureSampler<string UIName = "Diffuse Texture";> = 
-sampler_state
-{
-    Texture = <DiffuseTex>;
-    AddressU = WRAP;
-    AddressV = WRAP;
-    AddressW = WRAP;
-    MipFilter = LINEAR;
-    MinFilter = ANISOTROPIC;
-    MagFilter = LINEAR;
-};
-int drawBucket : __rage_drawbucket<int Bucket = 1;> = 1;
-float shadowmap_res : ShadowMapResolution = 1280.000000;
-float3 matDiffuseColor : DiffuseColor<string UIName = "Vehicle Diffuse Color"; float UIMin = 0.000000; float UIMax = 10.000000; float UIStep = 0.010000;> = float3(1.000000, 1.000000, 1.000000);
-float4 matDiffuseColor2 : DiffuseColor2 = float4(1.000000, 1.000000, 1.000000, 1.000000);
-float DiskBrakeGlow : DiskBrakeGlow = 0.000000;
-float specularFactor : specularFactor = 180.000000;
-float specularFactorED : Specular<string UIName = "Specular Falloff"; float UIMin = 0.000000; float UIMax = 10000.000000; float UIStep = 0.100000;> = 1.000000;
-float specularColorFactor : specularColorFactor = 0.150000;
-float specularColorFactorED : SpecularColor<string UIName = "Specular Intensity"; float UIMin = 0.000000; float UIMax = 10000.000000; float UIStep = 0.100000;> = 1.000000;
-float3 specMapIntMask : SpecularMapIntensityMask<string UIWidget = "slider"; float UIMin = 0.000000; float UIMax = 1.000000; float UIStep = 0.010000; string UIName = "specular map intensity mask color";> = float3(1.000000, 0.000000, 0.000000);
-float bumpiness : Bumpiness<string UIWidget = "slider"; float UIMin = 0.000000; float UIMax = 200.000000; float UIStep = 0.010000; string UIName = "Bumpiness";> = 1.000000;
-float reflectivePower : reflectivePower = 0.450000;
-float reflectivePowerED : Reflectivity<string UIName = "Reflectivity"; float UIMin = -10.000000; float UIMax = 10.000000; float UIStep = 0.100000;> = 1.000000;
-float3 LuminanceConstants : LuminanceConstants = float3(0.212500, 0.715400, 0.072100);
-texture BumpTex;
-sampler BumpSampler<string UIName = "Bump Texture"; string UIHint = "normalmap";> = 
-sampler_state
-{
-    Texture = <BumpTex>;
-    AddressU = WRAP;
-    AddressV = WRAP;
-    AddressW = WRAP;
-    MipFilter = LINEAR;
-    MinFilter = ANISOTROPIC;
-    MagFilter = LINEAR;
-};
-texture SpecularTex;
-sampler SpecSampler<string UIName = "Specular Texture"; string UIHint = "specularmap";> = 
-sampler_state
-{
-    Texture = <SpecularTex>;
-    AddressU = WRAP;
-    AddressV = WRAP;
-    AddressW = WRAP;
-    MipFilter = LINEAR;
-    MinFilter = ANISOTROPIC;
-    MagFilter = LINEAR;
-};
-texture damagevertbuffer;
-sampler DamageVertBuffer = 
-sampler_state
-{
-    Texture = <damagevertbuffer>;
-    MinFilter = POINT;
-    MagFilter = POINT;
-    MipFilter = POINT;
-    AddressU = CLAMP;
-    AddressV = CLAMP;
-};
+#define DIFFUSE_TEXTURE
+#define DRAWBUCKET_ALPHA
+#define SPECULAR_MAP
+#define NORMAL_MAP
+#define SPECULAR
+#define DISK_BRAKE_GLOW
+#define REFLECTIVE_POWER
+#define LUMINANCE_CONSTANTS
+#include "common_vehicle.fxh"
 
 //Vertex shaders
 VertexShader VS_VehicleTransformR2VB
@@ -1856,7 +1801,7 @@ technique drawskinned
 {
     pass p0
     {
-        AlphaRef = 64;
+        AlphaRef = 0x64;
         AlphaBlendEnable = true;
         AlphaTestEnable = true;
 
@@ -1881,7 +1826,7 @@ technique lightweight0_drawskinned
 {
     pass p0
     {
-        AlphaRef = 64;
+        AlphaRef = 0x64;
         AlphaBlendEnable = true;
         AlphaTestEnable = true;
 
@@ -1906,7 +1851,7 @@ technique lightweight4_drawskinned
 {
     pass p0
     {
-        AlphaRef = 64;
+        AlphaRef = 0x64;
         AlphaBlendEnable = true;
         AlphaTestEnable = true;
 
@@ -1928,7 +1873,7 @@ technique deferred_drawskinned
 {
     pass p0
     {
-        AlphaRef = 64;
+        AlphaRef = 0x64;
         AlphaBlendEnable = false;
         AlphaTestEnable = false;
 

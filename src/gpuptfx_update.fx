@@ -4,7 +4,6 @@
 #define PAD_LIGHT_CONSTANTS
 #include "common.fxh"
 
-//Locals
 texture ParticlePosXY;
 sampler ParticlePosXYTexSampler = 
 sampler_state
@@ -101,7 +100,7 @@ float4 EmitterParamLifeAndSpeed : EmitterParamLifeAndSpeed;
 float EmitterParamProbablityPhase2 : EmitterParamProbablityPhase2;
 float3 EmitterVelocityBoxPos : EmitterVelocityBoxPos;
 float4 EmitterVelocityBoxRange : EmitterVelocityBoxRange;
-float4 gHitPlane : gHitPlane = float4(0.000000, 1.000000, 0.000000, 2.000000);
+float4 gHitPlane : gHitPlane = float4(0.0, 1.0, 0.0, 2.0);
 float3 gCollisionVelocityModifier : CollisionVelocityModifier;
 float2 gCollisionLifeModifier : CollisionLifeModifier;
 float3 gCollisionPositionModifier : CollisionPositionModifier;

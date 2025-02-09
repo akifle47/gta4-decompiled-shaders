@@ -1,17 +1,9 @@
 #define NO_SKINNING
+#define FACET_MASK
 #define CLIP_PLANES
 #define PTX_DEPTH_MAP
 #include "common.fxh"
 
-//Locals
-float shadowmap_res : ShadowMapResolution = 1280.000000;
-float2 facetMask[4] : facetMask = 
-{
-    float2(-1.000000, 0.000000), 
-    float2(1.000000, 0.000000), 
-    float2(0.000000, -1.000000), 
-    float2(0.000000, 1.000000)
-};
 float gSoftness : gSoftness<string UIName = "Softness Fade : Controls how much soft particles fade out as objects become close to them ;"; float UIMin = 0.000000; float UIMax = 1000.000000; float UIStep = 0.010000;> = 2.000000;
 float HybridAdd : HybridAdd = 1.000000;
 texture DiffuseTex2;
@@ -69,7 +61,7 @@ sampler_state
     AddressV = CLAMP;
 };
 int gControlLight : ControlLight = 0;
-float4 gRainDebug : RainDebug = float4(1.000000, 1.000000, 1.000000, 1.000000);
+float4 gRainDebug : RainDebug = float4(1.0, 1.0, 1.0, 1.0);
 float gWrapScale : WrapScale<string UIName = "Wrap Scale : Controls how strong sun light hits particle ( 0 - no direct light , 1 - all direct light)"; float UIMin = 0.000000; float UIMax = 1.000000; float UIStep = 0.010000;> = 0.700000;
 float gWrapBias : WrapBias<string UIName = "Wrap Bias : Controls how sun light spreads over surface ( 0 - no extra spread, 1- spreads all over surface) "; float UIMin = 0.000000; float UIMax = 1.000000; float UIStep = 0.010000;> = 0.300000;
 float gDiffuse : Diffuse<string UIName = "Diffuse : Controls the amount of lighting on surface, color also controls this ( 0 - no light, 1- light)"; float UIMin = 0.000000; float UIMax = 2.000000; float UIStep = 0.010000;> = 1.000000;

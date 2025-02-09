@@ -5,9 +5,8 @@
 #define PAD_LIGHT_CONSTANTS
 #include "common.fxh"
 
-//Locals
 texture DiffuseTex;
-sampler DiffuseSampler<string UIName = "Diffuse Texture";> = 
+sampler DiffuseSampler<string UIName = "Diffuse Texture";> =
 sampler_state
 {
     Texture = <DiffuseTex>;

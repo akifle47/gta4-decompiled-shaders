@@ -1,11 +1,10 @@
+#define DRAWBUCKET_ALPHA
 #define NO_LIGHTING
 #define NO_SHADOWS
 #define PAD_FORCED_COLOR
 #define PAD_LIGHT_CONSTANTS
 #include "common.fxh"
 
-//Locals
-int drawBucket : __rage_drawbucket<int Bucket = 1;> = 1;
 texture Noise1Tex;
 sampler Noise1Sampler<string UIName = "1st Noise Layer Texture";> = 
 sampler_state
@@ -17,7 +16,7 @@ sampler_state
     MipFilter = LINEAR;
     MinFilter = LINEAR;
     MagFilter = LINEAR;
-    MipMapLodBias = 0.000000;
+    MipMapLodBias = 0.0;
 };
 texture Noise2Tex;
 sampler Noise2Sampler<string UIName = "2nd Noise Layer Texture";> = 
@@ -30,7 +29,7 @@ sampler_state
     MipFilter = NONE;
     MinFilter = LINEAR;
     MagFilter = LINEAR;
-    MipMapLodBias = 0.000000;
+    MipMapLodBias = 0.0;
 };
 float2 Velocity1 : Velocity1<string UIName = "1st Noise Layer Velocity"; string UIWidget = "Numeric"; float UIMin = 0.000000; float UIMax = 0.100000; float UIStep = 0.010000;> = float2(-0.010000, 0.010000);
 float2 Velocity2 : Velocity2<string UIName = "2nd Noise Layer Velocity"; string UIWidget = "Numeric"; float UIMin = 0.000000; float UIMax = 0.100000; float UIStep = 0.010000;> = float2(0.005000, 0.020000);
@@ -39,9 +38,9 @@ float Frequency2 : Frequency2<string UIName = "2nd Noise Layer Frequency"; strin
 float Contrast : Contrast<string UIName = "Contrast"; string UIWidget = "Numeric"; float UIMin = 0.000000; float UIMax = 2.000000; float UIStep = 0.100000;> = 1.100000;
 float Brightness : Brightness<string UIName = "Brightness"; string UIWidget = "Numeric"; float UIMin = 0.000000; float UIMax = 2.000000; float UIStep = 0.100000;> = 0.760000;
 float NoiseWarp : NoiseWarp<string UIName = "NoiseWarp"; string UIWidget = "Numeric"; float UIMin = 0.000000; float UIMax = 64.000000; float UIStep = 0.100000;> = 12.000000;
-float Persistance : Persistance = 0.769231;
-float Phase : Phase = 0.000000;
-float ClumpBump : ClumpBump = 1.000000;
+float Persistance : Persistance = 0.769230783;
+float Phase : Phase = 0.0;
+float ClumpBump : ClumpBump = 1.0;
 
 //Vertex shaders
 VertexShader VS_Main

@@ -1,7 +1,6 @@
 #define NO_SKINNING
-#include "common.fxh"
+#include "common_globals.fxh"
 
-//Locals
 texture HeightMapTexture;
 sampler HeightMapSampler = 
 sampler_state
@@ -14,19 +13,19 @@ sampler_state
     MinFilter = POINT;
     MagFilter = POINT;
 };
-float shadowmap_res : ShadowMapResolution = 1280.000000;
+float shadowmap_res : ShadowMapResolution = 1280;
 float2 facetMask[4] : facetMask = 
 {
-    float2(-1.000000, 0.000000), 
-    float2(1.000000, 0.000000), 
-    float2(0.000000, -1.000000), 
-    float2(0.000000, 1.000000)
+    float2(-1.0, 0.0), 
+    float2(1.0, 0.0), 
+    float2(0.0, -1.0), 
+    float2(0.0, 1.0)
 };
-float specularFactor : WaterSpecular = 0.000000;
-float specularColorFactor : WaterSpecularColor = 0.000000;
+float specularFactor : WaterSpecular = 0;
+float specularColorFactor : WaterSpecularColor = 0;
 float3 LuminanceConstants : LuminanceConstants = float3(0.212500, 0.715400, 0.072100);
 float4 waterRenderSimParam : waterRenderSimParam;
-float2 currentResolution : CurrentResolution = float2(1280.000000, 1024.000000);
+float2 currentResolution : CurrentResolution = float2(1280.0, 1024.0);
 float3 sunDirection : sunDirection;
 float3 sunColour : sunColour;
 float4 waterColour : waterColour;

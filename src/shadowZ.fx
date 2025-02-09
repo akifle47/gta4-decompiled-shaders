@@ -1,14 +1,5 @@
+#define FACET_MASK
 #include "common.fxh"
-
-//Locals
-float shadowmap_res : ShadowMapResolution = 1280.000000;
-float2 facetMask[4] : facetMask = 
-{
-    float2(-1.000000, 0.000000), 
-    float2(1.000000, 0.000000), 
-    float2(0.000000, -1.000000), 
-    float2(0.000000, 1.000000)
-};
 
 //Vertex shaders
 VertexShader VS_WarpDepth

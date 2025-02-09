@@ -1,17 +1,9 @@
 #define NO_SKINNING
+#define FACET_MASK
 #define CLIP_PLANES
 #define PTX_DEPTH_MAP
 #include "common.fxh"
 
-//Locals
-float shadowmap_res : ShadowMapResolution = 1280.000000;
-float2 facetMask[4] : facetMask = 
-{
-    float2(-1.000000, 0.000000), 
-    float2(1.000000, 0.000000), 
-    float2(0.000000, -1.000000), 
-    float2(0.000000, 1.000000)
-};
 float gSoftness : gSoftness<string UIName = "Softness Fade : Controls how much soft particles fade out as objects become close to them ;"; float UIMin = 0.000000; float UIMax = 1000.000000; float UIStep = 0.010000;> = 2.000000;
 float HybridAdd : HybridAdd = 1.000000;
 texture DiffuseTex2;
@@ -60,8 +52,8 @@ float gRefraction : gRefraction<string UIName = "Intensify Normal Map"; float UI
 float gNormalHeight : gNormalHeight<string UIName = "Scale Z Component of Normal Map"; float UIMin = -1000.000000; float UIMax = 2000.000000; float UIStep = 0.010000;> = 0.000000;
 float SpecularPower : SpecularPower<string UIName = "Specular Falloff"; float UIMin = -1000.000000; float UIMax = 2000.000000; float UIStep = 0.010000;> = 8.290000;
 float gShadowAmount : gShadowAmount<string UIName = "Shadow Scalar"; float UIMin = -2000.000000; float UIMax = 2000.000000; float UIStep = 0.010000;> = 0.000000;
-float2 gHeatHazeRippleRate : gHeatHazeRippleRate<string UIName = "HeatHazeFactor"; float UIMin = -1000.000000; float UIMax = 2000.000000; float UIStep = 0.010000;> = float2(5.000000, 0.000000);
-float2 gHeatHazeRippleLength : gHeatHazeRippleLength<string UIName = "HeatPhaseFactor"; float UIMin = -1000.000000; float UIMax = 2000.000000; float UIStep = 0.010000;> = float2(1.000000, 0.000000);
+float2 gHeatHazeRippleRate : gHeatHazeRippleRate<string UIName = "HeatHazeFactor"; float UIMin = -1000.000000; float UIMax = 2000.000000; float UIStep = 0.010000;> = float2(5.0, 0.0);
+float2 gHeatHazeRippleLength : gHeatHazeRippleLength<string UIName = "HeatPhaseFactor"; float UIMin = -1000.000000; float UIMax = 2000.000000; float UIStep = 0.010000;> = float2(1.0, 0.0);
 
 //Vertex shaders
 VertexShader VS_TransformLitScreenSpaceVS

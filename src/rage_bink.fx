@@ -4,7 +4,6 @@
 #define PAD_LIGHT_CONSTANTS
 #include "common.fxh"
 
-//Locals
 texture YPlane;
 sampler YPlaneSampler = 
 sampler_state
@@ -50,11 +49,10 @@ sampler_state
     AddressV = CLAMP;
     AddressW = CLAMP;
 };
-float4x4 YUVtoRGB : YUVtoRGB = 
-    float4x4(1.164124, 1.595795, 0.000000, -0.870655,
-             1.164124, -0.813477, -0.391449, 0.529705,
-             1.164124, 0.000000, 2.017822, -1.081669,
-             1.000000, 0.000000, 0.000000, 1.000000);
+float4x4 YUVtoRGB : YUVtoRGB = float4x4(1.16412354, 1.59579468, 0.0, -0.87065506,
+                                        1.16412354, -0.813476562, -0.391448975, 0.529705048,
+                                        1.16412354, 0.0, 2.01782227, -1.08166885,
+                                        1.0, 0.0, 0.0, 1.0);
 
 //Vertex shaders
 VertexShader VS_BinkAlpha

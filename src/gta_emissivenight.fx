@@ -1,32 +1,11 @@
+#define ANIMATED
+#define FACET_MASK
+#define DIFFUSE_TEXTURE
+#define DEPTH_SHIFT_SCALE
+#define DEPTH_SHIFT
+#define EMISSIVE
+#define LUMINANCE_CONSTANTS
 #include "common.fxh"
-
-//Locals
-float3 globalAnimUV0 : globalAnimUV0 = float3(1.000000, 0.000000, 0.000000);
-float3 globalAnimUV1 : globalAnimUV1 = float3(0.000000, 1.000000, 0.000000);
-texture DiffuseTex;
-sampler TextureSampler<string UIName = "Diffuse Texture";> = 
-sampler_state
-{
-    Texture = <DiffuseTex>;
-    AddressU = WRAP;
-    AddressV = WRAP;
-    AddressW = WRAP;
-    MipFilter = LINEAR;
-    MinFilter = ANISOTROPIC;
-    MagFilter = LINEAR;
-};
-float shadowmap_res : ShadowMapResolution = 1280.000000;
-float2 facetMask[4] : facetMask = 
-{
-    float2(-1.000000, 0.000000), 
-    float2(1.000000, 0.000000), 
-    float2(0.000000, -1.000000), 
-    float2(0.000000, 1.000000)
-};
-float zShiftScale : zShiftScale = 0.002000;
-float zShift : zShift = 0.000110;
-float emissiveMultiplier : EmissiveMultiplier<string UIName = "Emissive HDR Multiplier"; float UIMin = 0.000000; float UIMax = 255.000000; float UIStep = 0.100000;> = 1.000000;
-float3 LuminanceConstants : LuminanceConstants = float3(0.212500, 0.715400, 0.072100);
 
 //Vertex shaders
 VertexShader VS_Transform

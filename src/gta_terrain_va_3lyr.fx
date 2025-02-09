@@ -1,8 +1,7 @@
 #define NO_SHADOWS
+#define LUMINANCE_CONSTANTS
 #include "common.fxh"
 
-//Locals
-float3 LuminanceConstants : LuminanceConstants = float3(0.212500, 0.715400, 0.072100);
 texture DiffuseTexture_layer0;
 sampler TextureSampler_layer0<string UIName = "Diffuse Texture Layer 1";> = 
 sampler_state
@@ -39,7 +38,7 @@ sampler_state
     MinFilter = ANISOTROPIC;
     MagFilter = LINEAR;
 };
-float3 materialDiffuse : MaterialDiffuse<string UIWidget = "slider"; float UIMin = 0.000000; float UIMax = 200.000000; float UIStep = 0.010000; string UIName = "diffuse color";> = float3(1.000000, 1.000000, 1.000000);
+float3 materialDiffuse : MaterialDiffuse<string UIWidget = "slider"; float UIMin = 0.000000; float UIMax = 200.000000; float UIStep = 0.010000; string UIName = "diffuse color";> = float3(1.0, 1.0, 1.0);
 
 //Vertex shaders
 VertexShader VS_TransformPass0

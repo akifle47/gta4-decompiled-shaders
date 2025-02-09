@@ -1,7 +1,6 @@
 #define NO_SHADOWS
 #include "common.fxh"
 
-//Locals
 texture gbufferTexture1;
 sampler GBufferTextureSampler1 = 
 sampler_state
@@ -115,11 +114,12 @@ float AdaptTime : AdaptTime;
 float AdaptedLumMin : AdaptedLumMin;
 float AdaptedLumMax : AdaptedLumMax;
 float4 TexelSize : TexelSize;
-float4 DofBlurWeight : DofBlurWeight = float4(1.000000, 1.000000, 1.000000, 1.000000);
+float4 DofBlurWeight : DofBlurWeight = float4(1.0, 1.0, 1.0, 1.0);
 float4 dofProj : DOF_PROJ;
 float4 dofDist : DOF_PARAMS;
 float4 dofBlur : DOF_BLUR;
 float4 eaaParams2 : EAA_PARAMS2;
+
 float gDirectionalMotionBlurLength : PPPDirectionalMotionBlurLength;
 texture JitterTexture;
 sampler JitterSampler = 

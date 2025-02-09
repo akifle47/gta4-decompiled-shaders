@@ -1,7 +1,6 @@
 #define NO_SHADOWS
 #include "common.fxh"
 
-//Locals
 float specularFactor : specularFactor = 0.000000;
 float specularColorFactor : specularColorFactor = 0.000000;
 float bumpiness : Bumpiness<string UIWidget = "slider"; float UIMin = 0.000000; float UIMax = 200.000000; float UIStep = 0.010000; string UIName = "Bumpiness";> = 1.000000;
@@ -19,7 +18,7 @@ sampler_state
 };
 int drawBucket : __rage_drawbucket<int Bucket = 1;> = 1;
 float3 LuminanceConstants : LuminanceConstants = float3(0.212500, 0.715400, 0.072100);
-float4 diffuseCol : DiffuseColor<string UIName = "Radar Diffuse Color";> = float4(1.000000, 1.000000, 1.000000, 1.000000);
+float4 diffuseCol : DiffuseColor<string UIName = "Radar Diffuse Color";> = float4(1.0, 1.0, 1.0, 1.0);
 texture BumpTex;
 sampler BumpSampler<string UIName = "Bump Texture"; string UIHint = "normalmap";> = 
 sampler_state

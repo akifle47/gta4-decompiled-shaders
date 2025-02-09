@@ -1,17 +1,9 @@
 #define NO_SKINNING
+#define FACET_MASK
 #define CLIP_PLANES
 #define PTX_DEPTH_MAP
 #include "common.fxh"
 
-//Locals
-float shadowmap_res : ShadowMapResolution = 1280.000000;
-float2 facetMask[4] : facetMask = 
-{
-    float2(-1.000000, 0.000000), 
-    float2(1.000000, 0.000000), 
-    float2(0.000000, -1.000000), 
-    float2(0.000000, 1.000000)
-};
 float gSoftness : gSoftness<string UIName = "Softness Fade : Controls how much soft particles fade out as objects become close to them ;"; float UIMin = 0.000000; float UIMax = 1000.000000; float UIStep = 0.010000;> = 2.000000;
 float HybridAdd : HybridAdd = 1.000000;
 texture DiffuseTex2;

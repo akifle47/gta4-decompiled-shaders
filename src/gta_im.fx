@@ -1,6 +1,5 @@
-#include "common.fxh"
+#include "common_globals.fxh"
 
-//Locals
 texture TextureNoWrap;
 sampler TextureNoWrapSampler = 
 sampler_state
@@ -14,7 +13,7 @@ sampler_state
     MagFilter = LINEAR;
 };
 texture DiffuseTex;
-sampler TextureSampler<string UIName = "Diffuse Texture";> = 
+sampler TextureSampler : register(s0) <string UIName = "Diffuse Texture";> = 
 sampler_state
 {
     Texture = <DiffuseTex>;
@@ -25,13 +24,13 @@ sampler_state
     MinFilter = ANISOTROPIC;
     MagFilter = LINEAR;
 };
-float shadowmap_res : ShadowMapResolution = 1280.000000;
-float2 facetMask[4] : facetMask = 
+float shadowmap_res : ShadowMapResolution = 1280.0;
+float2 facetMask[4] : facetMask : register(c208) = 
 {
-    float2(-1.000000, 0.000000), 
-    float2(1.000000, 0.000000), 
-    float2(0.000000, -1.000000), 
-    float2(0.000000, 1.000000)
+    float2(-1.0, 0.0), 
+    float2(1.0, 0.0), 
+    float2(0.0, -1.0), 
+    float2(0.0, 1.0)
 };
 float3 LuminanceConstants : LuminanceConstants = float3(0.212500, 0.715400, 0.072100);
 texture TransparentDstMap;

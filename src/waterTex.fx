@@ -1,7 +1,6 @@
 #define NO_SHADOWS
 #include "common.fxh"
 
-//Locals
 float waterSimParam[8] : waterSimParam;
 float waterTexResValue : waterTexResValue = 1.000000;
 texture waternormalmaptexture;

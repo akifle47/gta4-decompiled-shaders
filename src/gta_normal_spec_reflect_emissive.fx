@@ -1,71 +1,16 @@
+#define ANIMATED
+#define DRAWBUCKET_ALPHA
+#define DIFFUSE_TEXTURE
+#define FACET_MASK
+#define DEPTH_SHIFT_SCALE
+#define DEPTH_SHIFT
+#define EMISSIVE
+#define SPECULAR
+#define SPECULAR_MAP
+#define ENVIRONMENT_MAP
+#define NORMAL_MAP
+#define LUMINANCE_CONSTANTS
 #include "common.fxh"
-
-//Locals
-float3 globalAnimUV0 : globalAnimUV0 = float3(1.000000, 0.000000, 0.000000);
-float3 globalAnimUV1 : globalAnimUV1 = float3(0.000000, 1.000000, 0.000000);
-int drawBucket : __rage_drawbucket<int Bucket = 1;> = 1;
-texture DiffuseTex;
-sampler TextureSampler<string UIName = "Diffuse Texture";> = 
-sampler_state
-{
-    Texture = <DiffuseTex>;
-    AddressU = WRAP;
-    AddressV = WRAP;
-    AddressW = WRAP;
-    MipFilter = LINEAR;
-    MinFilter = ANISOTROPIC;
-    MagFilter = LINEAR;
-};
-float shadowmap_res : ShadowMapResolution = 1280.000000;
-float2 facetMask[4] : facetMask = 
-{
-    float2(-1.000000, 0.000000), 
-    float2(1.000000, 0.000000), 
-    float2(0.000000, -1.000000), 
-    float2(0.000000, 1.000000)
-};
-float zShiftScale : zShiftScale = 0.002000;
-float zShift : zShift = 0.000110;
-float emissiveMultiplier : EmissiveMultiplier<string UIName = "Emissive HDR Multiplier"; float UIMin = 0.000000; float UIMax = 255.000000; float UIStep = 0.100000;> = 1.000000;
-float specularFactor : Specular<string UIName = "Specular Falloff"; float UIMin = 0.000000; float UIMax = 2000.000000; float UIStep = 0.100000;> = 100.000000;
-float specularColorFactor : SpecularColor<string UIName = "Specular Intensity"; float UIMin = 0.000000; float UIMax = 1.000000; float UIStep = 0.010000;> = 1.000000;
-float3 specMapIntMask : SpecularMapIntensityMask<string UIWidget = "slider"; float UIMin = 0.000000; float UIMax = 1.000000; float UIStep = 0.010000; string UIName = "specular map intensity mask color";> = float3(1.000000, 0.000000, 0.000000);
-float bumpiness : Bumpiness<string UIWidget = "slider"; float UIMin = 0.000000; float UIMax = 200.000000; float UIStep = 0.010000; string UIName = "Bumpiness";> = 1.000000;
-float reflectivePower : Reflectivity<string UIName = "Reflectivity"; float UIMin = -10.000000; float UIMax = 100.000000; float UIStep = 0.100000;> = 0.450000;
-float3 LuminanceConstants : LuminanceConstants = float3(0.212500, 0.715400, 0.072100);
-texture BumpTex;
-sampler BumpSampler<string UIName = "Bump Texture"; string UIHint = "normalmap";> = 
-sampler_state
-{
-    Texture = <BumpTex>;
-    AddressU = WRAP;
-    AddressV = WRAP;
-    AddressW = WRAP;
-    MinFilter = ANISOTROPIC;
-    MagFilter = LINEAR;
-    MipFilter = LINEAR;
-};
-texture SpecularTex;
-sampler SpecSampler<string UIName = "Specular Texture"; string UIHint = "specularmap";> = 
-sampler_state
-{
-    Texture = <SpecularTex>;
-    AddressU = WRAP;
-    AddressV = WRAP;
-    AddressW = WRAP;
-    MipFilter = LINEAR;
-    MinFilter = ANISOTROPIC;
-    MagFilter = LINEAR;
-};
-texture EnvironmentTex;
-sampler EnvironmentSampler<string UIName = "Environment Texture"; string ResourceType = "Cube";> = 
-sampler_state
-{
-    Texture = <EnvironmentTex>;
-    MinFilter = ANISOTROPIC;
-    MagFilter = LINEAR;
-    MipFilter = LINEAR;
-};
 
 //Vertex shaders
 VertexShader VS_Transform

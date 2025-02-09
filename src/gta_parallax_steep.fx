@@ -1,43 +1,10 @@
+#define DIFFUSE_TEXTURE
+#define FACET_MASK
+#define PARALLAX
+#define PARALLAX_STEEP
+#define SPECULAR
+#define LUMINANCE_CONSTANTS
 #include "common.fxh"
-
-//Locals
-texture DiffuseTex;
-sampler TextureSampler<string UIName = "Diffuse Texture";> = 
-sampler_state
-{
-    Texture = <DiffuseTex>;
-    AddressU = WRAP;
-    AddressV = WRAP;
-    AddressW = WRAP;
-    MipFilter = LINEAR;
-    MinFilter = ANISOTROPIC;
-    MagFilter = LINEAR;
-};
-float shadowmap_res : ShadowMapResolution = 1280.000000;
-float2 facetMask[4] : facetMask = 
-{
-    float2(-1.000000, 0.000000), 
-    float2(1.000000, 0.000000), 
-    float2(0.000000, -1.000000), 
-    float2(0.000000, 1.000000)
-};
-float parallaxScaleBias : ParallaxScaleBias<string UIName = "Parallax ScaleBias"; float UIMin = 0.010000; float UIMax = 1.000000; float UIStep = 0.010000;> = 0.005000;
-float specularFactor : Specular<string UIName = "Specular Falloff"; float UIMin = 0.000000; float UIMax = 2000.000000; float UIStep = 0.100000;> = 100.000000;
-float specularColorFactor : SpecularColor<string UIName = "Specular Intensity"; float UIMin = 0.000000; float UIMax = 1.000000; float UIStep = 0.010000;> = 1.000000;
-float bumpiness : Bumpiness<string UIWidget = "slider"; float UIMin = 0.000000; float UIMax = 200.000000; float UIStep = 0.010000; string UIName = "Bumpiness";> = 1.000000;
-float3 LuminanceConstants : LuminanceConstants = float3(0.212500, 0.715400, 0.072100);
-texture BumpTex;
-sampler BumpSampler<string UIName = "Bump [RGB] + Height [A] Texture"; string UIHint = "normalmap+heightmap";> = 
-sampler_state
-{
-    Texture = <BumpTex>;
-    AddressU = WRAP;
-    AddressV = WRAP;
-    AddressW = WRAP;
-    MipFilter = LINEAR;
-    MinFilter = LINEAR;
-    MagFilter = LINEAR;
-};
 
 //Vertex shaders
 VertexShader VS_Transform

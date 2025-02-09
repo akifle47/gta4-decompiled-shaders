@@ -5,12 +5,11 @@
 #define PAD_FORCED_COLOR
 #include "common.fxh"
 
-//Locals
 texture AttenuationMap;
 sampler AttenuationSampler : AttenuationMap <string UIName = "Attenuation Map";>;
 float SunElevation : SunElevation<string UIName = "Sun Elevation"; string UIWidget = "Numeric"; float UIMin = -10.000000; float UIMax = 10.000000; float UIStep = 0.500000;> = -1.000000;
 float3 SunCentre : SunCentre;
-float4 TexelSize : TexelSize = float4(0.000000, 0.000000, 0.000000, 0.000000);
+float4 TexelSize : TexelSize = float4(0.0, 0.0, 0.0, 0.0);
 texture DepthMap;
 sampler DepthMapSampler = 
 sampler_state
@@ -133,41 +132,41 @@ float3 SkyColor : SkyColor;
 float3 AzimuthColor : AzimuthColor;
 float3 SunColor : SunColor;
 float UnderLightStrength : UnderLightStrength;
-float3 gtaSkyDomeFade : gtaSkyDomeFade = float3(0.000000, 0.000000, 0.000000);
-float3 gtaWaterColor : gtaWaterColor = float3(0.000000, 0.000000, 0.000000);
+float3 gtaSkyDomeFade : gtaSkyDomeFade = float3(0.0, 0.0, 0.0);
+float3 gtaWaterColor : gtaWaterColor = float3(0.0, 0.0, 0.0);
 float MoonGlow : MoonGlow<string UIName = "Moon Glow"; string UIWidget = "Numeric"; float UIMin = 0.000000; float UIMax = 2.000000; float UIStep = 0.010000;> = 0.200000;
-float2 SunAxias : SunAxias<string UIName = "Sun Axias"; string UIWidget = "Numeric"; float UIMin = -1.000000; float UIMax = 1.000000; float UIStep = 0.010000;> = float2(1.000000, 0.000000);
-float3 AzimuthColorEast : AzimuthColorEast<string UIName = "Azimuth Color East"; string UIWidget = "Color"; float UIMin = 0.000000; float UIMax = 1.000000;> = float3(1.000000, 0.000000, 1.000000);
+float2 SunAxias : SunAxias<string UIName = "Sun Axias"; string UIWidget = "Numeric"; float UIMin = -1.000000; float UIMax = 1.000000; float UIStep = 0.010000;> = float2(1.0, 0.0);
+float3 AzimuthColorEast : AzimuthColorEast<string UIName = "Azimuth Color East"; string UIWidget = "Color"; float UIMin = 0.000000; float UIMax = 1.000000;> = float3(1.0, 0.0, 1.0);
 float AzimuthHeight : AzimuthHeight<string UIName = "Azimuth Height"; string UIWidget = "Numeric"; float UIMin = 0.000000; float UIMax = 20.000000;> = 8.000000;
-float4 CloudColor : CloudColor<string UIName = "Cloud Color"; string UIWidget = "Color"; float UIMin = 0.000000; float UIMax = 1.000000;> = float4(0.930000, 1.000000, 1.000000, 1.000000);
-float4 SunsetColor : SunsetColor<string UIName = "Sunset Color"; string UIWidget = "Color"; float UIMin = 0.000000; float UIMax = 1.000000;> = float4(1.000000, 0.510000, 0.380000, 1.000000);
+float4 CloudColor : CloudColor<string UIName = "Cloud Color"; string UIWidget = "Color"; float UIMin = 0.000000; float UIMax = 1.000000;> = float4(0.930000, 1.0, 1.0, 1.0);
+float4 SunsetColor : SunsetColor<string UIName = "Sunset Color"; string UIWidget = "Color"; float UIMin = 0.000000; float UIMax = 1.000000;> = float4(1.0, 0.510000, 0.380000, 1.0);
 float CloudThreshold : CloudThreshold<string UIName = "Cloud Threshold"; string UIWidget = "Numeric"; float UIMin = -5.000000; float UIMax = 5.000000; float UIStep = 0.050000;> = 1.800000;
 float CloudBias : CloudBias<string UIName = "Cloud Bias"; string UIWidget = "Numeric"; float UIMin = 0.000000; float UIMax = 1.000000; float UIStep = 0.050000;> = 0.800000;
 float CloudFadeOut : CloudFadeOut<string UIName = "Cloud Fade Out"; string UIWidget = "Numeric"; float UIMin = 0.000000; float UIMax = 1.000000; float UIStep = 0.050000;> = 1.000000;
 float TopCloudHeight : TopCloudHeight<string UIName = "Top Cloudlayer Height"; string UIWidget = "Numeric"; float UIMin = 0.000000; float UIMax = 10.000000; float UIStep = 0.050000;> = 2.000000;
 float TopCloudDetail : TopCloudDetail<string UIName = "Top Cloudlayer Detail"; string UIWidget = "Numeric"; float UIMin = 0.000000; float UIMax = 10.000000; float UIStep = 0.050000;> = 3.000000;
 float TopCloudThreshold : TopCloudThreshold<string UIName = "Top Cloudlayer Threshold"; string UIWidget = "Numeric"; float UIMin = -5.000000; float UIMax = 5.000000; float UIStep = 0.020000;> = 0.900000;
-float4 TopCloudBiasDetailThresholdHeight : TopCloudBiasDetailThresholdHeight<string UIName = "Top CloudLayer Bias Height"; string UIWidget = "Numeric"; float UIMin = 0.000000; float UIMax = 10.000000; float UIStep = 0.020000;> = float4(0.400000, 3.000000, 0.900000, 2.000000);
-float3 TopCloudColor : TopCloudColor<string UIName = "Top Cloud Color"; string UIWidget = "Color"; float UIMin = 0.000000; float UIMax = 1.000000;> = float3(0.930000, 1.000000, 1.000000);
+float4 TopCloudBiasDetailThresholdHeight : TopCloudBiasDetailThresholdHeight<string UIName = "Top CloudLayer Bias Height"; string UIWidget = "Numeric"; float UIMin = 0.000000; float UIMax = 10.000000; float UIStep = 0.020000;> = float4(0.400000, 3.0, 0.900000, 2.0);
+float3 TopCloudColor : TopCloudColor<string UIName = "Top Cloud Color"; string UIWidget = "Color"; float UIMin = 0.000000; float UIMax = 1.000000;> = float3(0.930000, 1.0, 1.0);
 float TopCloudLight : TopCloudLight<string UIName = "Top Cloud LIght"; string UIWidget = "Numeric"; float UIMin = 0.000000; float UIMax = 10.000000;> = 0.000000;
 float CloudShadowStrength : CloudShadowStrength<string UIName = "Cloud Shadow Strength"; string UIWidget = "Numeric"; float UIMin = 0.000000; float UIMax = 1.000000; float UIStep = 0.025000;> = 0.400000;
 float CloudShadowOffset : CloudShadowOffset<string UIName = "Cloud Shadow Offset"; string UIWidget = "Numeric"; float UIMin = 0.000000; float UIMax = 1.000000; float UIStep = 0.010000;> = 0.120000;
 float CloudInscatteringRange : CloudInscatteringRange<string UIName = "Cloud Inscattering Range"; string UIWidget = "Numeric"; float UIMin = 0.100000; float UIMax = 1.000000; float UIStep = 0.100000;> = 1.000000;
 float AzimuthStrength : AzimuthStrength<string UIName = "Azimuth Strength"; string UIWidget = "Numeric"; float UIMin = 0.000000; float UIMax = 1.000000; float UIStep = 0.100000;> = 0.500000;
-float4 CloudThicknessEdgeSmoothDetailScaleStrength : CloudThicknessEdgeSmoothDetailScaleStrength<string UIName = "Cloud Thickness &  EdgeSmooth DetailScale & Strength"; string UIWidget = "Numeric"; float UIMin = 0.000000; float UIMax = 64.000000; float UIStep = 0.100000;> = float4(0.350000, 1.000000, 16.000000, 0.150000);
+float4 CloudThicknessEdgeSmoothDetailScaleStrength : CloudThicknessEdgeSmoothDetailScaleStrength<string UIName = "Cloud Thickness &  EdgeSmooth DetailScale & Strength"; string UIWidget = "Numeric"; float UIMin = 0.000000; float UIMax = 64.000000; float UIStep = 0.100000;> = float4(0.350000, 1.0, 16.0, 0.150000);
 float4 StarFieldBrightness : StarFieldBrightness;
 float StarFieldUVRepeat : StarFieldUVRepeat<string UIName = "StarFieldUVRepeat"; string UIWidget = "Numeric"; float UIMin = 0.000000; float UIMax = 64.000000; float UIStep = 0.010000;> = 16.000000;
-float2 GalaxyOffset : GalaxyOffset<string UIName = "GalaxyOffset"; string UIWidget = "Numeric"; float UIMin = -16.000000; float UIMax = 16.000000; float UIStep = 0.010000;> = float2(0.000000, 0.000000);
+float2 GalaxyOffset : GalaxyOffset<string UIName = "GalaxyOffset"; string UIWidget = "Numeric"; float UIMin = -16.000000; float UIMax = 16.000000; float UIStep = 0.010000;> = float2(0.0, 0.0);
 float4 MoonTexPosition : MoonTexPosition<string UIName = "MoonTexPosition"; string UIWidget = "Numeric"; float UIMin = 0.000000; float UIMax = 64.000000; float UIStep = 0.010000;> = float4(0.500000, 0.500000, 0.500000, 0.500000);
-float4 MoonLight : MoonLight<string UIName = "Moon Light"; string UIWidget = "Numeric"; float UIMin = 0.000000; float UIMax = 64.000000; float UIStep = 0.010000;> = float4(0.500000, 0.500000, 0.500000, 1.000000);
+float4 MoonLight : MoonLight<string UIName = "Moon Light"; string UIWidget = "Numeric"; float UIMin = 0.000000; float UIMax = 64.000000; float UIStep = 0.010000;> = float4(0.500000, 0.500000, 0.500000, 1.0);
 float StarThreshold : StarThreshold<string UIName = "StarField Threshold"; string UIWidget = "Numeric"; float UIMin = -1.000000; float UIMax = 1.000000; float UIStep = 0.010000;> = 0.000000;
 float MoonVisiblity : MoonVisiblity<string UIName = "Moon Visiblity"; string UIWidget = "Numeric"; float UIMin = 0.000000; float UIMax = 5.000000; float UIStep = 0.010000;> = 1.000000;
 float SunSize : SunSize = 1.000000;
-float4 MoonColorConstant : MoonColorConstant = float4(1.000000, 1.000000, 1.000000, 1.000000);
+float4 MoonColorConstant : MoonColorConstant = float4(1.0, 1.0, 1.0, 1.0);
 float3 MoonPosition : MoonPosition;
 float3 MoonXVector : MoonXVector;
 float3 MoonYVector : MoonYVector;
-float2 DetailOffset : DetailOffset = float2(0.000000, 0.000000);
+float2 DetailOffset : DetailOffset = float2(0.0, 0.0);
 float TimeOfDay : TimeOfDay = 5.000000;
 float HDRExposure : HDRExposure;
 float3 HDRSunExposure : HDRSunExposure;

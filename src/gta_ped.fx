@@ -1,82 +1,12 @@
-#include "common.fxh"
-
-//Locals
-texture DiffuseTex;
-sampler TextureSampler<string UIName = "Diffuse Texture";> = 
-sampler_state
-{
-    Texture = <DiffuseTex>;
-    AddressU = WRAP;
-    AddressV = WRAP;
-    AddressW = WRAP;
-    MipFilter = LINEAR;
-    MinFilter = ANISOTROPIC;
-    MagFilter = LINEAR;
-};
-float shadowmap_res : ShadowMapResolution = 1280.000000;
-float2 facetMask[4] : facetMask = 
-{
-    float2(-1.000000, 0.000000), 
-    float2(1.000000, 0.000000), 
-    float2(0.000000, -1.000000), 
-    float2(0.000000, 1.000000)
-};
-float4 matMaterialColorScale : MaterialColorScale = float4(1.000000, 1.000000, 1.000000, 1.000000);
-float4 gBoneDamage0[14] : CustomBoneDamageArray;
-bool gBoneDamageEnabled : CustomBoneDamageEnabled;
-texture damageTex;
-sampler damageTextureSampler = 
-sampler_state
-{
-    Texture = <damageTex>;
-    AddressU = WRAP;
-    AddressV = WRAP;
-    AddressW = WRAP;
-    MipFilter = LINEAR;
-    MinFilter = ANISOTROPIC;
-    MagFilter = LINEAR;
-};
-texture damageSpecTex;
-sampler damageSpecTextureSampler = 
-sampler_state
-{
-    Texture = <damageSpecTex>;
-    AddressU = WRAP;
-    AddressV = WRAP;
-    AddressW = WRAP;
-    MipFilter = LINEAR;
-    MinFilter = ANISOTROPIC;
-    MagFilter = LINEAR;
-};
-texture BumpTex;
-sampler BumpSampler<string UIName = "Bump Texture"; string UIHint = "normalmap";> = 
-sampler_state
-{
-    Texture = <BumpTex>;
-    AddressU = WRAP;
-    AddressV = WRAP;
-    AddressW = WRAP;
-    MipFilter = LINEAR;
-    MinFilter = ANISOTROPIC;
-    MagFilter = LINEAR;
-};
-float specularFactor : Specular<string UIName = "Specular Falloff"; float UIMin = 0.000000; float UIMax = 10000.000000; float UIStep = 0.100000;> = 100.000000;
-float specularColorFactor : SpecularColor<string UIName = "Specular Intensity"; float UIMin = 0.000000; float UIMax = 10000.000000; float UIStep = 0.100000;> = 1.000000;
-float3 specMapIntMask : SpecularMapIntensityMask<string UIWidget = "slider"; float UIMin = 0.000000; float UIMax = 1.000000; float UIStep = 0.010000; string UIName = "specular map intensity mask color";> = float3(1.000000, 0.000000, 0.000000);
-texture SpecularTex;
-sampler SpecSampler<string UIName = "Specular Texture"; string UIHint = "specularmap";> = 
-sampler_state
-{
-    Texture = <SpecularTex>;
-    AddressU = WRAP;
-    AddressV = WRAP;
-    AddressW = WRAP;
-    MipFilter = LINEAR;
-    MinFilter = ANISOTROPIC;
-    MagFilter = LINEAR;
-};
-float bumpiness : Bumpiness<string UIWidget = "slider"; float UIMin = 0.000000; float UIMax = 200.000000; float UIStep = 0.010000; string UIName = "Bumpiness";> = 1.000000;
-float3 LuminanceConstants : LuminanceConstants = float3(0.212500, 0.715400, 0.072100);
+#define DIFFUSE_TEXTURE
+#define FACET_MASK
+#define PED_BONE_DAMAGE
+#define PED_MATERIAL_COLOR_SCALE
+#define NORMAL_MAP
+#define SPECULAR_MAP
+#define SPECULAR
+#define LUMINANCE_CONSTANTS
+#include "common_ped.fxh"
 
 //Vertex shaders
 VertexShader VS_ShadowDepthPed
@@ -2289,7 +2219,7 @@ technique draw
 {
     pass p0
     {
-        AlphaRef = 64;
+        AlphaRef = 0x64;
         AlphaBlendEnable = true;
         AlphaTestEnable = true;
 
@@ -2302,7 +2232,7 @@ technique unlit_draw
 {
     pass p0
     {
-        AlphaRef = 64;
+        AlphaRef = 0x64;
         AlphaBlendEnable = true;
         AlphaTestEnable = true;
 
@@ -2315,7 +2245,7 @@ technique lightweight0_draw
 {
     pass p0
     {
-        AlphaRef = 64;
+        AlphaRef = 0x64;
         AlphaBlendEnable = true;
         AlphaTestEnable = true;
 
@@ -2328,7 +2258,7 @@ technique lightweight4_draw
 {
     pass p0
     {
-        AlphaRef = 64;
+        AlphaRef = 0x64;
         AlphaBlendEnable = true;
         AlphaTestEnable = true;
 
@@ -2342,7 +2272,7 @@ technique drawskinned
     pass p0
     {
         AlphaTestEnable = true;
-        AlphaRef = 64;
+        AlphaRef = 0x64;
         AlphaBlendEnable = true;
 
         VertexShader = VS_PedTransformSkin;
@@ -2355,7 +2285,7 @@ technique unlit_drawskinned
     pass p0
     {
         AlphaTestEnable = true;
-        AlphaRef = 64;
+        AlphaRef = 0x64;
         AlphaBlendEnable = true;
 
         VertexShader = VS_PedTransformSkin;
@@ -2368,7 +2298,7 @@ technique lightweight0_drawskinned
     pass p0
     {
         AlphaTestEnable = true;
-        AlphaRef = 64;
+        AlphaRef = 0x64;
         AlphaBlendEnable = true;
 
         VertexShader = VS_PedTransformSkin;
@@ -2381,7 +2311,7 @@ technique lightweight4_drawskinned
     pass p0
     {
         AlphaTestEnable = true;
-        AlphaRef = 64;
+        AlphaRef = 0x64;
         AlphaBlendEnable = true;
 
         VertexShader = VS_PedTransformSkin;
