@@ -1,5 +1,6 @@
-#include "common.fxh"
+#include "common_globals.fxh"
 
+float shadowmap_res : ShadowMapResolution = 1280.0;
 float4 dShadowParam0123 : dShadowParam0123;
 float4 dShadowParam4567 : dShadowParam4567;
 float4 dShadowParam891113 : dShadowParam891113;

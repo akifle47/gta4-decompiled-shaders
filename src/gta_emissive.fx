@@ -1,10 +1,8 @@
 #define ANIMATED
-#define FACET_MASK
 #define DIFFUSE_TEXTURE
 #define DEPTH_SHIFT_SCALE
 #define DEPTH_SHIFT
 #define EMISSIVE
-#define LUMINANCE_CONSTANTS
 #define USE_GENERATED_VS_TRANSFORM
 
 #include "common.fxh"

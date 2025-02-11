@@ -1,11 +1,11 @@
 #define DIFFUSE_TEXTURE
 #define DRAWBUCKET_ALPHA
+#define NO_SHADOW_CASTING_VEHICLE
 #define SPECULAR_MAP
 #define NORMAL_MAP
 #define SPECULAR
 #define DISK_BRAKE_GLOW
 #define REFLECTIVE_POWER
-#define LUMINANCE_CONSTANTS
 #define USE_GENERATED_VS_BLIT
 
 #include "common_vehicle.fxh"

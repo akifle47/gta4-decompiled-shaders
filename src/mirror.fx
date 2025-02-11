@@ -1,5 +1,4 @@
-#define NO_SHADOWS
-#define LUMINANCE_CONSTANTS
+#define NO_SHADOW_CASTING
 #include "common.fxh"
 
 float4 mirrorParams : mirrorParams;

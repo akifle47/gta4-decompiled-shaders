@@ -59,12 +59,9 @@
     float BoundRadius : BoundRadius;
 #endif
 
-#ifndef NO_SHADOWS
-    //unused
+#ifndef NO_SHADOW_CASTING
+    //both unused
     float shadowmap_res : ShadowMapResolution = 1280.0;
-#endif
-
-#ifdef FACET_MASK
     float2 facetMask[4] : facetMask : register(c208) = 
     {
         float2(-1.0, 0.0), 
@@ -124,7 +121,7 @@
     float reflectivePower : Reflectivity<string UIName = "Reflectivity"; float UIMin = -10.0; float UIMax = 100.0; float UIStep = 0.100000;> = 0.450000;
 #endif
 
-#ifdef LUMINANCE_CONSTANTS
+#ifndef NO_LUMINANCE_CONSTANTS
     float3 LuminanceConstants : LuminanceConstants = float3(0.212500, 0.715400, 0.072100);
 #endif
 

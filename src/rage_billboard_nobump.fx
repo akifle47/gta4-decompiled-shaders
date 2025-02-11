@@ -1,6 +1,4 @@
 #define DIFFUSE_TEXTURE
-#define FACET_MASK
-#define LUMINANCE_CONSTANTS
 #define USE_GENERATED_VS_BLIT
 
 #include "common.fxh"

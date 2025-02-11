@@ -1,7 +1,7 @@
+#define NO_LUMINANCE_CONSTANTS
 #define NO_LIGHTING
-#define NO_SHADOWS
+#define NO_SHADOW_CASTING
 #define PAD_LIGHT_CONSTANTS
-#define PAD_FORCED_COLOR
 #define USE_GENERATED_VS_BLIT
 
 #include "common.fxh"

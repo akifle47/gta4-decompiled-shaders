@@ -1,7 +1,5 @@
 #define NO_SKINNING
 #define DIFFUSE_TEXTURE
-#define FACET_MASK
-#define LUMINANCE_CONSTANTS
 #include "common.fxh"
 
 float3 imposterDir[8] : imposterDir = 

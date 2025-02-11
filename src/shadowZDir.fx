@@ -1,4 +1,4 @@
-#define FACET_MASK
+#define NO_LUMINANCE_CONSTANTS
 #include "common.fxh"
 
 //Vertex shaders

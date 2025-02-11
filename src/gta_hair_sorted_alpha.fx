@@ -1,12 +1,10 @@
 #define DRAWBUCKET_DECAL
-#define FACET_MASK
 #define DIFFUSE_TEXTURE
 #define PED_MATERIAL_COLOR_SCALE
 #define PED_BONE_DAMAGE
 #define SPECULAR
 #define SPECULAR_MAP
 #define NORMAL_MAP
-#define LUMINANCE_CONSTANTS
 #include "common_ped.fxh"
 
 //Vertex shaders

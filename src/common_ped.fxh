@@ -37,12 +37,9 @@
     };
 #endif
 
-#ifndef NO_SHADOWS
+#ifndef NO_SHADOW_CASTING
     //unused
-    float shadowmap_res : ShadowMapResolution = 1280.000000;
-#endif
-
-#ifdef FACET_MASK
+    float shadowmap_res : ShadowMapResolution = 1280.0;
     float2 facetMask[4] : facetMask : register(c208) = 
     {
         float2(-1.0, 0.0), 
@@ -148,6 +145,4 @@
     float bumpiness : Bumpiness<string UIWidget = "slider"; float UIMin = 0.0; float UIMax = 200.0; float UIStep = 0.010000; string UIName = "Bumpiness";> = 1.0;
 #endif
 
-#ifdef LUMINANCE_CONSTANTS
-    float3 LuminanceConstants : LuminanceConstants = float3(0.212500006, 0.715399981, 0.0720999986);
-#endif
+float3 LuminanceConstants : LuminanceConstants = float3(0.212500006, 0.715399981, 0.0720999986);

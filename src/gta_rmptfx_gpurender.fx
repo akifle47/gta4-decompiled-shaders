@@ -1,6 +1,6 @@
+#define NO_LUMINANCE_CONSTANTS
 #define NO_SKINNING
-#define FACET_MASK
-#define CLIP_PLANES
+#define PTX_CLIP_PLANES
 #define PTX_DEPTH_MAP
 #include "common.fxh"
 

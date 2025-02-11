@@ -61,12 +61,12 @@
     float BoundRadius : BoundRadius;
 #endif
 
-#ifndef NO_SHADOWS
+#ifndef NO_SHADOW_CASTING
     //unused
     float shadowmap_res : ShadowMapResolution = 1280.0;
 #endif
 
-#ifdef FACET_MASK
+#ifndef NO_SHADOW_CASTING_VEHICLE
     float2 facetMask[4] : facetMask : register(c208) = 
     {
         float2(-1.0, 0.0), 
@@ -148,9 +148,7 @@ float reflectivePowerED : Reflectivity<string UIName = "Reflectivity"; float UIM
     float diffuse2SpecMod : Diffuse2ModSpec<string UIName = "Texture2 Specular Modifier"; string UIHelp = "Amount of specular power added by alpha of secondary texture"; float UIMin = 0.0; float UIMax = 1000.0; float UIStep = 0.100000;> = 0.800000;
 #endif
 
-#ifdef LUMINANCE_CONSTANTS
-    float3 LuminanceConstants : LuminanceConstants = float3(0.212500006, 0.715399981, 0.0720999986);
-#endif
+float3 LuminanceConstants : LuminanceConstants = float3(0.212500006, 0.715399981, 0.0720999986);
 
 #ifdef DIFFUSE_TEXTURE2
     texture DiffuseTex2;

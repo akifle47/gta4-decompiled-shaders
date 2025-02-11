@@ -1,7 +1,5 @@
 #define NO_SKINNING
-#define FACET_MASK
 #define DIFFUSE_TEXTURE
-#define LUMINANCE_CONSTANTS
 #include "common.fxh"
 
 float4x4 gWorldInstanceMatrix : gWorldInstanceMatrix;

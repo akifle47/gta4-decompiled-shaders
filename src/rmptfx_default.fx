@@ -1,9 +1,10 @@
+#define NO_LUMINANCE_CONSTANTS
 #define NO_SKINNING
 #define NO_LIGHTING
-#define NO_SHADOWS
+#define NO_SHADOW_CASTING
 #define PAD_LIGHT_CONSTANTS
-#define PAD_FORCED_COLOR
 #define PTX_DEPTH_MAP
+
 #include "common.fxh"
 
 float gBiasToCamera : BiasToCamera<string UIName = "Move particle closer to camera"; float UIMin = 0.000000; float UIMax = 1000.000000; float UIStep = 0.010000;> = 0.000000;

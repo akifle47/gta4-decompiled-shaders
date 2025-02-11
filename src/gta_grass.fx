@@ -1,6 +1,4 @@
-#define FACET_MASK
 #define DIFFUSE_TEXTURE
-#define LUMINANCE_CONSTANTS
 #include "common.fxh"
 
 float4x4 matGrassTransform : matGrassTransform0;

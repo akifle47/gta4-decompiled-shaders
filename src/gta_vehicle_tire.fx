@@ -1,12 +1,10 @@
 #define DIFFUSE_TEXTURE
-#define FACET_MASK
 #define TIRE_DEFORMATION
 #define NORMAL_MAP
 #define NO_BUMPINESS
 #define SPECULAR_MAP
 #define DIRT
 #define REFLECTIVE_POWER
-#define LUMINANCE_CONSTANTS
 #define USE_GENERATED_VS_BLIT
 
 #include "common_vehicle.fxh"

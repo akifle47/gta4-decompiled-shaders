@@ -1,10 +1,10 @@
 #define DRAWBUCKET_ALPHA
 #define DIFFUSE_TEXTURE
 #define VEHICLE_DAMAGE
+#define NO_SHADOW_CASTING_VEHICLE
 #define NORMAL_MAP
 #define SPECULAR_MAP
 #define ENVIRONMENT_MAP
-#define LUMINANCE_CONSTANTS
 #define USE_GENERATED_VS_BLIT
 
 #include "common_vehicle.fxh"

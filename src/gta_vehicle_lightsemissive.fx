@@ -1,13 +1,11 @@
 #define DIFFUSE_TEXTURE
 #define DRAWBUCKET_ALPHA
-#define FACET_MASK
 #define EMISSIVE
 #define DIMMER_SET
 #define VEHICLE_DAMAGE
 #define SPECULAR_MAP
 #define ENVIRONMENT_MAP
 #define DIRT
-#define LUMINANCE_CONSTANTS
 #define USE_GENERATED_VS_BLIT
 
 #include "common_vehicle.fxh"

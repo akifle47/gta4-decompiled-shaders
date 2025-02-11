@@ -1,11 +1,9 @@
 #define DRAWBUCKET_DECAL
 #define DIFFUSE_TEXTURE
 #define VEHICLE_DAMAGE
-#define FACET_MASK
 #define DEPTH_SHIFT_SCALE
 #define SPECULAR
 #define PARALLAX
-#define LUMINANCE_CONSTANTS
 #include "common.fxh"
 
 //Vertex shaders

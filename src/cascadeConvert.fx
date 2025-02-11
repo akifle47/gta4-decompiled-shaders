@@ -1,8 +1,9 @@
 #define USE_GENERATED_VS_BLIT
 
-#include "common.fxh"
+#include "common_globals.fxh"
 #include "megashader.fxh"
 
+float shadowmap_res : ShadowMapResolution = 1280.0;
 texture ConvertTexture;
 sampler ConvertSampler = 
 sampler_state

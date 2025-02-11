@@ -1,7 +1,6 @@
 #define ANIMATED
 #define DRAWBUCKET_ALPHA
 #define DIFFUSE_TEXTURE
-#define FACET_MASK
 #define DEPTH_SHIFT_SCALE
 #define DEPTH_SHIFT
 #define EMISSIVE
@@ -9,7 +8,6 @@
 #define SPECULAR_MAP
 #define ENVIRONMENT_MAP
 #define NORMAL_MAP
-#define LUMINANCE_CONSTANTS
 #define USE_GENERATED_VS_TRANSFORM
 
 #include "common.fxh"

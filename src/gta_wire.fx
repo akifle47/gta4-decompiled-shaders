@@ -1,7 +1,7 @@
+#define NO_LUMINANCE_CONSTANTS
 #define ANIMATED
 #define DRAWBUCKET_ALPHA
 #define DIFFUSE_TEXTURE
-#define FACET_MASK
 #include "common.fxh"
 
 float Fade_Thickness : FadeThickness<string UIName = "Thickness of object in metres"; string UIHelp = "Amount of thickness of object"; float UIMin = 0.000000; float UIMax = 10.000000; float UIStep = 0.010000;> = 0.070000;

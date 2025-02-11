@@ -1,4 +1,5 @@
-#define NO_SHADOWS
+#define NO_LUMINANCE_CONSTANTS
+#define NO_SHADOW_CASTING
 #include "common.fxh"
 
 texture BaseTexture;

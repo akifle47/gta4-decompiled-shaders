@@ -1,10 +1,8 @@
 #define DRAWBUCKET_DECAL
-#define FACET_MASK
 #define DIFFUSE_TEXTURE
 #define SPECULAR
 #define SPECULAR_COLOR_ZERO
 #define DIRT_DECAL_MASK
-#define LUMINANCE_CONSTANTS
 #define USE_GENERATED_VS_TRANSFORM
 
 #include "common.fxh"

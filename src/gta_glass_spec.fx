@@ -1,9 +1,7 @@
 #define DRAWBUCKET_ALPHA
-#define FACET_MASK
 #define DIFFUSE_TEXTURE
 #define SPECULAR
 #define SPECULAR_MAP
-#define LUMINANCE_CONSTANTS
 #define USE_GENERATED_VS_TRANSFORM
 
 #include "common.fxh"

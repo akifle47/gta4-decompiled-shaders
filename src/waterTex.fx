@@ -1,4 +1,5 @@
-#define NO_SHADOWS
+#define NO_SHADOW_CASTING
+#define NO_LUMINANCE_CONSTANTS
 #include "common.fxh"
 
 float waterSimParam[8] : waterSimParam;

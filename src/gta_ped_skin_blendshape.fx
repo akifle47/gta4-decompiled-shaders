@@ -1,12 +1,10 @@
 #define DIFFUSE_TEXTURE
-#define FACET_MASK
 #define SUBSURFACE_SCATTERING
 #define PED_BONE_DAMAGE
 #define PED_MATERIAL_COLOR_SCALE
 #define NORMAL_MAP
 #define SPECULAR_MAP
 #define SPECULAR
-#define LUMINANCE_CONSTANTS
 #include "common_ped.fxh"
 
 //Vertex shaders

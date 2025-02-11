@@ -1,5 +1,3 @@
-//macros prefixed with "PAD_" are for unused constants that are only here for completeness
-
 shared float4 gAllGlobals[64] : AllGlobals : register(c0);
 
 #ifndef NO_SKINNING
@@ -59,6 +57,7 @@ shared float4x4 gViewInverse : ViewInverse : register(c12);
 #endif
 
 #ifdef PAD_LIGHT_CONSTANTS
+    //all unused
     shared float4 gLightPosDir[4] : Position<string Object = "PointDirLight"; string Space = "World";> = 
     {
         float4(1403.0, 1441.0, 1690.0, 0.0), 
@@ -84,15 +83,12 @@ shared float4x4 gViewInverse : ViewInverse : register(c12);
     shared float4 gLightAmbient : Ambient<string UIWidget = "Ambient Light Color"; string Space = "material";> = float4(0.0, 0.0, 0.0, 1.0);
 #endif
 
-#ifdef PAD_FORCED_COLOR
+#ifdef NO_LIGHTING
     shared float gInvColorExpBias : ColorExpBias : register(c46);
     shared float4 gForcedColor : ForcedColor : register(c47) = float4(1.0, 1.0, 1.0, 1.0);
     shared float4 gAspectRatio : AspectRatio : register(c48) = float4(1.0, 1.0, 1.0, 1.0);
 #else
     shared float4 gAspectRatio : gAspectRatio : register(c47) = float4(1.0, 1.0, 1.0, 1.0);
-#endif
-
-#ifndef NO_LIGHTING
     shared float4 globalScreenSize : globalScreenSize : register(c44) = float4(1.0, 1.0, 1.0, 1.0);
     shared float4 globalFogParams : globalFogParams : register(c41) = float4(1600.0, 9000000.0, 0.00999999978, 1.0);
     shared float4 globalFogColor : globalFogColor   : register(c42) = float4(1.0, 1.0, 1.0, 1.0);
@@ -103,7 +99,7 @@ shared float4x4 gViewInverse : ViewInverse : register(c12);
     shared float4 stencil : Stencil : register(c52) = float4(0.0, 255.0, 0.0, 0.0);
 #endif
 
-#ifndef NO_SHADOWS
+#ifndef NO_SHADOW_CASTING
     shared float4 gFacetCentre : FacetCentre : register(c54);
     //not used by any shader but it is set by the renderer. values are {0.62800002, ScreenWidth, ScreenHeight, 0.0}
     shared float4 gShadowCommonParam0123 : ShadowCommonParam0123 : register(c55);
@@ -164,7 +160,7 @@ shared float4x4 gViewInverse : ViewInverse : register(c12);
     };
 #endif
 
-#ifdef CLIP_PLANES
+#ifdef PTX_CLIP_PLANES
     shared float4 NearFarPlane : NearFarPlane : register(c128);
     shared float4 gInvScreenSize : InvScreenSize : register(c129);
 #endif

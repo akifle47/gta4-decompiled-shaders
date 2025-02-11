@@ -1,12 +1,10 @@
 #define DIFFUSE_TEXTURE
 #define DIFFUSE_TEXTURE2
-#define FACET_MASK
 #define VEHICLE_DAMAGE
 #define SPECULAR_MAP
 #define SPECULAR2
 #define REFLECTIVE_POWER
 #define DIRT
-#define LUMINANCE_CONSTANTS
 #define USE_GENERATED_VS_BLIT
 
 #include "common_vehicle.fxh"
