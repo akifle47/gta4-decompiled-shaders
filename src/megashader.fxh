@@ -109,3 +109,34 @@ struct VS_Output
         return OUT;
     }
 #endif //USE_GENERATED_VS_TRANSFORM
+
+
+#ifdef USE_GENERATED_VS_BLIT
+    struct VS_BlitInput
+    {
+        float3 Position : POSITION;
+        float2 TexCoord : TEXCOORD0;
+    };
+    struct VS_BlitOutput
+    {
+        float4 Position : POSITION;
+        float4 TexCoord : TEXCOORD0;
+    };
+
+    VS_BlitOutput VS_Blit(VS_BlitInput IN)
+    {
+        VS_BlitOutput OUT;
+        OUT.Position = IN.Position.xyzx * float4(1, 1, 1, 0) + float4(0, 0, 0, 1);
+        OUT.TexCoord = IN.TexCoord.xyxx * float4(1, 1, 0, 0);
+        return OUT;
+    }
+
+    struct VS_BlitPositionOnlyInput
+    {
+        float3 Position : POSITION;
+    };
+    float4 VS_BlitPositionOnly(VS_BlitPositionOnlyInput IN) : POSITION
+    {
+        return IN.Position.xyzx * float4(1, 1, 1, 0) + float4(0, 0, 0, 1);
+    }
+#endif
