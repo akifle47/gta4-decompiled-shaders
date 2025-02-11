@@ -3,7 +3,7 @@
 shared float4 gAllGlobals[64] : AllGlobals : register(c0);
 
 #ifndef NO_SKINNING
-    shared float4x3 gBoneMtx[48] : WorldMatrixArray : register(c64);
+    shared float4x3 gBoneMtx[48];
 #endif
 
 shared float4x4 gWorld : World : register(c0);

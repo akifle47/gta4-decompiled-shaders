@@ -2,8 +2,8 @@
 #include "common_globals.fxh"
 
 #ifdef ANIMATED
-    float3 globalAnimUV0 : globalAnimUV0 = float3(1.0, 0.0, 0.0);
-    float3 globalAnimUV1 : globalAnimUV1 = float3(0.0, 1.0, 0.0);
+    float3 globalAnimUV0 : globalAnimUV0 : register(c208) = float3(1.0, 0.0, 0.0);
+    float3 globalAnimUV1 : globalAnimUV1 : register(c209)  = float3(0.0, 1.0, 0.0);
 #endif
 
 #ifdef DRAWBUCKET_ALPHA
@@ -75,11 +75,11 @@
 #endif
 
 #ifdef DEPTH_SHIFT_SCALE
-    float zShiftScale : zShiftScale = 0.002000;
+    float zShiftScale : zShiftScale : register(c209) = 0.002000;
 #endif
 
 #ifdef DEPTH_SHIFT
-    float zShift : zShift = 0.000110;
+    float zShift : zShift : register(c210) = 0.000110;
 #endif
 
 #ifdef EMISSIVE
@@ -116,10 +116,7 @@
     float3 specMapIntMask : SpecularMapIntensityMask<string UIWidget = "slider"; float UIMin = 0.0; float UIMax = 1.0; float UIStep = 0.010000; string UIName = "specular map intensity mask color";> = float3(1.0, 0.0, 0.0);
 #endif
 
-#ifdef NORMAL_MAP
-    float bumpiness : Bumpiness<string UIWidget = "slider"; float UIMin = 0.0; float UIMax = 200.0; float UIStep = 0.010000; string UIName = "Bumpiness";> = 1.0;
-#endif
-#ifdef PARALLAX
+#if defined(NORMAL_MAP) || defined(PARALLAX)
     float bumpiness : Bumpiness<string UIWidget = "slider"; float UIMin = 0.0; float UIMax = 200.0; float UIStep = 0.010000; string UIName = "Bumpiness";> = 1.0;
 #endif
 
