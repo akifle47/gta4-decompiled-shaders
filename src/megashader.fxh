@@ -34,78 +34,77 @@ struct VS_Output
 };
 
 #ifdef USE_GENERATED_VS_TRANSFORM
-    //TODO: translate the vehicle damage code in gta_projtex and gta_projtex_steep to hlsl then make them use this as well
     VS_Output VS_Transform(VS_Input IN)
     {
         VS_Output OUT;
         
         float3 worldPos = mul(float4(IN.Position, 1.0), gWorld).xyz;
 
-#ifdef SPECULAR
-        float3 viewDir = gViewInverse[3].xyz - worldPos;
-        OUT.ViewDir = viewDir;
-#endif //SPECULAR
+        #ifdef SPECULAR
+            float3 viewDir = gViewInverse[3].xyz - worldPos;
+            OUT.ViewDir = viewDir;
+        #endif //SPECULAR
         OUT.WorldPosition.xyz = worldPos;
         
         float3 worldNormal = normalize(mul(IN.Normal, (float3x3)gWorld) + 0.00001);
-#if defined(NORMAL_MAP) || defined(PARALLAX)
-        float3 worldTangent = normalize(mul(IN.Tangent.xyz, (float3x3)gWorld) + 0.00001);
-        float3 worldBitangent = cross(worldTangent, worldNormal);
-#endif //NORMAL_MAP || PARALLAX
+        #if defined(NORMAL_MAP) || defined(PARALLAX)
+            float3 worldTangent = normalize(mul(IN.Tangent.xyz, (float3x3)gWorld) + 0.00001);
+            float3 worldBitangent = cross(worldTangent, worldNormal);
+        #endif //NORMAL_MAP || PARALLAX
 
         OUT.WorldNormalAndDepthColor.xyz = worldNormal;
 
-#if defined(NORMAL_MAP) || defined(PARALLAX)
-        OUT.WorldTangent.xyz = worldTangent;
-        OUT.WorldBitangent.xyz = worldBitangent * IN.Tangent.w;
-#endif //NORMAL_MAP || PARALLAX
+        #if defined(NORMAL_MAP) || defined(PARALLAX)
+            OUT.WorldTangent.xyz = worldTangent;
+            OUT.WorldBitangent.xyz = worldBitangent * IN.Tangent.w;
+        #endif //NORMAL_MAP || PARALLAX
 
-#ifdef PARALLAX
-        OUT.TangentViewDir.x = dot(worldTangent, viewDir);
-        OUT.TangentViewDir.y = dot(worldBitangent, viewDir);
-        OUT.TangentViewDir.z = dot(worldNormal, viewDir);
-#endif //PARALLAX
+        #ifdef PARALLAX
+            OUT.TangentViewDir.x = dot(worldTangent, viewDir);
+            OUT.TangentViewDir.y = dot(worldBitangent, viewDir);
+            OUT.TangentViewDir.z = dot(worldNormal, viewDir);
+        #endif //PARALLAX
 
-#ifdef ANIMATED
-        //float3(IN.TexCoord0.xy, 1)
-        float3 uv = IN.TexCoord0.xyx * float3(1.0, 1.0, 0.0) + float3(0.0, 0.0, 1.0);
-        OUT.TexCoord.x = dot(globalAnimUV0, uv);
-        OUT.TexCoord.y = dot(globalAnimUV1, uv);
-#endif //ANIMATED
+        #ifdef ANIMATED
+            //float3(IN.TexCoord0.xy, 1)
+            float3 uv = IN.TexCoord0.xyx * float3(1.0, 1.0, 0.0) + float3(0.0, 0.0, 1.0);
+            OUT.TexCoord.x = dot(globalAnimUV0, uv);
+            OUT.TexCoord.y = dot(globalAnimUV1, uv);
+        #endif //ANIMATED
 
-#ifdef DAY_NIGHT_EFFECTS
-        float2 color = gDayNightEffects.xy * IN.Color.xy;
-        color.x = color.y + color.x;
-        color.x = color.x * globalScalars.z  - 1;
-        color.x = color.x * globalScalars2.z + 1;
-        OUT.Color.xy = color.xx;
-#else
-        OUT.Color.xy = IN.Color.xy;
-#endif //DAY_NIGHT_EFFECTS
+        #ifdef DAY_NIGHT_EFFECTS
+            float2 color = gDayNightEffects.xy * IN.Color.xy;
+            color.x = color.y + color.x;
+            color.x = color.x * globalScalars.z  - 1;
+            color.x = color.x * globalScalars2.z + 1;
+            OUT.Color.xy = color.xx;
+        #else
+            OUT.Color.xy = IN.Color.xy;
+        #endif //DAY_NIGHT_EFFECTS
 
         float4 clipPos = mul(float4(IN.Position, 1.0), gWorldViewProj);
 
-#ifdef DEPTH_SHIFT
-        OUT.Position.xy = globalScreenSize.zw * (clipPos.w / 2) + clipPos.xy; //?
-    #ifdef DEPTH_SHIFT_POSITIVE //bug?
-        OUT.Position.z = clipPos.z + zShift;
-    #else
-        OUT.Position.z = clipPos.z - zShift;
-    #endif //DEPTH_SHIFT_POSITIVE
-#else
-        OUT.Position.xyz = clipPos.xyz;
-#endif //DEPTH_SHIFT
+        #ifdef DEPTH_SHIFT
+            OUT.Position.xy = globalScreenSize.zw * (clipPos.w / 2) + clipPos.xy; //?
+            #ifdef DEPTH_SHIFT_POSITIVE //bug?
+                OUT.Position.z = clipPos.z + zShift;
+            #else
+                OUT.Position.z = clipPos.z - zShift;
+            #endif //DEPTH_SHIFT_POSITIVE
+        #else
+            OUT.Position.xyz = clipPos.xyz;
+        #endif //DEPTH_SHIFT
 
         OUT.Position.w = OUT.WorldNormalAndDepthColor.w = clipPos.w;
-#ifndef ANIMATED
-        OUT.TexCoord = IN.TexCoord0;
-#endif //ANIMATED
+        #ifndef ANIMATED
+            OUT.TexCoord = IN.TexCoord0;
+        #endif //ANIMATED
         OUT.Color.zw = IN.Color.zw;
 
         OUT.WorldPosition.w = 1.0;
-#ifdef PARALLAX
-        OUT.TangentViewDir.w = 1.0;
-#endif
+        #ifdef PARALLAX
+            OUT.TangentViewDir.w = 1.0;
+        #endif
         return OUT;
     }
 #endif //USE_GENERATED_VS_TRANSFORM
