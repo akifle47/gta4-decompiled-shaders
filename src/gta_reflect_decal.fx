@@ -2,7 +2,6 @@
 #define DIFFUSE_TEXTURE
 #define ENVIRONMENT_MAP
 #define DAY_NIGHT_EFFECTS
-#define USE_GENERATED_VS_TRANSFORM
 
 #include "common.fxh"
 #include "megashader.fxh"

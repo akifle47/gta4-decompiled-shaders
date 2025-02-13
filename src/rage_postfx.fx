@@ -1,6 +1,5 @@
 #define NO_LUMINANCE_CONSTANTS
 #define NO_SHADOW_CASTING
-#define USE_GENERATED_VS_BLIT
 
 #include "common.fxh"
 #include "megashader.fxh"

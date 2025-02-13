@@ -2,7 +2,6 @@
 #define NO_LIGHTING
 #define NO_SHADOW_CASTING
 #define PAD_LIGHT_CONSTANTS
-#define USE_GENERATED_VS_BLIT
 
 #include "common.fxh"
 #include "megashader.fxh"

@@ -8,7 +8,8 @@
 #include "common.fxh"
 
 //Vertex shaders
-VertexShader VS_Transform
+//TODO: make this a part of the megashader's VS_TransformProjTex
+VertexShader VS_TransformProjTex
 <
     string BoundRadius      = "parameter register(208)";
     string DamageSampler    = "parameter register(0)";
@@ -5037,7 +5038,7 @@ technique draw
 {
     pass p0
     {
-        VertexShader = VS_Transform;
+        VertexShader = VS_TransformProjTex;
         PixelShader = PS_TexturedEight;
     }
 }
@@ -5183,7 +5184,7 @@ technique reflection_draw
 {
     pass p0
     {
-        VertexShader = VS_Transform;
+        VertexShader = VS_TransformProjTex;
         PixelShader = PS_TexturedBasic;
     }
 }
@@ -5192,7 +5193,7 @@ technique reflection_drawskinned
 {
     pass p0
     {
-        VertexShader = VS_Transform;
+        VertexShader = VS_TransformProjTex;
         PixelShader = PS_TexturedBasic;
     }
 }
@@ -5201,7 +5202,7 @@ technique lightweight0_draw
 {
     pass p0
     {
-        VertexShader = VS_Transform;
+        VertexShader = VS_TransformProjTex;
         PixelShader = PS_TexturedZero;
     }
 }
@@ -5219,7 +5220,7 @@ technique lightweight4_draw
 {
     pass p0
     {
-        VertexShader = VS_Transform;
+        VertexShader = VS_TransformProjTex;
         PixelShader = PS_TexturedFour;
     }
 }

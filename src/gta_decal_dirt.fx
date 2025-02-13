@@ -3,7 +3,6 @@
 #define SPECULAR
 #define SPECULAR_COLOR_ZERO
 #define DIRT_DECAL_MASK
-#define USE_GENERATED_VS_TRANSFORM
 
 #include "common.fxh"
 #include "megashader.fxh"

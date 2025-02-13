@@ -1,5 +1,4 @@
 #define NO_LUMINANCE_CONSTANTS
-#define USE_GENERATED_VS_BLIT
 
 #include "common_globals.fxh"
 #include "megashader.fxh"

@@ -4,7 +4,6 @@
 #define NORMAL_MAP
 #define SPECULAR_MAP
 #define ENVIRONMENT_MAP
-#define USE_GENERATED_VS_TRANSFORM
 
 #include "common.fxh"
 #include "megashader.fxh"

@@ -1,5 +1,4 @@
 #define DAY_NIGHT_EFFECTS
-#define USE_GENERATED_VS_TRANSFORM
 
 #include "common_globals.fxh"
 #include "megashader.fxh"
@@ -201,21 +200,22 @@ asm
     // approximately 6 instruction slots used
 };
 
-struct VS_BlitInput
+struct VS_Blit_IMInput
 {
     float4 Position : POSITION;
     float4 Color    : COLOR;
     float2 TexCoord : TEXCOORD0;
 };
-struct VS_BlitOutput
+struct VS_Blit_IMOutput
 {
     float4 Position : POSITION;
     float4 Color    : COLOR;
     float2 TexCoord : TEXCOORD0;
 };
-VS_BlitOutput VS_Blit(VS_BlitInput IN)
+
+VS_Blit_IMOutput VS_Blit_IM(VS_Blit_IMInput IN)
 {
-    VS_BlitOutput OUT;
+    VS_Blit_IMOutput OUT;
     OUT.Position = IN.Position;
     OUT.Color    = IN.Color;
     OUT.TexCoord = IN.TexCoord.xy;
@@ -956,7 +956,7 @@ technique drawblit
 {
     pass p0
     {
-        VertexShader = compile vs_3_0 VS_Blit();
+        VertexShader = compile vs_3_0 VS_Blit_IM();
         PixelShader = PS_Blit;
     }
 }
@@ -1003,7 +1003,7 @@ technique Copy
         AlphaBlendEnable = false;
         AlphaTestEnable = false;
 
-        VertexShader = compile vs_3_0 VS_Blit();
+        VertexShader = compile vs_3_0 VS_Blit_IM();
         PixelShader = PS;
     }
 }
@@ -1015,7 +1015,7 @@ technique CopyDepth
         AlphaBlendEnable = false;
         AlphaTestEnable = false;
 
-        VertexShader = compile vs_3_0 VS_Blit();
+        VertexShader = compile vs_3_0 VS_Blit_IM();
         PixelShader = PS_BlitDepth;
     }
 }
@@ -1030,7 +1030,7 @@ technique CopyTransparent
         AlphaBlendEnable = true;
         AlphaTestEnable = false;
 
-        VertexShader = compile vs_3_0 VS_Blit();
+        VertexShader = compile vs_3_0 VS_Blit_IM();
         PixelShader = PS_BlitTransparent;
     }
 }
@@ -1045,7 +1045,7 @@ technique CopyTransparentEdgeBlur
         AlphaBlendEnable = true;
         AlphaTestEnable = false;
 
-        VertexShader = compile vs_3_0 VS_Blit();
+        VertexShader = compile vs_3_0 VS_Blit_IM();
         PixelShader = PS_BlitTransparent;
     }
 }
@@ -1060,7 +1060,7 @@ technique BlitTransparentEdgeBlur
         AlphaBlendEnable = false;
         AlphaTestEnable = false;
 
-        VertexShader = compile vs_3_0 VS_Blit();
+        VertexShader = compile vs_3_0 VS_Blit_IM();
         PixelShader = PS_BlitTransparent;
     }
 }

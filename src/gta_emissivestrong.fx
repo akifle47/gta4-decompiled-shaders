@@ -4,7 +4,6 @@
 #define DEPTH_SHIFT
 #define DEPTH_SHIFT_POSITIVE
 #define EMISSIVE
-#define USE_GENERATED_VS_TRANSFORM
 
 #include "common.fxh"
 #include "megashader.fxh"

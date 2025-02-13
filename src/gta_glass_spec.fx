@@ -2,7 +2,6 @@
 #define DIFFUSE_TEXTURE
 #define SPECULAR
 #define SPECULAR_MAP
-#define USE_GENERATED_VS_TRANSFORM
 
 #include "common.fxh"
 #include "megashader.fxh"

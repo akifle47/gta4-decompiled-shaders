@@ -3,7 +3,6 @@
 #define DEPTH_SHIFT_SCALE
 #define DEPTH_SHIFT
 #define EMISSIVE
-#define USE_GENERATED_VS_TRANSFORM
 
 #include "common.fxh"
 #include "megashader.fxh"

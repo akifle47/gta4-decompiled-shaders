@@ -8,7 +8,8 @@ float Fade_Thickness : FadeThickness<string UIName = "Thickness of object in met
 float3 LuminanceConstants : LuminanceConstants = float3(0.212500006, 0.715399981, 0.0720999986);
 
 //Vertex shaders
-VertexShader VS_Transform
+//TODO: make this a part of the megashader's VS_Transform
+VertexShader VS_TransformWire
 <
     string Fade_Thickness   = "parameter register(210)";
     string gDayNightEffects = "parameter register(45)";
@@ -2989,7 +2990,7 @@ technique draw
     {
         ZWriteEnable = false;
 
-        VertexShader = VS_Transform;
+        VertexShader = VS_TransformWire;
         PixelShader = PS_TexturedEight;
     }
 }
@@ -3117,7 +3118,7 @@ technique reflection_draw
 {
     pass p0
     {
-        VertexShader = VS_Transform;
+        VertexShader = VS_TransformWire;
         PixelShader = PS_TexturedBasic;
     }
 }
@@ -3126,7 +3127,7 @@ technique reflection_drawskinned
 {
     pass p0
     {
-        VertexShader = VS_Transform;
+        VertexShader = VS_TransformWire;
         PixelShader = PS_TexturedBasic;
     }
 }
@@ -3155,7 +3156,7 @@ technique lightweight0_draw
     {
         ZWriteEnable = false;
 
-        VertexShader = VS_Transform;
+        VertexShader = VS_TransformWire;
         PixelShader = PS_TexturedZero;
     }
 }
@@ -3175,7 +3176,7 @@ technique lightweight4_draw
     {
         ZWriteEnable = false;
 
-        VertexShader = VS_Transform;
+        VertexShader = VS_TransformWire;
         PixelShader = PS_TexturedFour;
     }
 }

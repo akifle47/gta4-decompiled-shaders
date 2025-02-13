@@ -4,7 +4,6 @@
 #define SPECULAR_MAP_LOD_BIAS
 #define REFLECTIVE_POWER
 #define DIRT
-#define USE_GENERATED_VS_BLIT
 
 #include "common_vehicle.fxh"
 #include "megashader.fxh"

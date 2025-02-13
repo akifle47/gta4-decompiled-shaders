@@ -43,7 +43,7 @@ sampler_state
 };
 
 //Vertex shaders
-VertexShader VS_Transform
+VertexShader VS_Transform_IM
 <
     string gViewInverse   = "parameter register(12)";
     string gWorld         = "parameter register(0)";
@@ -417,7 +417,7 @@ technique draw
 {
     pass p0
     {
-        VertexShader = VS_Transform;
+        VertexShader = VS_Transform_IM;
         PixelShader = PS_Textured_IM;
     }
 }
@@ -426,7 +426,7 @@ technique drawskinned
 {
     pass p0
     {
-        VertexShader = VS_Transform;
+        VertexShader = VS_Transform_IM;
         PixelShader = PS_Textured_IM;
     }
 }
