@@ -1784,6 +1784,7 @@ asm
     // approximately 50 instruction slots used
 };
 
+//TODO: make this a part of the megashader's VS_ShadowDepth
 VertexShader VS_ShadowDepth
 <
     string BoundRadius   = "parameter register(208)";

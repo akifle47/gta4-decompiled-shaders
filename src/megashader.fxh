@@ -107,6 +107,41 @@ VS_Output VS_Transform(VS_Input IN)
     return OUT;
 }
 
+#ifndef NO_SHADOW_CASTING 
+    struct VS_ShadowDepthInput
+    {
+        float3 Position : POSITION;
+    #ifdef ALPHA_SHADOW
+        float2 TexCoord : TEXCOORD0;
+    #endif //ALPHA_SHADOW
+    };
+    struct VS_ShadowDepthOutput
+    {
+        float4 Position              : POSITION;
+    #ifdef ALPHA_SHADOW
+        float3 DepthColorAndTexCoord : TEXCOORD0;
+    #else
+        float  DepthColor            : TEXCOORD0;
+    #endif //ALPHA_SHADOW
+    };
+    
+    VS_ShadowDepthOutput VS_ShadowDepth(VS_ShadowDepthInput IN)
+    {
+        VS_ShadowDepthOutput OUT;
+        float4 clipPos = mul(mul(float4(IN.Position, 1),  gWorld), gShadowMatrix);
+        OUT.Position.z = 1.0 - min(clipPos.z, 1.0);
+        OUT.Position.xyw = clipPos.xyw * float3(1, 1, 0) + float3(0, 0, 1);
+        #ifdef ALPHA_SHADOW
+            OUT.DepthColorAndTexCoord.x = clipPos.w;
+            OUT.DepthColorAndTexCoord.yz = IN.TexCoord;
+        #else
+            OUT.DepthColor = clipPos.w;
+        #endif //ALPHA_SHADOW
+        return OUT;
+    }
+#endif //NO_SHADOW_CASTING
+
+
 struct VS_BlitInput
 {
     float3 Position : POSITION;
