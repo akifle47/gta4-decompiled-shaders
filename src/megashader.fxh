@@ -1,5 +1,22 @@
 //base for most shaders. you should use or extend this to reduce code duplication unless you really need specialized shaders for an effect
 
+#ifndef NO_LIGHTING
+    void AlphaClip(float alpha, float2 screenCoords)
+    {
+        float y = saturate(alpha) * 3.996;
+        float x = frac(y) * 4;
+        float2 alphaOffset = float2((int)x, (int)y) / 4.0;
+
+        float2 uvOffset = frac(abs(screenCoords.xy / 8));
+        uvOffset = (screenCoords.xy >= 0) ? uvOffset : -uvOffset;
+        uvOffset /= 4;
+        
+        float4 uv = float4(alphaOffset + uvOffset, 0, 0);
+        if(tex2Dlod(StippleTexture, uv).y <= 0)
+            discard;
+    }
+#endif
+
 struct VS_Input
 {
     float3 Position  : POSITION;
@@ -124,7 +141,7 @@ VS_Output VS_Transform(VS_Input IN)
         float  DepthColor            : TEXCOORD0;
     #endif //ALPHA_SHADOW
     };
-    
+
     VS_ShadowDepthOutput VS_ShadowDepth(VS_ShadowDepthInput IN)
     {
         VS_ShadowDepthOutput OUT;
@@ -138,6 +155,36 @@ VS_Output VS_Transform(VS_Input IN)
             OUT.DepthColor = clipPos.w;
         #endif //ALPHA_SHADOW
         return OUT;
+    }
+
+    #ifdef ALPHA_SHADOW
+        float4 PS_ShadowDepth(VS_ShadowDepthOutput IN, float2 screenCoords : VPOS) : COLOR
+    #else
+        float4 PS_ShadowDepth(VS_ShadowDepthOutput IN) : COLOR
+    #endif //ALPHA_SHADOW
+    {
+        #ifdef ALPHA_SHADOW
+            float alpha = tex2D(TextureSampler, IN.DepthColorAndTexCoord.yz).a * globalScalars.x;
+            AlphaClip(alpha, screenCoords);
+            return float4(IN.DepthColorAndTexCoord.xxx, alpha);
+        #else
+            return IN.DepthColor.x * float4(1, 1, 1, 0) + float4(0, 0, 0, 1);
+        #endif //ALPHA_SHADOW
+    }
+
+    //probably something they wanted to implement in the pc port as an optimization but didn't have time 
+    //to finish it so it's always the same as PS_ShadowDepth
+    #ifdef ALPHA_SHADOW
+        float4 PS_ShadowDepthMasked(VS_ShadowDepthOutput IN, float2 screenCoords : VPOS) : COLOR
+    #else
+        float4 PS_ShadowDepthMasked(VS_ShadowDepthOutput IN) : COLOR
+    #endif //ALPHA_SHADOW
+    {
+        #ifdef ALPHA_SHADOW
+            return PS_ShadowDepth(IN, screenCoords);
+        #else
+            return PS_ShadowDepth(IN);
+        #endif //ALPHA_SHADOW
     }
 #endif //NO_SHADOW_CASTING
 
