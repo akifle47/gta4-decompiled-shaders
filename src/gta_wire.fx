@@ -368,7 +368,8 @@ asm
     // approximately 26 instruction slots used
 };
 
-VertexShader VS_TransformD
+//TODO: make these a part of the megashader's VS_TransformD
+VertexShader VS_TransformDWire
 <
     string gDayNightEffects = "parameter register(45)";
     string gWorld           = "parameter register(0)";
@@ -449,7 +450,7 @@ asm
     // approximately 27 instruction slots used
 };
 
-VertexShader VS_TransformAlphaClipD
+VertexShader VS_TransformAlphaClipDWire
 <
     string gDayNightEffects = "parameter register(45)";
     string gWorld           = "parameter register(0)";
@@ -2868,7 +2869,7 @@ technique deferred_draw
 {
     pass p0
     {
-        VertexShader = VS_TransformD;
+        VertexShader = VS_TransformDWire;
         PixelShader = PS_DeferredTextured;
     }
 }
@@ -2877,7 +2878,7 @@ technique deferredalphaclip_draw
 {
     pass p0
     {
-        VertexShader = VS_TransformAlphaClipD;
+        VertexShader = VS_TransformAlphaClipDWire;
         PixelShader = PS_DeferredTexturedAlphaClip;
     }
 }
@@ -2976,7 +2977,7 @@ technique imposterdeferred_draw
 {
     pass p0
     {
-        VertexShader = VS_TransformD;
+        VertexShader = VS_TransformDWire;
         PixelShader = PS_DeferredImposter;
     }
 }

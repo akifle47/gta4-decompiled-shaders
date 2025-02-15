@@ -124,6 +124,117 @@ VS_Output VS_Transform(VS_Input IN)
     return OUT;
 }
 
+struct VS_OutputDeferred
+{
+    float4 Position                 : POSITION;
+    float2 TexCoord                 : TEXCOORD0;
+    float4 WorldNormalAndDepthColor : TEXCOORD1;
+#ifdef ENVIRONMENT_MAP
+    //view pos to vertex
+    float3 ViewDir                  : TEXCOORD3;
+#endif //ENVIRONMENT_MAP
+#if defined(NORMAL_MAP) || defined(PARALLAX)
+    float3 WorldTangent             : TEXCOORD4; 
+    float3 WorldBitangent           : TEXCOORD5; 
+#endif //NORMAL_MAP || PARALLAX
+    float4 Color                    : COLOR0;
+    float4 WorldPosition            : TEXCOORD6;
+#ifdef PARALLAX
+    //(tangent) view pos to vertex
+    float4 TangentViewDir           : TEXCOORD7;
+#endif //PARALLAX
+};
+
+//ignoring macros this produces the same result as VS_Transform just with some stuff moved around to generate the same(ish) assembly
+VS_OutputDeferred VS_TransformD(VS_Input IN)
+{
+    VS_OutputDeferred OUT;
+    
+    float3 worldPos = mul(float4(IN.Position, 1.0), gWorld).xyz;
+    float3 viewDir = gViewInverse[3].xyz - worldPos;
+
+    #ifdef ENVIRONMENT_MAP
+        OUT.ViewDir = viewDir;
+    #endif //ENVIRONMENT_MAP
+    OUT.WorldPosition.xyz = worldPos;
+    
+    #ifdef PARALLAX
+        float3 worldTangent = normalize(mul(IN.Tangent.xyz, (float3x3)gWorld) + 0.00001);
+        OUT.TangentViewDir.x = dot(worldTangent, viewDir);
+        
+        float3 worldNormal = normalize(mul(IN.Normal, (float3x3)gWorld) + 0.00001);
+        float3 worldBitangent = cross(worldTangent, worldNormal);
+
+        OUT.WorldTangent.xyz = worldTangent;
+        worldBitangent *= IN.Tangent.w;
+        OUT.TangentViewDir.y = dot(worldBitangent, viewDir);
+        OUT.WorldBitangent.xyz = worldBitangent;
+        OUT.TangentViewDir.z = dot(worldNormal, viewDir);
+        OUT.WorldNormalAndDepthColor.xyz = worldNormal;
+    #else
+        float3 worldNormal = normalize(mul(IN.Normal, (float3x3)gWorld) + 0.00001);
+        #if defined(NORMAL_MAP) || defined(PARALLAX)
+            float3 worldTangent = normalize(mul(IN.Tangent.xyz, (float3x3)gWorld) + 0.00001);
+            float3 worldBitangent = cross(worldTangent, worldNormal);
+        #endif //NORMAL_MAP
+
+        OUT.WorldNormalAndDepthColor.xyz = worldNormal;
+
+        #if defined(NORMAL_MAP)
+            OUT.WorldTangent.xyz = worldTangent;
+            OUT.WorldBitangent.xyz = worldBitangent * IN.Tangent.w;
+        #endif //NORMAL_MAP
+    #endif //PARALLAX
+
+    #ifdef ANIMATED
+        //float3(IN.TexCoord0.xy, 1)
+        float3 uv = IN.TexCoord0.xyx * float3(1.0, 1.0, 0.0) + float3(0.0, 0.0, 1.0);
+        OUT.TexCoord.x = dot(globalAnimUV0, uv);
+        OUT.TexCoord.y = dot(globalAnimUV1, uv);
+    #endif //ANIMATED
+
+    #if !defined(DIRT_DECAL_MASK) && !defined(NO_LIGHTING) //idk
+        float2 color = gDayNightEffects.xy * IN.Color.xy;
+        color.x = color.y + color.x;
+        color.x = color.x * globalScalars.z  - 1;
+        color.x = color.x * globalScalars2.z + 1;
+        OUT.Color.xy = color.xx;
+    #else
+        OUT.Color.xy = IN.Color.xy;
+    #endif //DIRT_DECAL_MASK
+
+    float4 clipPos = mul(float4(IN.Position, 1.0), gWorldViewProj);
+
+    #ifdef DEPTH_SHIFT
+        OUT.Position.xy = globalScreenSize.zw * (clipPos.w / 2) + clipPos.xy; //?
+        #ifdef DEPTH_SHIFT_POSITIVE //bug?
+            OUT.Position.z = clipPos.z + zShift;
+        #else
+            OUT.Position.z = clipPos.z - zShift;
+        #endif //DEPTH_SHIFT_POSITIVE
+    #else
+        OUT.Position.xyz = clipPos.xyz;
+    #endif //DEPTH_SHIFT
+
+    OUT.Position.w = OUT.WorldNormalAndDepthColor.w = clipPos.w;
+    #ifndef ANIMATED
+        OUT.TexCoord = IN.TexCoord0;
+    #endif //ANIMATED
+    OUT.Color.zw = IN.Color.zw;
+
+    OUT.WorldPosition.w = 1.0;
+    #ifdef PARALLAX
+        OUT.TangentViewDir.w = 1.0;
+    #endif
+    return OUT;
+}
+
+VS_OutputDeferred VS_TransformAlphaClipD(VS_Input IN)
+{
+    return VS_TransformD(IN);
+}
+
+
 #ifndef NO_SHADOW_CASTING 
     struct VS_ShadowDepthInput
     {

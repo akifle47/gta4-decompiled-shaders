@@ -11,7 +11,7 @@
 #include "megashader.fxh"
 
 //Vertex shaders
-//TODO: make this a part of the megashader's VS_TransformProjTex
+//TODO: make this a part of the megashader's VS_Transform
 VertexShader VS_TransformProjTex
 <
     string BoundRadius      = "parameter register(208)";
@@ -1016,7 +1016,7 @@ asm
     // approximately 136 instruction slots used (8 texture, 128 arithmetic)
 };
 
-VertexShader VS_TransformD
+VertexShader VS_TransformDProjTex
 <
     string BoundRadius      = "parameter register(208)";
     string DamageSampler    = "parameter register(0)";
@@ -1348,7 +1348,8 @@ asm
     // approximately 276 instruction slots used (8 texture, 268 arithmetic)
 };
 
-VertexShader VS_TransformAlphaClipD
+//TODO: make these a part of the megashader's VS_TransformD
+VertexShader VS_TransformAlphaClipDProjTex
 <
     string BoundRadius      = "parameter register(208)";
     string DamageSampler    = "parameter register(0)";
@@ -1787,7 +1788,7 @@ asm
     // approximately 50 instruction slots used
 };
 
-//TODO: make this a part of the megashader's VS_ShadowDepthProjTex
+//TODO: make this a part of the megashader's VS_ShadowDepth
 VertexShader VS_ShadowDepthProjTex
 <
     string BoundRadius   = "parameter register(208)";
@@ -4967,7 +4968,7 @@ technique deferred_draw
         ColorWriteEnable2 = RED | GREEN;
         ColorWriteEnable3 = RED | GREEN | BLUE | ALPHA;
 
-        VertexShader = VS_TransformD;
+        VertexShader = VS_TransformDProjTex;
         PixelShader = PS_DeferredTextured;
     }
 }
@@ -4981,7 +4982,7 @@ technique deferredalphaclip_draw
         ColorWriteEnable2 = RED | GREEN;
         ColorWriteEnable3 = RED | GREEN | BLUE | ALPHA;
 
-        VertexShader = VS_TransformAlphaClipD;
+        VertexShader = VS_TransformAlphaClipDProjTex;
         PixelShader = PS_DeferredTexturedAlphaClip;
     }
 }
