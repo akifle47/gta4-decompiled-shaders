@@ -678,7 +678,8 @@ asm
     // approximately 267 instruction slots used (8 texture, 259 arithmetic)
 };
 
-VertexShader VS_TransformUnlit
+//[0] megashader.fxh
+VertexShader VS_TransformUnlitVehicleDamage
 <
     string BoundRadius    = "parameter register(208)";
     string DamageSampler  = "parameter register(0)";
@@ -4945,7 +4946,7 @@ technique unlit_draw
 {
     pass p0
     {
-        VertexShader = VS_TransformUnlit;
+        VertexShader = VS_TransformUnlitVehicleDamage;
         PixelShader = PS_TexturedUnlit;
     }
 }

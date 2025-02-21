@@ -17,6 +17,30 @@
     }
 #endif
 
+#ifdef ANIMATED
+    float2 ComputeUvAnimation(in float2 texCoord)
+    {
+        //float3(IN.TexCoord0.xy, 1)
+        float3 uv = texCoord.xyx * float3(1.0, 1.0, 0.0) + float3(0.0, 0.0, 1.0);
+        return float2(dot(globalAnimUV0, uv), dot(globalAnimUV1, uv));
+    }
+#endif
+
+#ifdef DEPTH_SHIFT
+    float3 ComputeDepthShift(inout float4 clipPos)
+    {
+        float3 clipPosOut = clipPos.xyz;
+        clipPosOut.xy = globalScreenSize.zw * (clipPos.w / 2) + clipPos.xy; //?
+        #ifdef DEPTH_SHIFT_POSITIVE
+            clipPosOut.z = clipPos.z + zShift;
+        #else
+            clipPosOut.z = clipPos.z - zShift;
+        #endif //DEPTH_SHIFT_POSITIVE
+
+        return clipPosOut;
+    }
+#endif
+
 struct VS_Input
 {
     float3 Position  : POSITION;
@@ -82,10 +106,7 @@ VS_Output VS_Transform(VS_Input IN)
     #endif //PARALLAX
 
     #ifdef ANIMATED
-        //float3(IN.TexCoord0.xy, 1)
-        float3 uv = IN.TexCoord0.xyx * float3(1.0, 1.0, 0.0) + float3(0.0, 0.0, 1.0);
-        OUT.TexCoord.x = dot(globalAnimUV0, uv);
-        OUT.TexCoord.y = dot(globalAnimUV1, uv);
+        OUT.TexCoord = ComputeUvAnimation(IN.TexCoord0);
     #endif //ANIMATED
 
     #ifdef DAY_NIGHT_EFFECTS
@@ -101,12 +122,7 @@ VS_Output VS_Transform(VS_Input IN)
     float4 clipPos = mul(float4(IN.Position, 1.0), gWorldViewProj);
 
     #ifdef DEPTH_SHIFT
-        OUT.Position.xy = globalScreenSize.zw * (clipPos.w / 2) + clipPos.xy; //?
-        #ifdef DEPTH_SHIFT_POSITIVE //bug?
-            OUT.Position.z = clipPos.z + zShift;
-        #else
-            OUT.Position.z = clipPos.z - zShift;
-        #endif //DEPTH_SHIFT_POSITIVE
+        OUT.Position.xyz = ComputeDepthShift(clipPos);
     #else
         OUT.Position.xyz = clipPos.xyz;
     #endif //DEPTH_SHIFT
@@ -187,10 +203,7 @@ VS_OutputDeferred VS_TransformD(VS_Input IN)
     #endif //PARALLAX
 
     #ifdef ANIMATED
-        //float3(IN.TexCoord0.xy, 1)
-        float3 uv = IN.TexCoord0.xyx * float3(1.0, 1.0, 0.0) + float3(0.0, 0.0, 1.0);
-        OUT.TexCoord.x = dot(globalAnimUV0, uv);
-        OUT.TexCoord.y = dot(globalAnimUV1, uv);
+        OUT.TexCoord = ComputeUvAnimation(IN.TexCoord0);
     #endif //ANIMATED
 
     #if !defined(DIRT_DECAL_MASK) && !defined(NO_LIGHTING) //idk
@@ -206,12 +219,7 @@ VS_OutputDeferred VS_TransformD(VS_Input IN)
     float4 clipPos = mul(float4(IN.Position, 1.0), gWorldViewProj);
 
     #ifdef DEPTH_SHIFT
-        OUT.Position.xy = globalScreenSize.zw * (clipPos.w / 2) + clipPos.xy; //?
-        #ifdef DEPTH_SHIFT_POSITIVE //bug?
-            OUT.Position.z = clipPos.z + zShift;
-        #else
-            OUT.Position.z = clipPos.z - zShift;
-        #endif //DEPTH_SHIFT_POSITIVE
+        OUT.Position.xyz = ComputeDepthShift(clipPos);
     #else
         OUT.Position.xyz = clipPos.xyz;
     #endif //DEPTH_SHIFT
@@ -232,6 +240,50 @@ VS_OutputDeferred VS_TransformD(VS_Input IN)
 VS_OutputDeferred VS_TransformAlphaClipD(VS_Input IN)
 {
     return VS_TransformD(IN);
+}
+
+
+struct VS_TransformUnlitInput
+{
+    float3 Position : POSITION;
+    float4 Color    : COLOR;
+    float2 TexCoord : TEXCOORD0;
+};
+
+struct VS_TransformUnlitOutput
+{
+    float4 Position : POSITION;
+    float2 TexCoord : TEXCOORD0;
+    float4 Color    : COLOR;
+};
+
+VS_TransformUnlitOutput VS_TransformUnlit(VS_TransformUnlitInput IN)
+{
+    VS_TransformUnlitOutput OUT;
+
+    float4 clipPos = mul(float4(IN.Position, 1.0), gWorldViewProj);
+    #ifndef DEPTH_SHIFT
+        OUT.Position = clipPos;
+    #endif //DEPTH_SHIFT
+
+    #ifdef ANIMATED
+        OUT.TexCoord = ComputeUvAnimation(IN.TexCoord);
+    #else
+        OUT.TexCoord = IN.TexCoord;
+    #endif //ANIMATED
+
+    #ifdef DEPTH_SHIFT
+        OUT.Position.xyz = ComputeDepthShift(clipPos);
+        OUT.Position.w = clipPos.w;
+    #endif
+
+    OUT.Color = IN.Color;
+    return OUT;
+}
+
+VS_TransformUnlitOutput VS_VehicleTransformUnlit(VS_TransformUnlitInput IN)
+{
+    return VS_TransformUnlit(IN);
 }
 
 
@@ -327,3 +379,6 @@ float4 VS_BlitPositionOnly(VS_BlitPositionOnlyInput IN) : POSITION
 {
     return IN.Position.xyzx * float4(1, 1, 1, 0) + float4(0, 0, 0, 1);
 }
+
+//[0] TODO: make this a part of the megashader's VS_TransformUnlit
+//[1] TODO: make this a part of the megashader's VS_VehicleTransformUnlit

@@ -425,7 +425,8 @@ asm
     // approximately 88 instruction slots used
 };
 
-VertexShader VS_VehicleTransformUnlit
+//[1] megashader.fxh
+VertexShader VS_VehicleTransformUnlitRims
 <
     string gWorldViewProj = "parameter register(8)";
 > =
@@ -2087,7 +2088,7 @@ technique unlit_draw
 {
     pass p0
     {
-        VertexShader = VS_VehicleTransformUnlit;
+        VertexShader = VS_VehicleTransformUnlitRims;
         PixelShader = PS_VehicleTexturedUnlit;
     }
 }
