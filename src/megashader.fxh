@@ -1,5 +1,7 @@
 //base for most shaders. you should use or extend this to reduce code duplication unless you really need specialized shaders for an effect
 
+#define PARABOLOID_HEIGHT_OFFSET 512
+
 #ifndef NO_LIGHTING
     void AlphaClip(float alpha, float2 screenCoords)
     {
@@ -14,6 +16,15 @@
         float4 uv = float4(alphaOffset + uvOffset, 0, 0);
         if(tex2Dlod(StippleTexture, uv).y <= 0)
             discard;
+    }
+
+    float2 ComputeDayNightEffects(in float2 vertexColor)
+    {
+        float2 color = gDayNightEffects.xy * vertexColor;
+        color.x = color.y + color.x;
+        color.x = color.x * globalScalars.z  - 1;
+        color.x = color.x * globalScalars2.z + 1;
+        return color.xx;
     }
 #endif
 
@@ -40,6 +51,7 @@
         return posClipOut;
     }
 #endif
+
 
 struct VS_Input
 {
@@ -110,11 +122,7 @@ VS_Output VS_Transform(VS_Input IN)
     #endif //ANIMATED
 
     #ifdef DAY_NIGHT_EFFECTS
-        float2 color = gDayNightEffects.xy * IN.Color.xy;
-        color.x = color.y + color.x;
-        color.x = color.x * globalScalars.z  - 1;
-        color.x = color.x * globalScalars2.z + 1;
-        OUT.Color.xy = color.xx;
+        OUT.Color.xy = ComputeDayNightEffects(IN.Color.xy);
     #else
         OUT.Color.xy = IN.Color.xy;
     #endif //DAY_NIGHT_EFFECTS
@@ -139,6 +147,7 @@ VS_Output VS_Transform(VS_Input IN)
     #endif
     return OUT;
 }
+
 
 struct VS_OutputDeferred
 {
@@ -207,11 +216,7 @@ VS_OutputDeferred VS_TransformD(VS_Input IN)
     #endif //ANIMATED
 
     #if !defined(DIRT_DECAL_MASK) && !defined(NO_LIGHTING) //idk
-        float2 color = gDayNightEffects.xy * IN.Color.xy;
-        color.x = color.y + color.x;
-        color.x = color.x * globalScalars.z  - 1;
-        color.x = color.x * globalScalars2.z + 1;
-        OUT.Color.xy = color.xx;
+        OUT.Color.xy = ComputeDayNightEffects(IN.Color.xy);
     #else
         OUT.Color.xy = IN.Color.xy;
     #endif //DIRT_DECAL_MASK
@@ -284,6 +289,65 @@ VS_TransformUnlitOutput VS_TransformUnlit(VS_TransformUnlitInput IN)
 VS_TransformUnlitOutput VS_VehicleTransformUnlit(VS_TransformUnlitInput IN)
 {
     return VS_TransformUnlit(IN);
+}
+
+
+struct VS_TransformParaboloidInput
+{
+    float3 Position : POSITION;
+    float4 Color    : COLOR0;
+    float2 TexCoord : TEXCOORD0;
+    float3 Normal   : NORMAL;
+};
+
+struct VS_TransformParaboloidOutput
+{
+    float4 Position            : POSITION;
+    float2 TexCoord            : TEXCOORD0;
+    float4 NormalWorldAndDepth : TEXCOORD1;
+    //view pos to world pos 
+    float3 ViewDir             : TEXCOORD3;
+    float4 Color               : COLOR0;
+};
+
+VS_TransformParaboloidOutput VS_TransformParaboloid(VS_TransformParaboloidInput IN)
+{
+    VS_TransformParaboloidOutput OUT;
+    
+    OUT.NormalWorldAndDepth.xyz = normalize(mul(IN.Normal, (float3x3)gWorld) + 0.00001);
+
+    float3 posWorld = mul(float4(IN.Position, 1.0), gWorld).xyz;
+    float3 viewDir = gViewInverse[3].xyz - posWorld;
+    OUT.ViewDir = -viewDir;
+
+    float3 posView = mul(float4(IN.Position, 1.0), gWorldView).xyz;
+    posView.z += PARABOLOID_HEIGHT_OFFSET;
+    float L = length(posView);
+    posView.z = 1.0 - (posView.z / L);
+    posView.z *= L;
+
+    OUT.Position.xy = posView.xy / posView.z;
+    OUT.NormalWorldAndDepth.w = L;
+    L = 1.0 / (L + 1.0);
+    OUT.Position.z = 1.0 - L;
+
+    #ifdef ANIMATED
+        OUT.TexCoord = ComputeUvAnimation(IN.TexCoord);
+    #endif //ANIMATED
+
+    #ifdef DAY_NIGHT_EFFECTS
+        OUT.Color.xy = ComputeDayNightEffects(IN.Color.xy);
+    #else
+        OUT.Color.xy = IN.Color.xy;
+    #endif //DAY_NIGHT_EFFECTS
+
+    OUT.Position.w = 1.0;
+    #ifndef ANIMATED
+        OUT.TexCoord = IN.TexCoord;
+    #endif //ANIMATED
+    OUT.Color.zw = IN.Color.zw;
+
+    return OUT;
 }
 
 
