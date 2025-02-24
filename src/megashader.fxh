@@ -27,17 +27,17 @@
 #endif
 
 #ifdef DEPTH_SHIFT
-    float3 ComputeDepthShift(inout float4 clipPos)
+    float3 ComputeDepthShift(inout float4 posClip)
     {
-        float3 clipPosOut = clipPos.xyz;
-        clipPosOut.xy = globalScreenSize.zw * (clipPos.w / 2) + clipPos.xy; //?
+        float3 posClipOut = posClip.xyz;
+        posClipOut.xy = globalScreenSize.zw * (posClip.w / 2) + posClip.xy; //?
         #ifdef DEPTH_SHIFT_POSITIVE
-            clipPosOut.z = clipPos.z + zShift;
+            posClipOut.z = posClip.z + zShift;
         #else
-            clipPosOut.z = clipPos.z - zShift;
+            posClipOut.z = posClip.z - zShift;
         #endif //DEPTH_SHIFT_POSITIVE
 
-        return clipPosOut;
+        return posClipOut;
     }
 #endif
 
@@ -57,20 +57,20 @@ struct VS_Output
 {
     float4 Position                 : POSITION;
     float2 TexCoord                 : TEXCOORD0;
-    float4 WorldNormalAndDepthColor : TEXCOORD1;
+    float4 NormalWorldAndDepthColor : TEXCOORD1;
 #ifdef SPECULAR
     //view pos to vertex
     float3 ViewDir                  : TEXCOORD3;
 #endif //SPECULAR
 #if defined(NORMAL_MAP) || defined(PARALLAX)
-    float3 WorldTangent             : TEXCOORD4; 
+    float3 TangentWorld             : TEXCOORD4; 
     float3 WorldBitangent           : TEXCOORD5; 
 #endif //NORMAL_MAP || PARALLAX
     float4 Color                    : COLOR0;
-    float4 WorldPosition            : TEXCOORD6;
+    float4 PositionWorld            : TEXCOORD6;
 #ifdef PARALLAX
     //(tangent) view pos to vertex
-    float4 TangentViewDir           : TEXCOORD7;
+    float4 ViewDirTangent           : TEXCOORD7;
 #endif //PARALLAX
 };
 
@@ -78,31 +78,31 @@ VS_Output VS_Transform(VS_Input IN)
 {
     VS_Output OUT;
     
-    float3 worldPos = mul(float4(IN.Position, 1.0), gWorld).xyz;
+    float3 posWorld = mul(float4(IN.Position, 1.0), gWorld).xyz;
 
     #ifdef SPECULAR
-        float3 viewDir = gViewInverse[3].xyz - worldPos;
+        float3 viewDir = gViewInverse[3].xyz - posWorld;
         OUT.ViewDir = viewDir;
     #endif //SPECULAR
-    OUT.WorldPosition.xyz = worldPos;
+    OUT.PositionWorld.xyz = posWorld;
     
-    float3 worldNormal = normalize(mul(IN.Normal, (float3x3)gWorld) + 0.00001);
+    float3 normalWorld = normalize(mul(IN.Normal, (float3x3)gWorld) + 0.00001);
     #if defined(NORMAL_MAP) || defined(PARALLAX)
-        float3 worldTangent = normalize(mul(IN.Tangent.xyz, (float3x3)gWorld) + 0.00001);
-        float3 worldBitangent = cross(worldTangent, worldNormal);
+        float3 tangentWorld = normalize(mul(IN.Tangent.xyz, (float3x3)gWorld) + 0.00001);
+        float3 bitangentWorld = cross(tangentWorld, normalWorld);
     #endif //NORMAL_MAP || PARALLAX
 
-    OUT.WorldNormalAndDepthColor.xyz = worldNormal;
+    OUT.NormalWorldAndDepthColor.xyz = normalWorld;
 
     #if defined(NORMAL_MAP) || defined(PARALLAX)
-        OUT.WorldTangent.xyz = worldTangent;
-        OUT.WorldBitangent.xyz = worldBitangent * IN.Tangent.w;
+        OUT.TangentWorld.xyz = tangentWorld;
+        OUT.WorldBitangent.xyz = bitangentWorld * IN.Tangent.w;
     #endif //NORMAL_MAP || PARALLAX
 
     #ifdef PARALLAX
-        OUT.TangentViewDir.x = dot(worldTangent, viewDir);
-        OUT.TangentViewDir.y = dot(worldBitangent, viewDir);
-        OUT.TangentViewDir.z = dot(worldNormal, viewDir);
+        OUT.ViewDirTangent.x = dot(tangentWorld, viewDir);
+        OUT.ViewDirTangent.y = dot(bitangentWorld, viewDir);
+        OUT.ViewDirTangent.z = dot(normalWorld, viewDir);
     #endif //PARALLAX
 
     #ifdef ANIMATED
@@ -119,23 +119,23 @@ VS_Output VS_Transform(VS_Input IN)
         OUT.Color.xy = IN.Color.xy;
     #endif //DAY_NIGHT_EFFECTS
 
-    float4 clipPos = mul(float4(IN.Position, 1.0), gWorldViewProj);
+    float4 posClip = mul(float4(IN.Position, 1.0), gWorldViewProj);
 
     #ifdef DEPTH_SHIFT
-        OUT.Position.xyz = ComputeDepthShift(clipPos);
+        OUT.Position.xyz = ComputeDepthShift(posClip);
     #else
-        OUT.Position.xyz = clipPos.xyz;
+        OUT.Position.xyz = posClip.xyz;
     #endif //DEPTH_SHIFT
 
-    OUT.Position.w = OUT.WorldNormalAndDepthColor.w = clipPos.w;
+    OUT.Position.w = OUT.NormalWorldAndDepthColor.w = posClip.w;
     #ifndef ANIMATED
         OUT.TexCoord = IN.TexCoord0;
     #endif //ANIMATED
     OUT.Color.zw = IN.Color.zw;
 
-    OUT.WorldPosition.w = 1.0;
+    OUT.PositionWorld.w = 1.0;
     #ifdef PARALLAX
-        OUT.TangentViewDir.w = 1.0;
+        OUT.ViewDirTangent.w = 1.0;
     #endif
     return OUT;
 }
@@ -144,20 +144,20 @@ struct VS_OutputDeferred
 {
     float4 Position                 : POSITION;
     float2 TexCoord                 : TEXCOORD0;
-    float4 WorldNormalAndDepthColor : TEXCOORD1;
+    float4 NormalWorldAndDepthColor : TEXCOORD1;
 #ifdef ENVIRONMENT_MAP
     //view pos to vertex
     float3 ViewDir                  : TEXCOORD3;
 #endif //ENVIRONMENT_MAP
 #if defined(NORMAL_MAP) || defined(PARALLAX)
-    float3 WorldTangent             : TEXCOORD4; 
+    float3 TangentWorld             : TEXCOORD4; 
     float3 WorldBitangent           : TEXCOORD5; 
 #endif //NORMAL_MAP || PARALLAX
     float4 Color                    : COLOR0;
-    float4 WorldPosition            : TEXCOORD6;
+    float4 PositionWorld            : TEXCOORD6;
 #ifdef PARALLAX
     //(tangent) view pos to vertex
-    float4 TangentViewDir           : TEXCOORD7;
+    float4 ViewDirTangent           : TEXCOORD7;
 #endif //PARALLAX
 };
 
@@ -166,39 +166,39 @@ VS_OutputDeferred VS_TransformD(VS_Input IN)
 {
     VS_OutputDeferred OUT;
     
-    float3 worldPos = mul(float4(IN.Position, 1.0), gWorld).xyz;
-    float3 viewDir = gViewInverse[3].xyz - worldPos;
+    float3 posWorld = mul(float4(IN.Position, 1.0), gWorld).xyz;
+    float3 viewDir = gViewInverse[3].xyz - posWorld;
 
     #ifdef ENVIRONMENT_MAP
         OUT.ViewDir = viewDir;
     #endif //ENVIRONMENT_MAP
-    OUT.WorldPosition.xyz = worldPos;
+    OUT.PositionWorld.xyz = posWorld;
     
     #ifdef PARALLAX
-        float3 worldTangent = normalize(mul(IN.Tangent.xyz, (float3x3)gWorld) + 0.00001);
-        OUT.TangentViewDir.x = dot(worldTangent, viewDir);
+        float3 tangentWorld = normalize(mul(IN.Tangent.xyz, (float3x3)gWorld) + 0.00001);
+        OUT.ViewDirTangent.x = dot(tangentWorld, viewDir);
         
-        float3 worldNormal = normalize(mul(IN.Normal, (float3x3)gWorld) + 0.00001);
-        float3 worldBitangent = cross(worldTangent, worldNormal);
+        float3 normalWorld = normalize(mul(IN.Normal, (float3x3)gWorld) + 0.00001);
+        float3 bitangentWorld = cross(tangentWorld, normalWorld);
 
-        OUT.WorldTangent.xyz = worldTangent;
-        worldBitangent *= IN.Tangent.w;
-        OUT.TangentViewDir.y = dot(worldBitangent, viewDir);
-        OUT.WorldBitangent.xyz = worldBitangent;
-        OUT.TangentViewDir.z = dot(worldNormal, viewDir);
-        OUT.WorldNormalAndDepthColor.xyz = worldNormal;
+        OUT.TangentWorld.xyz = tangentWorld;
+        bitangentWorld *= IN.Tangent.w;
+        OUT.ViewDirTangent.y = dot(bitangentWorld, viewDir);
+        OUT.WorldBitangent.xyz = bitangentWorld;
+        OUT.ViewDirTangent.z = dot(normalWorld, viewDir);
+        OUT.NormalWorldAndDepthColor.xyz = normalWorld;
     #else
-        float3 worldNormal = normalize(mul(IN.Normal, (float3x3)gWorld) + 0.00001);
+        float3 normalWorld = normalize(mul(IN.Normal, (float3x3)gWorld) + 0.00001);
         #if defined(NORMAL_MAP) || defined(PARALLAX)
-            float3 worldTangent = normalize(mul(IN.Tangent.xyz, (float3x3)gWorld) + 0.00001);
-            float3 worldBitangent = cross(worldTangent, worldNormal);
+            float3 tangentWorld = normalize(mul(IN.Tangent.xyz, (float3x3)gWorld) + 0.00001);
+            float3 bitangentWorld = cross(tangentWorld, normalWorld);
         #endif //NORMAL_MAP
 
-        OUT.WorldNormalAndDepthColor.xyz = worldNormal;
+        OUT.NormalWorldAndDepthColor.xyz = normalWorld;
 
         #if defined(NORMAL_MAP)
-            OUT.WorldTangent.xyz = worldTangent;
-            OUT.WorldBitangent.xyz = worldBitangent * IN.Tangent.w;
+            OUT.TangentWorld.xyz = tangentWorld;
+            OUT.WorldBitangent.xyz = bitangentWorld * IN.Tangent.w;
         #endif //NORMAL_MAP
     #endif //PARALLAX
 
@@ -216,23 +216,23 @@ VS_OutputDeferred VS_TransformD(VS_Input IN)
         OUT.Color.xy = IN.Color.xy;
     #endif //DIRT_DECAL_MASK
 
-    float4 clipPos = mul(float4(IN.Position, 1.0), gWorldViewProj);
+    float4 posClip = mul(float4(IN.Position, 1.0), gWorldViewProj);
 
     #ifdef DEPTH_SHIFT
-        OUT.Position.xyz = ComputeDepthShift(clipPos);
+        OUT.Position.xyz = ComputeDepthShift(posClip);
     #else
-        OUT.Position.xyz = clipPos.xyz;
+        OUT.Position.xyz = posClip.xyz;
     #endif //DEPTH_SHIFT
 
-    OUT.Position.w = OUT.WorldNormalAndDepthColor.w = clipPos.w;
+    OUT.Position.w = OUT.NormalWorldAndDepthColor.w = posClip.w;
     #ifndef ANIMATED
         OUT.TexCoord = IN.TexCoord0;
     #endif //ANIMATED
     OUT.Color.zw = IN.Color.zw;
 
-    OUT.WorldPosition.w = 1.0;
+    OUT.PositionWorld.w = 1.0;
     #ifdef PARALLAX
-        OUT.TangentViewDir.w = 1.0;
+        OUT.ViewDirTangent.w = 1.0;
     #endif
     return OUT;
 }
@@ -261,9 +261,9 @@ VS_TransformUnlitOutput VS_TransformUnlit(VS_TransformUnlitInput IN)
 {
     VS_TransformUnlitOutput OUT;
 
-    float4 clipPos = mul(float4(IN.Position, 1.0), gWorldViewProj);
+    float4 posClip = mul(float4(IN.Position, 1.0), gWorldViewProj);
     #ifndef DEPTH_SHIFT
-        OUT.Position = clipPos;
+        OUT.Position = posClip;
     #endif //DEPTH_SHIFT
 
     #ifdef ANIMATED
@@ -273,8 +273,8 @@ VS_TransformUnlitOutput VS_TransformUnlit(VS_TransformUnlitInput IN)
     #endif //ANIMATED
 
     #ifdef DEPTH_SHIFT
-        OUT.Position.xyz = ComputeDepthShift(clipPos);
-        OUT.Position.w = clipPos.w;
+        OUT.Position.xyz = ComputeDepthShift(posClip);
+        OUT.Position.w = posClip.w;
     #endif
 
     OUT.Color = IN.Color;
@@ -308,14 +308,14 @@ VS_TransformUnlitOutput VS_VehicleTransformUnlit(VS_TransformUnlitInput IN)
     VS_ShadowDepthOutput VS_ShadowDepth(VS_ShadowDepthInput IN)
     {
         VS_ShadowDepthOutput OUT;
-        float4 clipPos = mul(mul(float4(IN.Position, 1),  gWorld), gShadowMatrix);
-        OUT.Position.z = 1.0 - min(clipPos.z, 1.0);
-        OUT.Position.xyw = clipPos.xyw * float3(1, 1, 0) + float3(0, 0, 1);
+        float4 posClip = mul(mul(float4(IN.Position, 1),  gWorld), gShadowMatrix);
+        OUT.Position.z = 1.0 - min(posClip.z, 1.0);
+        OUT.Position.xyw = posClip.xyw * float3(1, 1, 0) + float3(0, 0, 1);
         #ifdef ALPHA_SHADOW
-            OUT.DepthColorAndTexCoord.x = clipPos.w;
+            OUT.DepthColorAndTexCoord.x = posClip.w;
             OUT.DepthColorAndTexCoord.yz = IN.TexCoord;
         #else
-            OUT.DepthColor = clipPos.w;
+            OUT.DepthColor = posClip.w;
         #endif //ALPHA_SHADOW
         return OUT;
     }
