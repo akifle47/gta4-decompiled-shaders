@@ -248,23 +248,23 @@ VS_OutputDeferred VS_TransformAlphaClipD(VS_Input IN)
 }
 
 
-struct VS_TransformUnlitInput
+struct VS_InputUnlit
 {
     float3 Position : POSITION;
     float4 Color    : COLOR;
     float2 TexCoord : TEXCOORD0;
 };
 
-struct VS_TransformUnlitOutput
+struct VS_OutputUnlit
 {
     float4 Position : POSITION;
     float2 TexCoord : TEXCOORD0;
     float4 Color    : COLOR;
 };
 
-VS_TransformUnlitOutput VS_TransformUnlit(VS_TransformUnlitInput IN)
+VS_OutputUnlit VS_TransformUnlit(VS_InputUnlit IN)
 {
-    VS_TransformUnlitOutput OUT;
+    VS_OutputUnlit OUT;
 
     float4 posClip = mul(float4(IN.Position, 1.0), gWorldViewProj);
     #ifndef DEPTH_SHIFT
@@ -286,13 +286,13 @@ VS_TransformUnlitOutput VS_TransformUnlit(VS_TransformUnlitInput IN)
     return OUT;
 }
 
-VS_TransformUnlitOutput VS_VehicleTransformUnlit(VS_TransformUnlitInput IN)
+VS_OutputUnlit VS_VehicleTransformUnlit(VS_InputUnlit IN)
 {
     return VS_TransformUnlit(IN);
 }
 
 
-struct VS_TransformParaboloidInput
+struct VS_InputParaboloid
 {
     float3 Position : POSITION;
     float4 Color    : COLOR0;
@@ -300,7 +300,7 @@ struct VS_TransformParaboloidInput
     float3 Normal   : NORMAL;
 };
 
-struct VS_TransformParaboloidOutput
+struct VS_OutputParaboloid
 {
     float4 Position            : POSITION;
     float2 TexCoord            : TEXCOORD0;
@@ -310,9 +310,9 @@ struct VS_TransformParaboloidOutput
     float4 Color               : COLOR0;
 };
 
-VS_TransformParaboloidOutput VS_TransformParaboloid(VS_TransformParaboloidInput IN)
+VS_OutputParaboloid VS_TransformParaboloid(VS_InputParaboloid IN)
 {
-    VS_TransformParaboloidOutput OUT;
+    VS_OutputParaboloid OUT;
     
     OUT.NormalWorldAndDepth.xyz = normalize(mul(IN.Normal, (float3x3)gWorld) + 0.00001);
 
@@ -416,19 +416,19 @@ VS_TransformParaboloidOutput VS_TransformParaboloid(VS_TransformParaboloidInput 
 #endif //NO_SHADOW_CASTING
 
 
-struct VS_BlitInput
+struct VS_InputBlit
 {
     float3 Position : POSITION;
     float2 TexCoord : TEXCOORD0;
 };
-struct VS_BlitOutput
+struct VS_OutputBlit
 {
     float4 Position : POSITION;
     float4 TexCoord : TEXCOORD0;
 };
-VS_BlitOutput VS_Blit(VS_BlitInput IN)
+VS_OutputBlit VS_Blit(VS_InputBlit IN)
 {
-    VS_BlitOutput OUT;
+    VS_OutputBlit OUT;
     OUT.Position = IN.Position.xyzx * float4(1, 1, 1, 0) + float4(0, 0, 0, 1);
     OUT.TexCoord = IN.TexCoord.xyxx * float4(1, 1, 0, 0);
     return OUT;
