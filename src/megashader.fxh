@@ -396,6 +396,47 @@ VS_OutputInst VS_TransformInst(VS_InputInst IN)
 }
 
 
+struct VS_InputUnlitInst
+{
+    float3 Position                : POSITION;
+    float2 TexCoord                : TEXCOORD0;
+    float4 WorldMatrixRow1AndColor : TEXCOORD1;
+    float4 WorldMatrixRow2AndColor : TEXCOORD2;
+    float4 WorldMatrixRow3AndColor : TEXCOORD3;
+    float4 WorldMatrixRow4AndColor : TEXCOORD4;
+};
+
+VS_OutputUnlit VS_TransformUnlitInst(VS_InputUnlitInst IN)
+{
+    VS_OutputUnlit OUT;
+    
+    float4x3 instanceWorldMtx = float4x3(IN.WorldMatrixRow1AndColor.xyz, IN.WorldMatrixRow2AndColor.xyz, IN.WorldMatrixRow3AndColor.xyz, IN.WorldMatrixRow4AndColor.xyz);
+    float3 posWorld = mul(float4(IN.Position, 1.0), instanceWorldMtx).xyz;
+
+    float4 posClip = mul(float4(posWorld, 1.0), gWorldViewProj);
+    #ifdef DEPTH_SHIFT
+        OUT.Position.xyz = ComputeDepthShift(posClip);
+    #else
+        OUT.Position.xyz = posClip.xyz;
+    #endif //DEPTH_SHIFT
+    OUT.Position.w = posClip.w;
+
+    #ifdef ANIMATED
+        OUT.TexCoord = ComputeUvAnimation(IN.TexCoord);
+    #else
+        OUT.TexCoord = IN.TexCoord;
+    #endif //ANIMATED
+    OUT.Color = float4(IN.WorldMatrixRow1AndColor.w, IN.WorldMatrixRow2AndColor.w, IN.WorldMatrixRow3AndColor.w, IN.WorldMatrixRow4AndColor.w);
+
+    return OUT;
+}
+
+VS_OutputUnlit VS_TransformSkinInst(VS_InputUnlitInst IN)
+{
+    return VS_TransformUnlitInst(IN);
+}
+
+
 struct VS_InputParaboloid
 {
     float3 Position : POSITION;
