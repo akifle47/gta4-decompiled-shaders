@@ -2,8 +2,8 @@
 #include "common_globals.fxh"
 
 #ifdef ANIMATED
-    float3 globalAnimUV0 : globalAnimUV0 : register(c208) = float3(1.0, 0.0, 0.0);
-    float3 globalAnimUV1 : globalAnimUV1 : register(c209)  = float3(0.0, 1.0, 0.0);
+    float3 globalAnimUV0 : globalAnimUV0 = float3(1.0, 0.0, 0.0);
+    float3 globalAnimUV1 : globalAnimUV1 = float3(0.0, 1.0, 0.0);
 #endif
 
 #ifdef DRAWBUCKET_ALPHA
@@ -62,7 +62,7 @@
 #ifndef NO_SHADOW_CASTING
     //both unused
     float shadowmap_res : ShadowMapResolution = 1280.0;
-    float2 facetMask[4] : facetMask : register(c208) = 
+    float2 facetMask[4] : facetMask = 
     {
         float2(-1.0, 0.0), 
         float2(1.0, 0.0), 
@@ -72,11 +72,11 @@
 #endif
 
 #ifdef DEPTH_SHIFT_SCALE
-    float zShiftScale : zShiftScale : register(c209) = 0.002000;
+    float zShiftScale : zShiftScale = 0.002000;
 #endif
 
 #ifdef DEPTH_SHIFT
-    float zShift : zShift : register(c210) = 0.000110;
+    float zShift : zShift = 0.000110;
 #endif
 
 #ifdef EMISSIVE

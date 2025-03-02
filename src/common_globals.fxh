@@ -1,13 +1,13 @@
 shared float4 gAllGlobals[64] : AllGlobals : register(c0);
 
 #ifndef NO_SKINNING
-    shared float4x3 gBoneMtx[48];
+    shared float4x3 gBoneMtx[48] : register(c64);
 #endif
 
-shared float4x4 gWorld : World : register(c0);
-shared float4x4 gWorldView : WorldView : register(c4);
-shared float4x4 gWorldViewProj : WorldViewProjection : register(c8);
-shared float4x4 gViewInverse : ViewInverse : register(c12);
+shared row_major float4x4 gWorld : World : register(c0);
+shared row_major float4x4 gWorldView : WorldView : register(c4);
+shared row_major float4x4 gWorldViewProj : WorldViewProjection : register(c8);
+shared row_major float4x4 gViewInverse : ViewInverse : register(c12);
 
 #ifndef NO_LIGHTING
     shared texture stippletexture;
@@ -108,7 +108,7 @@ shared float4x4 gViewInverse : ViewInverse : register(c12);
     shared float4 gShadowParam0123 : ShadowParam0123 : register(c57);
     shared float4 gShadowParam4567 : ShadowParam4567 : register(c58);
     shared float4 gShadowParam891113 : ShadowParam891113 : register(c59);
-    shared float4x4 gShadowMatrix : ShadowMatrix : register(c60);
+    shared row_major float4x4 gShadowMatrix : ShadowMatrix : register(c60);
     
     shared texture ShadowZTextureDir;
     shared sampler gShadowZSamplerDir : register(s15) = 
