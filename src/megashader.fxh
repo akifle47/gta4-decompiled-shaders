@@ -2,6 +2,21 @@
 
 #define PARABOLOID_HEIGHT_OFFSET 512
 
+#ifndef NO_SKINNING
+    float4x3 ComputeSkinMatrix(in float4 indices, in float4 weights)
+    {
+        int4 i = D3DCOLORtoUBYTE4(indices).bgra;
+        
+        float4x3 skinMtx;
+        skinMtx  = gBoneMtx[i.x] * weights.x;
+        skinMtx += gBoneMtx[i.y] * weights.y;
+        skinMtx += gBoneMtx[i.z] * weights.z;
+        skinMtx += gBoneMtx[i.w] * weights.w;
+        
+        return skinMtx;
+    }
+#endif
+
 #ifndef NO_LIGHTING
     void AlphaClip(float alpha, float2 screenCoords)
     {
@@ -247,6 +262,90 @@ VS_OutputDeferred VS_TransformAlphaClipD(VS_Input IN)
     return VS_TransformD(IN);
 }
 
+
+#ifndef NO_SKINNING
+    struct VS_InputSkin
+    {
+        float3 Position     : POSITION;
+        float4 BlendWeights : BLENDWEIGHT;
+        float4 BlendIndices : BLENDINDICES;
+        float2 TexCoord0    : TEXCOORD0;
+        float3 Normal       : NORMAL;
+    #if defined(NORMAL_MAP) || defined(PARALLAX)
+        float4 Tangent      : TANGENT;
+    #endif //NORMAL_MAP || PARALLAX
+        float4 Color        : COLOR;
+    };
+
+    VS_OutputDeferred VS_TransformSkinD(VS_InputSkin IN)
+    {
+        VS_OutputDeferred OUT;
+
+        float4x3 skinMtx = ComputeSkinMatrix(IN.BlendIndices, IN.BlendWeights);
+        float3 posWorld = mul(float4(IN.Position, 1.0), skinMtx).xyz;
+        float3 viewDir = gViewInverse[3].xyz - posWorld;
+
+        #ifdef ENVIRONMENT_MAP
+            OUT.ViewDir = viewDir;
+        #endif //ENVIRONMENT_MAP
+        OUT.PositionWorld.xyz = posWorld;
+        
+        #ifdef PARALLAX
+            float3 tangentWorld = mul(IN.Tangent.xyz, (float3x3)skinMtx);
+            OUT.ViewDirTangent.x = dot(tangentWorld, viewDir);
+            
+            float3 normalWorld = mul(IN.Normal, (float3x3)skinMtx);
+            float3 bitangentWorld = cross(tangentWorld, normalWorld);
+
+            OUT.TangentWorld.xyz = tangentWorld;
+            bitangentWorld *= IN.Tangent.w;
+            OUT.ViewDirTangent.y = dot(bitangentWorld, viewDir);
+            OUT.BitangentWorld.xyz = bitangentWorld;
+            OUT.ViewDirTangent.z = dot(normalWorld, viewDir);
+            OUT.NormalWorldAndDepthColor.xyz = normalWorld;
+        #else
+            float3 normalWorld = mul(IN.Normal, (float3x3)skinMtx);
+            #if defined(NORMAL_MAP) || defined(PARALLAX)
+                float3 tangentWorld = mul(IN.Tangent.xyz, (float3x3)skinMtx);
+                float3 bitangentWorld = cross(tangentWorld, normalWorld);
+            #endif //NORMAL_MAP
+
+            OUT.NormalWorldAndDepthColor.xyz = normalWorld;
+
+            #if defined(NORMAL_MAP)
+                OUT.TangentWorld.xyz = tangentWorld;
+                OUT.BitangentWorld.xyz = bitangentWorld * IN.Tangent.w;
+            #endif //NORMAL_MAP
+        #endif //PARALLAX
+
+        #ifdef ANIMATED
+            OUT.TexCoord = ComputeUvAnimation(IN.TexCoord0);
+        #endif //ANIMATED
+
+        #ifdef DAY_NIGHT_EFFECTS
+            OUT.Color.xy = ComputeDayNightEffects(IN.Color.xy);
+        #else
+            OUT.Color.xy = IN.Color.xy;
+        #endif //DIRT_DECAL_MASK
+
+        float4 posClip = mul(float4(posWorld, 1.0), gWorldViewProj);
+
+        OUT.Position.xyz = posClip.xyz;
+
+        OUT.Position.w = OUT.NormalWorldAndDepthColor.w = posClip.w;
+        #ifndef ANIMATED
+            OUT.TexCoord = IN.TexCoord0;
+        #endif //ANIMATED
+        OUT.Color.zw = IN.Color.zw;
+
+        OUT.PositionWorld.w = 1.0;
+        #ifdef PARALLAX
+            OUT.ViewDirTangent.w = 1.0;
+        #endif
+
+        return OUT;
+    }
+#endif
 
 struct VS_InputUnlit
 {
