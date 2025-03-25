@@ -1,6 +1,8 @@
 #define NO_LUMINANCE_CONSTANTS
 
 #include "common_globals.fxh"
+
+#define NO_SHADOW_CASTING
 #include "megashader.fxh"
 
 float shadowmap_res : ShadowMapResolution = 1280.0;

@@ -1,7 +1,6 @@
 #define DAY_NIGHT_EFFECTS
 
 #include "common_globals.fxh"
-#include "megashader.fxh"
 
 texture TextureNoWrap;
 sampler TextureNoWrapSampler = 
@@ -71,6 +70,8 @@ sampler_state
 };
 float4x4 gBlitMatrix : BlitMatrix;
 float4 TexelSize : TexelSize;
+
+#include "megashader.fxh"
 
 //Vertex shaders
 struct VS_Blit_IMInput

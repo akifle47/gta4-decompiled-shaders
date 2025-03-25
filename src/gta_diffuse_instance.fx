@@ -5,8 +5,8 @@
 #include "common.fxh"
 #include "megashader.fxh"
 
-float4x4 gWorldInstanceMatrix : gWorldInstanceMatrix;
-float4x4 gWorldInstanceInverseTranspose : gWorldInstanceInverseTranspose;
+row_major float4x4 gWorldInstanceMatrix : gWorldInstanceMatrix;
+row_major float4x4 gWorldInstanceInverseTranspose : gWorldInstanceInverseTranspose;
 
 VertexShader VS_TransformSkinnedInst
 <
