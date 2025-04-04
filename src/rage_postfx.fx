@@ -2,7 +2,7 @@
 #define NO_SHADOW_CASTING
 
 #include "common.fxh"
-#include "megashader.fxh"
+#include "common_functions.fxh"
 
 texture gbufferTexture1;
 sampler GBufferTextureSampler1 = 

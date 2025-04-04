@@ -1,38 +1,10 @@
 //base for most shaders. you should use or extend this to reduce code duplication unless you really need specialized shaders for an effect
-
 #define PARABOLOID_HEIGHT_OFFSET 512
 
-#ifndef NO_SKINNING
-    float4x3 ComputeSkinMatrix(in float4 indices, in float4 weights)
-    {
-        int4 i = D3DCOLORtoUBYTE4(indices).bgra;
-        
-        float4x3 skinMtx;
-        skinMtx  = gBoneMtx[i.x] * weights.x;
-        skinMtx += gBoneMtx[i.y] * weights.y;
-        skinMtx += gBoneMtx[i.z] * weights.z;
-        skinMtx += gBoneMtx[i.w] * weights.w;
-        
-        return skinMtx;
-    }
-#endif
+#include "common_functions.fxh"
+#include "common_shadow.fxh"
 
 #ifndef NO_LIGHTING
-    void AlphaClip(float alpha, float2 screenCoords)
-    {
-        float y = saturate(alpha) * 3.996;
-        float x = frac(y) * 4;
-        float2 alphaOffset = float2((int)x, (int)y) / 4.0;
-
-        float2 uvOffset = frac(abs(screenCoords.xy / 8));
-        uvOffset = (screenCoords.xy >= 0) ? uvOffset : -uvOffset;
-        uvOffset /= 4;
-        
-        float4 uv = float4(alphaOffset + uvOffset, 0, 0);
-        if(tex2Dlod(StippleTexture, uv).y <= 0)
-            discard;
-    }
-
     float2 ComputeDayNightEffects(in float2 vertexColor)
     {
         float2 color = gDayNightEffects.xy * vertexColor;
@@ -41,7 +13,7 @@
         color.x = color.x * globalScalars2.z + 1;
         return color.xx;
     }
-#endif
+#endif //NO_LIGHTING
 
 #ifdef ANIMATED
     float2 ComputeUvAnimation(in float2 texCoord)
@@ -50,7 +22,7 @@
         float3 uv = texCoord.xyx * float3(1.0, 1.0, 0.0) + float3(0.0, 0.0, 1.0);
         return float2(dot(globalAnimUV0, uv), dot(globalAnimUV1, uv));
     }
-#endif
+#endif //ANIMATED
 
 #ifdef DEPTH_SHIFT
     float3 ComputeDepthShift(inout float4 posClip)
@@ -65,7 +37,7 @@
 
         return posClipOut;
     }
-#endif
+#endif //DEPTH_SHIFT
 
 
 struct VS_Input
@@ -685,168 +657,6 @@ VS_OutputParaboloid VS_TransformParaboloid(VS_InputParaboloid IN)
     OUT.Color.zw = IN.Color.zw;
 
     return OUT;
-}
-
-
-#if !defined(NO_SHADOW_CASTING) && !defined(NO_SHADOW_CASTING_VEHICLE)
-    struct VS_ShadowDepthInput
-    {
-        float3 Position : POSITION;
-    #ifdef ALPHA_SHADOW
-        float2 TexCoord : TEXCOORD0;
-    #endif //ALPHA_SHADOW
-    };
-
-    #ifndef NO_SKINNING
-        struct VS_ShadowDepthSkinInput
-        {
-            float3 Position : POSITION;
-            float4 BlendWeights : BLENDWEIGHT;
-            float4 BlendIndices : BLENDINDICES;
-        #ifdef ALPHA_SHADOW
-            float2 TexCoord : TEXCOORD0;
-        #endif //ALPHA_SHADOW
-        };
-    #endif //NO_SKINNING
-
-    struct VS_ShadowDepthOutput
-    {
-        float4 Position              : POSITION;
-    #ifdef ALPHA_SHADOW
-        float3 DepthColorAndTexCoord : TEXCOORD0;
-    #else
-        float  DepthColor            : TEXCOORD0;
-    #endif //ALPHA_SHADOW
-    };
-
-    VS_ShadowDepthOutput VS_ShadowDepth(VS_ShadowDepthInput IN)
-    {
-        VS_ShadowDepthOutput OUT;
-        float4 posClip = mul(mul(float4(IN.Position, 1),  gWorld), gShadowMatrix);
-        OUT.Position.z = 1.0 - min(posClip.z, 1.0);
-        OUT.Position.xyw = posClip.xyw * float3(1, 1, 0) + float3(0, 0, 1);
-        #ifdef ALPHA_SHADOW
-            OUT.DepthColorAndTexCoord.x = posClip.w;
-            OUT.DepthColorAndTexCoord.yz = IN.TexCoord;
-        #else
-            OUT.DepthColor = posClip.w;
-        #endif //ALPHA_SHADOW
-        return OUT;
-    }
-
-    #ifndef NO_SKINNING
-        VS_ShadowDepthOutput VS_ShadowDepthSkin(VS_ShadowDepthSkinInput IN)
-        {
-            VS_ShadowDepthOutput OUT;
-            float4x3 skinMtx = ComputeSkinMatrix(IN.BlendIndices, IN.BlendWeights);
-            float3 posWorld = mul(float4(IN.Position, 1.0), skinMtx).xyz + gWorld[3].xyz;
-            float4 posClip = mul(float4(posWorld, 1), gShadowMatrix);
-
-            OUT.Position.z = 1.0 - min(posClip.z, 1.0);
-            float4 v0;
-
-            //only this branch seems to ever be used for directional shadows
-            if(gShadowParam14151617.x == 0)
-            {
-                float v1 = posClip.z + gShadowParam891113.z;
-                float z0 = v1 * ((gShadowParam14151617.y == 0.0) - 0.5);
-                float z1 = z0 * 2.0;
-                float len = length(float3(posClip.xy, z1));
-                v0.xy = posClip.xy / ((z0 * -2.0) + len);
-                v0.w = z1 * -gShadowParam0123.w;
-                v0.z = len * -gShadowParam0123.w;
-            }
-            else if(gShadowParam14151617.x == 1)
-            {
-                v0.xyz = float3(posClip.xy, 0.5) * float3(gShadowParam0123.zw, posClip.z * gShadowParam0123.z);
-                float2 v1 = v0.xy * facetMask[gShadowParam14151617.y].xy;
-                v0.z = max(v0.z, 0.0);
-                v0.w = v1.x + v1.y + 2.0;
-            }
-            else
-            {
-                v0.xy = posClip.xy * gShadowParam0123.z;
-                float v1 = gShadowParam0123.x - gShadowParam891113.w;
-                float v2 = gShadowParam891113.w / v1;
-                float v3 = (gShadowParam0123.x * gShadowParam891113.w) / v1;
-                v0.z = posClip.z * v2 + v1;
-                v0.w = -posClip.z;
-            }
-
-            OUT.Position.x = dot(v0, float4(1, 1, 1, 1)) * 0.00001 + posClip.x;
-            OUT.Position.yw = posClip.yw * float2(1, 0) + float2(0, 0);
-
-            #ifdef ALPHA_SHADOW
-                OUT.DepthColorAndTexCoord.x = posClip.w;
-                OUT.DepthColorAndTexCoord.yz = IN.TexCoord;
-            #else
-                OUT.DepthColor = posClip.w;
-            #endif //ALPHA_SHADOW
-            return OUT;
-        }
-    #endif //NO_SKINNING
-
-    #ifdef ALPHA_SHADOW
-        float4 PS_ShadowDepth(VS_ShadowDepthOutput IN, float2 screenCoords : VPOS) : COLOR
-    #else
-        float4 PS_ShadowDepth(VS_ShadowDepthOutput IN) : COLOR
-    #endif //ALPHA_SHADOW
-    {
-        #ifdef ALPHA_SHADOW
-            float alpha = tex2D(TextureSampler, IN.DepthColorAndTexCoord.yz).a * globalScalars.x;
-            AlphaClip(alpha, screenCoords);
-            return float4(IN.DepthColorAndTexCoord.xxx, alpha);
-        #else
-            return IN.DepthColor.x * float4(1, 1, 1, 0) + float4(0, 0, 0, 1);
-        #endif //ALPHA_SHADOW
-    }
-
-    //probably something they wanted to implement in the pc port as an optimization but didn't have time 
-    //to finish it so it's always the same as PS_ShadowDepth
-    #ifdef ALPHA_SHADOW
-        float4 PS_ShadowDepthMasked(VS_ShadowDepthOutput IN, float2 screenCoords : VPOS) : COLOR
-    #else
-        float4 PS_ShadowDepthMasked(VS_ShadowDepthOutput IN) : COLOR
-    #endif //ALPHA_SHADOW
-    {
-        #ifdef ALPHA_SHADOW
-            return PS_ShadowDepth(IN, screenCoords);
-        #else
-            return PS_ShadowDepth(IN);
-        #endif //ALPHA_SHADOW
-    }
-
-
-
-#endif //NO_SHADOW_CASTING
-
-
-struct VS_InputBlit
-{
-    float3 Position : POSITION;
-    float2 TexCoord : TEXCOORD0;
-};
-struct VS_OutputBlit
-{
-    float4 Position : POSITION;
-    float4 TexCoord : TEXCOORD0;
-};
-VS_OutputBlit VS_Blit(VS_InputBlit IN)
-{
-    VS_OutputBlit OUT;
-    OUT.Position = IN.Position.xyzx * float4(1, 1, 1, 0) + float4(0, 0, 0, 1);
-    OUT.TexCoord = IN.TexCoord.xyxx * float4(1, 1, 0, 0);
-    return OUT;
-}
-
-struct VS_BlitPositionOnlyInput
-{
-    float3 Position : POSITION;
-};
-
-float4 VS_BlitPositionOnly(VS_BlitPositionOnlyInput IN) : POSITION
-{
-    return IN.Position.xyzx * float4(1, 1, 1, 0) + float4(0, 0, 0, 1);
 }
 
 

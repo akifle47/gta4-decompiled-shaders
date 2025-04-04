@@ -1,6 +1,7 @@
 #define NO_LUMINANCE_CONSTANTS
 #include "common.fxh"
-#include "megashader.fxh"
+#include "common_functions.fxh"
+#include "common_shadow.fxh"
 
 VertexShader VS_TransformCascadeGenSkin
 <

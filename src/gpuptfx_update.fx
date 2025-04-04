@@ -4,7 +4,7 @@
 #define PAD_LIGHT_CONSTANTS
 
 #include "common.fxh"
-#include "megashader.fxh"
+#include "common_functions.fxh"
 
 texture ParticlePosXY;
 sampler ParticlePosXYTexSampler = 

@@ -4,7 +4,7 @@
 #define NO_SHADOW_CASTING
 
 #include "common.fxh"
-#include "megashader.fxh"
+#include "common_functions.fxh"
 
 shared float4x4 gCameraMatrix : CameraMatrix;
 shared float4 gShadowmap_ShadowColor0 : Shadowmap_ShadowColor0 = float4(1.0, 1.0, 1.0, 0.723000);
