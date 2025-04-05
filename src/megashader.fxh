@@ -1011,3 +1011,33 @@ VS_OutputParaboloid VS_TransformParaboloid(VS_InputParaboloid IN)
 
     return OUT;
 }
+
+
+float4 PS_TexturedUnlit(VS_OutputUnlit IN, float2 screenCoords : VPOS) : COLOR
+{
+    AlphaClip(globalScalars.x, screenCoords);
+    
+    float4 color = tex2D(TextureSampler, IN.TexCoord) * IN.Color;
+
+    #ifdef EMISSIVE
+        color.xyz *= emissiveMultiplier;
+        #if defined(EMISSIVE_NIGHT)
+            color.xyz *= gDayNightEffects.w;
+            color.w *= globalScalars.x;
+        #elif defined(EMISSIVE_IDK)
+            float v0 = 1.0 - globalScalars.x;
+            v0 = 1.0 / (v0 * color.w - 1.0);
+            float v1 = v0 * -globalScalars.x;
+            v0 = globalScalars.x - (globalScalars.x * v0);
+            v0 = globalScalars.y * v0 + v1;
+            color.w *= v0;
+        #else
+            color.w *= globalScalars.x;
+        #endif //EMISSIVE_NIGHT
+        color *= colorize;
+    #else
+        color.w *= globalScalars.x;
+    #endif //EMISSIVE
+
+    return color;
+}
