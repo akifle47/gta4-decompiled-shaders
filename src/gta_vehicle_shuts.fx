@@ -7,7 +7,7 @@
 #define REFLECTIVE_POWER
 
 #include "common_vehicle.fxh"
-#include "megashader.fxh"
+#include "megashader_vehicle.fxh"
 
 //Vertex shaders
 VertexShader VS_VehicleTransform

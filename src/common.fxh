@@ -29,7 +29,7 @@
 
 #ifdef DIFFUSE_TEXTURE
     texture DiffuseTex;
-    sampler TextureSampler : register(s0) <string UIName = "Diffuse Texture";> = 
+    sampler TextureSampler <string UIName = "Diffuse Texture";> = 
     sampler_state
     {
         Texture = <DiffuseTex>;
@@ -173,7 +173,11 @@
 
 #ifdef ENVIRONMENT_MAP
     texture EnvironmentTex;
-    sampler EnvironmentSampler<string UIName = "Environment Texture"; string ResourceType = "Cube";> = 
+    #ifdef CUBEMAP_ENVIRONMENT_MAP
+        samplerCUBE EnvironmentSampler<string UIName = "Environment Texture"; string ResourceType = "Cube";> = 
+    #else
+        sampler2D EnvironmentSampler<string UIName = "Environment Texture"; string ResourceType = "Cube";> = 
+    #endif //CUBEMAP_ENVIRONMENT_MAP
     sampler_state
     {
         Texture = <EnvironmentTex>;

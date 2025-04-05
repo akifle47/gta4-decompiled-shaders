@@ -40,6 +40,23 @@
     }
 #endif //DEPTH_SHIFT
 
+#if defined(NORMAL_MAP) || defined(PARALLAX)
+    float3 UnpackNormalMap(float4 normalMap)
+    {
+        float3 normal;
+        #ifdef PARALLAX
+            normal.xy = normalMap.xy;
+        #else
+            //use wy as the xy axis if the alpha channel is not white and the red channel is black. gives better precision if using dxt5 compression
+            normal.xy = (1.0 - normalMap.w) - normalMap.x >= 0.0 ? normalMap.wy : normalMap.xy;
+        #endif //PARALLAX
+        normal.xy = (normal.xy - 0.5) * bumpiness;
+        normal.z = sqrt(dot(normal.xy, -normal.xy) + 1.0);
+
+        return normal;
+    }
+#endif //NORMAL_MAP || PARALLAX
+
 
 struct VS_Input
 {
@@ -236,6 +253,346 @@ VS_OutputDeferred VS_TransformAlphaClipD(VS_Input IN)
 }
 
 
+struct PS_OutputDeferred
+{
+    float4 Diffuse       : COLOR0;
+    float4 Normal        : COLOR1;
+    //intensity and power/shininess
+    float4 SpecularAndAO : COLOR2;
+    float4 Stencil       : COLOR3;
+};
+
+#ifdef NO_DEFERRED_ALPHA_DITHER
+    PS_OutputDeferred PS_DeferredTextured(VS_OutputDeferred IN)
+#else
+    PS_OutputDeferred PS_DeferredTextured(VS_OutputDeferred IN, float2 screenCoords : VPOS)
+#endif //NO_DEFERRED_ALPHA_DITHER
+{
+    PS_OutputDeferred OUT;
+    
+    #if defined(PARALLAX) && !defined(PARALLAX_STEEP)
+        float2 viewDirTan = normalize(IN.ViewDirTangent.xyz + 0.00001).xy;
+        float height = (tex2D(BumpSampler, IN.TexCoord).w * parallaxScaleBias) - (parallaxScaleBias / 2.0);
+        float2 texCoord = saturate(viewDirTan * height + IN.TexCoord);
+        float4 normalMap = tex2D(BumpSampler, texCoord);
+    #elif defined(PARALLAX) && defined(PARALLAX_STEEP)
+        const int numSamples = 8;
+        const float stepSize = 1.0 / numSamples;
+
+        float2 viewDirTan = normalize(IN.ViewDirTangent.xyz + 0.00001).xy;
+        viewDirTan = -viewDirTan * parallaxScaleBias;
+
+        float2 texCoord = IN.TexCoord;
+        float4 normalMap = tex2D(BumpSampler, texCoord);
+        float height = -normalMap.w;
+        float layerHeight = -1.0;
+
+        for(int i = 0; i < numSamples; i++)
+        {
+            float2 sampleTexCoord = texCoord + (viewDirTan * stepSize);
+            float4 sampleNormalMap = tex2D(BumpSampler, sampleTexCoord);
+
+            if(layerHeight <= height)
+            {
+                texCoord = sampleTexCoord;
+                normalMap = sampleNormalMap;
+                height = -normalMap.w;
+                layerHeight += stepSize;
+            }
+        }
+    #elif defined(NORMAL_MAP)
+        float2 texCoord = IN.TexCoord;
+        float4 normalMap = tex2D(BumpSampler, texCoord);
+    #else
+        float2 texCoord = IN.TexCoord;
+    #endif
+
+    float4 diffuse = tex2D(TextureSampler, texCoord);
+    #ifdef EMISSIVE
+        diffuse *= colorize;
+    #endif
+
+    #ifdef NO_DIFFUSE_WRITE
+        float alpha = 0.0;
+    #else
+        float alpha = diffuse.w * IN.Color.w * globalScalars.x;
+    #endif //NO_DIFFUSE_WRITE
+
+    #ifdef DIRT_DECAL_MASK
+        float dirtMask = dot(diffuse.xyz, dirtDecalMask.xyz) * IN.Color.w * globalScalars.x;
+    #endif //DIRT_DECAL_MASK
+
+    #ifdef NO_DEFERRED_ALPHA_DITHER
+        if(alpha <= 0.176470593)
+            discard;
+    #else
+        AlphaClip(globalScalars.x, screenCoords);
+    #endif //NO_DEFERRED_ALPHA_DITHER
+
+    float3 normal;
+    #if defined(NO_NORMAL_WRITE)
+        normal = float3(0, 0, 0);
+        OUT.Normal = float4(normal, 0);
+    #elif defined(NORMAL_MAP) || defined(PARALLAX)
+        float3x3 tbn = float3x3(IN.TangentWorld.xyz, IN.BitangentWorld.xyz, IN.NormalWorldAndDepthColor.xyz);
+        normal = UnpackNormalMap(normalMap);
+        normal = normalize(mul(normal, tbn) + 0.00001);
+        OUT.Normal.xyz = (normal + 1.0) * 0.5;
+        #ifdef NO_DIFFUSE_WRITE
+            OUT.Normal.w = normalMap.z * globalScalars.x;
+        #elif defined(PARALLAX) && defined(DEPTH_SHIFT_SCALE) //?
+            OUT.Normal.w = normalMap.z * alpha * globalScalars.x;
+        #else
+            OUT.Normal.w = alpha;
+        #endif //NO_DIFFUSE_WRITE
+
+        float v0 = dot(normalMap.xy, normalMap.xy) >= 0.02 ? 1.0 : 0.0;
+    #else
+        normal = normalize(IN.NormalWorldAndDepthColor.xyz + 0.00001);
+        OUT.Normal.xyz = (normal + 1.0) * 0.5;
+        OUT.Normal.w = alpha;
+    #endif //NO_NORMAL_WRITE
+    
+    #if defined(NO_DIFFUSE_WRITE)
+        OUT.Diffuse = float4(0, 0, 0, 0);
+    #elif defined(DIRT_DECAL_MASK)
+        OUT.Diffuse.xyz = IN.Color.xyz;
+        OUT.Diffuse.w = dirtMask;
+    #else
+        OUT.Diffuse.xyz = diffuse.xyz;
+        OUT.Diffuse.w = alpha;
+    #endif //NO_DIFFUSE_WRITE
+
+    #ifdef SPECULAR_MAP
+        float4 specMap = tex2D(SpecSampler, texCoord);
+        float specShininess = specMap.w * specularFactor;
+        float specIntensity = dot(specMap.xyz, specMapIntMask.xyz) * specularColorFactor;
+    #elif defined(SPECULAR)
+        float specIntensity = specularColorFactor;
+        float specShininess = specularFactor;
+    #endif //SPECULAR_MAP
+
+    #ifdef ENVIRONMENT_MAP
+        float3 viewDir = -normalize(IN.ViewDir + 0.00001);
+        float3 R = reflect(viewDir, normal);
+        R = normalize(R + 0.00001);
+
+        #ifdef CUBEMAP_ENVIRONMENT_MAP
+            float3 specular = texCUBE(EnvironmentSampler, R).xyz;
+        #else
+            float3 specular = tex2D(EnvironmentSampler, (R.xy + 1.0) * -0.5).xyz;
+        #endif //CUBEMAP_ENVIRONMENT_MAP
+
+        #ifdef SPECULAR
+            specular *= specIntensity;
+        #endif
+
+        OUT.Diffuse.xyz += (specular * reflectivePower);
+    #endif //ENVIRONMENT_MAP
+
+    //?
+    #ifdef PARALLAX
+        OUT.Diffuse.xyz *= v0;
+        specIntensity *= v0;
+    #endif //PARALLAX
+    
+    #ifdef SPECULAR
+        OUT.SpecularAndAO.x = specIntensity * 0.5;
+        OUT.SpecularAndAO.y = sqrt(specShininess / 512.0);
+        #ifdef DIRT_DECAL_MASK
+            OUT.SpecularAndAO.z = 0.0;
+        #else
+            OUT.SpecularAndAO.z = IN.Color.x;
+        #endif //DIRT_DECAL_MASK
+    #else
+        #if defined(NO_SPECULAR_WRITE)
+            OUT.SpecularAndAO.xyz = float3(0, 0, 0);
+        #elif defined(EMISSIVE)
+            OUT.SpecularAndAO.xyz = globalScalars.z * float3(0, 0, 1) + float3(0, 0.25, 0);
+        #else
+            OUT.SpecularAndAO.xyz = IN.Color.x * float3(0, 0, 1) + float3(0, 0.25, 0);
+        #endif //NO_SPECULAR_WRITE
+    #endif //SPECULAR
+
+    #ifdef PARALLAX
+        OUT.SpecularAndAO.z *= v0;
+    #endif //PARALLAX
+
+    #if defined(AMBIENT_DECAL_MASK)
+        OUT.SpecularAndAO.w = saturate(1.0 - dot(diffuse.xyz, ambientDecalMask.xyz)) * alpha * globalScalars2.z;
+    #elif defined(DIRT_DECAL_MASK)
+        OUT.SpecularAndAO.w = dirtMask;
+    #else
+        OUT.SpecularAndAO.w = alpha;
+    #endif //AMBIENT_DECAL_MASK
+
+    OUT.Stencil = float4(1, 0, 0, 0) * stencil.x;
+    
+    return OUT;
+}
+
+//just PS_DeferredTextured but with dithering
+PS_OutputDeferred PS_DeferredTexturedAlphaClip(VS_OutputDeferred IN, float2 screenCoords : VPOS)
+{
+    PS_OutputDeferred OUT;
+    
+    #if defined(PARALLAX) && !defined(PARALLAX_STEEP)
+        float2 viewDirTan = normalize(IN.ViewDirTangent.xyz + 0.00001).xy;
+        float height = (tex2D(BumpSampler, IN.TexCoord).w * parallaxScaleBias) - (parallaxScaleBias / 2.0);
+        float2 texCoord = saturate(viewDirTan * height + IN.TexCoord);
+        float4 normalMap = tex2D(BumpSampler, texCoord);
+    #elif defined(PARALLAX) && defined(PARALLAX_STEEP)
+        const int numSamples = 8;
+        const float stepSize = 1.0 / numSamples;
+
+        float2 viewDirTan = normalize(IN.ViewDirTangent.xyz + 0.00001).xy;
+        viewDirTan = -viewDirTan * parallaxScaleBias;
+
+        float2 texCoord = IN.TexCoord;
+        float4 normalMap = tex2D(BumpSampler, texCoord);
+        float height = -normalMap.w;
+        float layerHeight = -1.0;
+
+        for(int i = 0; i < numSamples; i++)
+        {
+            float2 sampleTexCoord = texCoord + (viewDirTan * stepSize);
+            float4 sampleNormalMap = tex2D(BumpSampler, sampleTexCoord);
+
+            if(layerHeight <= height)
+            {
+                texCoord = sampleTexCoord;
+                normalMap = sampleNormalMap;
+                height = -normalMap.w;
+                layerHeight += stepSize;
+            }
+        }
+    #elif defined(NORMAL_MAP)
+        float2 texCoord = IN.TexCoord;
+        float4 normalMap = tex2D(BumpSampler, texCoord);
+    #else
+        float2 texCoord = IN.TexCoord;
+    #endif
+
+    float4 diffuse = tex2D(TextureSampler, texCoord);
+    #ifdef EMISSIVE
+        diffuse *= colorize;
+    #endif
+
+    #ifdef NO_DIFFUSE_WRITE
+        float alpha = 0.0;
+    #else
+        float alpha = diffuse.w * IN.Color.w * globalScalars.x;
+    #endif //NO_DIFFUSE_WRITE
+
+    #ifdef DIRT_DECAL_MASK
+        float dirtMask = dot(diffuse.xyz, dirtDecalMask.xyz) * IN.Color.w * globalScalars.x;
+    #endif //DIRT_DECAL_MASK
+
+    AlphaClip(globalScalars.x, screenCoords);
+
+    float3 normal;
+    #if defined(NO_NORMAL_WRITE)
+        normal = float3(0, 0, 0);
+        OUT.Normal = float4(normal, 0);
+    #elif defined(NORMAL_MAP) || defined(PARALLAX)
+        float3x3 tbn = float3x3(IN.TangentWorld.xyz, IN.BitangentWorld.xyz, IN.NormalWorldAndDepthColor.xyz);
+        normal = UnpackNormalMap(normalMap);
+        normal = normalize(mul(normal, tbn) + 0.00001);
+        OUT.Normal.xyz = (normal + 1.0) * 0.5;
+        #ifdef NO_DIFFUSE_WRITE
+            OUT.Normal.w = normalMap.z * globalScalars.x;
+        #elif defined(PARALLAX) && defined(DEPTH_SHIFT_SCALE) //?
+            OUT.Normal.w = normalMap.z * alpha * globalScalars.x;
+        #else
+            OUT.Normal.w = alpha;
+        #endif //NO_DIFFUSE_WRITE
+
+        float v0 = dot(normalMap.xy, normalMap.xy) >= 0.02 ? 1.0 : 0.0;
+    #else
+        normal = normalize(IN.NormalWorldAndDepthColor.xyz + 0.00001);
+        OUT.Normal.xyz = (normal + 1.0) * 0.5;
+        OUT.Normal.w = alpha;
+    #endif //NO_NORMAL_WRITE
+    
+    #if defined(NO_DIFFUSE_WRITE)
+        OUT.Diffuse = float4(0, 0, 0, 0);
+    #elif defined(DIRT_DECAL_MASK)
+        OUT.Diffuse.xyz = IN.Color.xyz;
+        OUT.Diffuse.w = dirtMask;
+    #else
+        OUT.Diffuse.xyz = diffuse.xyz;
+        OUT.Diffuse.w = alpha;
+    #endif //NO_DIFFUSE_WRITE
+
+    #ifdef SPECULAR_MAP
+        float4 specMap = tex2D(SpecSampler, texCoord);
+        float specShininess = specMap.w * specularFactor;
+        float specIntensity = dot(specMap.xyz, specMapIntMask.xyz) * specularColorFactor;
+    #elif defined(SPECULAR)
+        float specIntensity = specularColorFactor;
+        float specShininess = specularFactor;
+    #endif //SPECULAR_MAP
+
+    #ifdef ENVIRONMENT_MAP
+        float3 viewDir = -normalize(IN.ViewDir + 0.00001);
+        float3 R = reflect(viewDir, normal);
+        R = normalize(R + 0.00001);
+
+        #ifdef CUBEMAP_ENVIRONMENT_MAP
+            float3 specular = texCUBE(EnvironmentSampler, R).xyz;
+        #else
+            float3 specular = tex2D(EnvironmentSampler, (R.xy + 1.0) * -0.5).xyz;
+        #endif //CUBEMAP_ENVIRONMENT_MAP
+
+        #ifdef SPECULAR
+            specular *= specIntensity;
+        #endif
+
+        OUT.Diffuse.xyz += (specular * reflectivePower);
+    #endif //ENVIRONMENT_MAP
+
+    //?
+    #ifdef PARALLAX
+        OUT.Diffuse.xyz *= v0;
+        specIntensity *= v0;
+    #endif //PARALLAX
+    
+    #ifdef SPECULAR
+        OUT.SpecularAndAO.x = specIntensity * 0.5;
+        OUT.SpecularAndAO.y = sqrt(specShininess / 512.0);
+        #ifdef DIRT_DECAL_MASK
+            OUT.SpecularAndAO.z = 0.0;
+        #else
+            OUT.SpecularAndAO.z = IN.Color.x;
+        #endif //DIRT_DECAL_MASK
+    #else
+        #if defined(NO_SPECULAR_WRITE)
+            OUT.SpecularAndAO.xyz = float3(0, 0, 0);
+        #elif defined(EMISSIVE)
+            OUT.SpecularAndAO.xyz = globalScalars.z * float3(0, 0, 1) + float3(0, 0.25, 0);
+        #else
+            OUT.SpecularAndAO.xyz = IN.Color.x * float3(0, 0, 1) + float3(0, 0.25, 0);
+        #endif //NO_SPECULAR_WRITE
+    #endif //SPECULAR
+
+    #ifdef PARALLAX
+        OUT.SpecularAndAO.z *= v0;
+    #endif //PARALLAX
+
+    #if defined(AMBIENT_DECAL_MASK)
+        OUT.SpecularAndAO.w = saturate(1.0 - dot(diffuse.xyz, ambientDecalMask.xyz)) * alpha * globalScalars2.z;
+    #elif defined(DIRT_DECAL_MASK)
+        OUT.SpecularAndAO.w = dirtMask;
+    #else
+        OUT.SpecularAndAO.w = alpha;
+    #endif //AMBIENT_DECAL_MASK
+
+    OUT.Stencil = float4(1, 0, 0, 0) * stencil.x;
+    
+    return OUT;
+}
+
+
 struct VS_InputUnlit
 {
     float3 Position : POSITION;
@@ -272,11 +629,6 @@ VS_OutputUnlit VS_TransformUnlit(VS_InputUnlit IN)
 
     OUT.Color = IN.Color;
     return OUT;
-}
-
-VS_OutputUnlit VS_VehicleTransformUnlit(VS_InputUnlit IN)
-{
-    return VS_TransformUnlit(IN);
 }
 
 
