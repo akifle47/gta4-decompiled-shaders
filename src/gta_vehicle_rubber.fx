@@ -7,7 +7,8 @@
 #define DIRT
 
 #include "common_vehicle.fxh"
-#include "megashader.fxh"
+#include "common_functions.fxh"
+#include "megashader_todo.fxh"
 
 //Vertex shaders
 VertexShader VS_VehicleTransform

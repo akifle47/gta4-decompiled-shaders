@@ -3,6 +3,8 @@
 
 #include "common.fxh"
 #include "common_functions.fxh"
+#define NO_LIGHTING
+#include "common_lighting.fxh"
 
 texture gbufferTexture1;
 sampler GBufferTextureSampler1 = 
@@ -2590,34 +2592,14 @@ asm
     // approximately 60 instruction slots used (4 texture, 56 arithmetic)
 };
 
-//by ParallelLines
 float4 PS_GTADepthEffects(float2 texCoord : TEXCOORD0) : COLOR
 {
     float depth = tex2D(GBufferTextureSampler3, texCoord).x;
     float linearDepth = (-dofProj.x * dofProj.y) / (depth * (dofProj.y - dofProj.x) - dofProj.y);
+    float noSkyMask = depth >= 1.0 ? 0.0 : 1.0;
+    float3 color = tex2D(HDRSampler, texCoord).xyz;
 
-    float noSkyMask = depth - 1.0 >= 0.0 ? 0.0 : 1.0;
-    float colorFactor = 1.0 - clamp((gDepthFxParams.w - linearDepth) / (gDepthFxParams.w - gDepthFxParams.z), 0.0, 1.0);
-    colorFactor *= noSkyMask;
-
-    float saturation = colorFactor * (gDepthFxParams.x - 1.0) + 1.0;
-    float gamma = colorFactor * (gDepthFxParams.y - 1.0);
-    float3 sourceColor = tex2D(HDRSampler, texCoord).xyz;
-    float luminance = dot(sourceColor, float3(0.2125, 0.7154, 0.0721));
-
-    // apply "DepthFx" (saturation and gamma depending on distance)
-    sourceColor = lerp(luminance, sourceColor, saturation) * pow(abs(luminance + 0.0000001), gamma);
-
-    float fogStartToEndFactor = clamp((linearDepth - globalFogParams.x) / (globalFogParams.y - globalFogParams.x), 0.0, 1.0);
-    float fogCameraToStartFactor = clamp(linearDepth / globalFogParams.x, 0.0, 1.0);
-    float fogFactor = lerp(fogStartToEndFactor, fogCameraToStartFactor, globalFogParams.w) + globalFogParams.z;
-    fogFactor *= noSkyMask;
-
-    float3 fogColor = lerp(globalFogColorN.xyz, globalFogColor.xyz, fogStartToEndFactor);
-
-    float skyFogFactor = (1.0 - noSkyMask) * globalFogParams.w;
-    sourceColor = lerp(sourceColor, globalFogColorN.xyz, skyFogFactor); // sky pixels are affected when "fog density" > 0.0
-    return float4(lerp(sourceColor, fogColor, fogFactor), 1.0);
+    return float4(ComputeDepthEffects(noSkyMask, color, linearDepth), 1);
 }
 
 PixelShader PS_Simple

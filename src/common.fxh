@@ -1,4 +1,5 @@
-//do not add any new variables to existing effects or change the names or order of existing ones otherwise all vanilla drawables using them will no longer be compatible
+//note: adding new variables to existing effects or changing the names or order of existing varables will make drawables 
+//using that effect no longer compatible unless you rebuild them
 #include "common_globals.fxh"
 
 #ifdef ANIMATED

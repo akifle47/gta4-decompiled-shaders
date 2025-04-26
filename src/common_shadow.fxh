@@ -1,4 +1,56 @@
 #if !defined(NO_SHADOW_CASTING) && !defined(NO_SHADOW_CASTING_VEHICLE)
+    float ComputeShadow(float3 posWorld)
+    {
+        const int numShadowSamples = 12;
+        const float2 jitter[numShadowSamples] =
+        {
+            float2(-0.326212, -0.405810), 
+            float2(-0.840144, -0.073580), 
+            float2(-0.695914, 0.457137), 
+            float2(-0.203345, 0.620716), 
+            float2(0.962340, -0.194983), 
+            float2(0.473434, -0.480026), 
+            float2(0.519456, 0.767022), 
+            float2(0.185461, -0.893124), 
+            float2(0.507431, 0.064425), 
+            float2(0.896420, 0.412458), 
+            float2(-0.321940, -0.932615), 
+            float2(-0.791559, -0.597710)
+        };
+
+        float3 posShadow = posWorld.xxx * gShadowMatrix[0].xyw;
+        posShadow += posWorld.yyy * gShadowMatrix[1].xyw;
+        posShadow += posWorld.zzz * gShadowMatrix[2].xyw;
+        posShadow += gShadowMatrix[3].xyw;
+        
+        float4 cascadeMask;
+        cascadeMask.x = 1.0;
+        cascadeMask.yzw = -(dot(gViewInverse[2].xyz, posWorld.xyz).xxx + gFacetCentre.xyz);
+        cascadeMask.yzw = cascadeMask.yzw >= 0 ? 1 : 0;
+
+        posShadow.xy *= float2(dot(cascadeMask, gShadowParam0123), dot(cascadeMask, gShadowParam4567));
+        posShadow.xy += float2(dot(cascadeMask, gShadowParam891113), dot(cascadeMask, gShadowParam14151617));
+
+        float dist = distance(posWorld, gViewInverse[3].xyz);
+
+        float atlasPixelOffset = gShadowParam18192021.y;
+        float shadow = 0.0;
+        for(int i = 0; i < numShadowSamples; i++)
+        {
+            float2 sampleCoords = posShadow.xy + jitter[i] * atlasPixelOffset;
+            shadow += posShadow.z >= tex2D(gShadowZSamplerDir, sampleCoords).x ? 1.0 : 0.0;
+        }
+
+        float shadowFade = dist / gShadowParam18192021.w;
+        shadowFade = shadowFade * shadowFade * 1.5;
+        shadow = (shadow / numShadowSamples) + shadowFade;
+
+        float2 pastShadowDistance = dist >= gShadowParam18192021.w ? float2(1, -1) : float2(0, -0);
+        shadow = saturate(pastShadowDistance.y + shadow >= 0.0 ? shadow : pastShadowDistance.x);
+
+        return shadow;
+    }
+
     struct VS_ShadowDepthInput
     {
         float3 Position : POSITION;
@@ -53,7 +105,7 @@
             float4 posClip = mul(float4(posWorld, 1), gShadowMatrix);
 
             OUT.Position.z = 1.0 - min(posClip.z, 1.0);
-            float4 v0;
+            float4 cascadeMask;
 
             //only this branch seems to ever be used for directional shadows
             if(gShadowParam14151617.x == 0)
@@ -62,28 +114,28 @@
                 float z0 = v1 * ((gShadowParam14151617.y == 0.0) - 0.5);
                 float z1 = z0 * 2.0;
                 float len = length(float3(posClip.xy, z1));
-                v0.xy = posClip.xy / ((z0 * -2.0) + len);
-                v0.w = z1 * -gShadowParam0123.w;
-                v0.z = len * -gShadowParam0123.w;
+                cascadeMask.xy = posClip.xy / ((z0 * -2.0) + len);
+                cascadeMask.w = z1 * -gShadowParam0123.w;
+                cascadeMask.z = len * -gShadowParam0123.w;
             }
             else if(gShadowParam14151617.x == 1)
             {
-                v0.xyz = float3(posClip.xy, 0.5) * float3(gShadowParam0123.zw, posClip.z * gShadowParam0123.z);
-                float2 v1 = v0.xy * facetMask[gShadowParam14151617.y].xy;
-                v0.z = max(v0.z, 0.0);
-                v0.w = v1.x + v1.y + 2.0;
+                cascadeMask.xyz = float3(posClip.xy, 0.5) * float3(gShadowParam0123.zw, posClip.z * gShadowParam0123.z);
+                float2 v1 = cascadeMask.xy * facetMask[gShadowParam14151617.y].xy;
+                cascadeMask.z = max(cascadeMask.z, 0.0);
+                cascadeMask.w = v1.x + v1.y + 2.0;
             }
             else
             {
-                v0.xy = posClip.xy * gShadowParam0123.z;
+                cascadeMask.xy = posClip.xy * gShadowParam0123.z;
                 float v1 = gShadowParam0123.x - gShadowParam891113.w;
                 float v2 = gShadowParam891113.w / v1;
                 float v3 = (gShadowParam0123.x * gShadowParam891113.w) / v1;
-                v0.z = posClip.z * v2 + v1;
-                v0.w = -posClip.z;
+                cascadeMask.z = posClip.z * v2 + v1;
+                cascadeMask.w = -posClip.z;
             }
 
-            OUT.Position.x = dot(v0, float4(1, 1, 1, 1)) * 0.00001 + posClip.x;
+            OUT.Position.x = dot(cascadeMask, float4(1, 1, 1, 1)) * 0.00001 + posClip.x;
             OUT.Position.yw = posClip.yw * float2(1, 0) + float2(0, 0);
 
             #ifdef ALPHA_SHADOW
