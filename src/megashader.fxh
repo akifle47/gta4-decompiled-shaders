@@ -1022,3 +1022,70 @@ float4 PS_TexturedZero(VS_Output IN, float2 screenCoords : VPOS) : COLOR
 
     return lighting;
 }
+
+float4 PS_TexturedBasic(VS_Output IN, float2 screenCoords : VPOS) : COLOR
+{
+    #ifndef DIFFUSE_ALPHA
+        AlphaClip(globalScalars.x, screenCoords);
+    #endif //!DIFFUSE_ALPHA
+    
+    float4 diffuse = tex2D(TextureSampler, IN.TexCoord);
+    #ifdef DIRT_DECAL_MASK
+        diffuse *= IN.Color;
+    #else
+        diffuse.w *= IN.Color.w;
+    #endif
+
+    float3 normal = normalize(IN.NormalWorldAndDepth.xyz + 0.00001);
+    
+    #if defined(EMISSIVE)
+        float ambientOcclusion = globalScalars.z;
+    #elif defined(DIRT_DECAL_MASK)
+        float ambientOcclusion = 1.0;
+    #else
+        float ambientOcclusion = IN.Color.x;
+    #endif //EMISSIVE
+
+    float specIntensity = 1.0;
+    float specPower = 1.0;
+    #ifdef SPECULAR
+        specIntensity = specularColorFactor;
+        specPower = specularFactor;
+    #endif //SPECULAR
+
+    #if defined(SPECULAR) || defined(ENVIRONMENT_MAP)
+        float3 viewDir = normalize(IN.ViewDir.xyz + 0.00001);
+    #else
+        float3 viewDir = float3(0, 0, 0);
+    #endif //SPECULAR || ENVIRONMENT_MAP
+
+    SurfaceProperties surfaceProperties;
+    surfaceProperties.Diffuse = diffuse.xyz;
+    surfaceProperties.Normal = normal;
+    surfaceProperties.SpecularIntensity = specIntensity;
+    surfaceProperties.SpecularPower = specPower;
+    surfaceProperties.AmbientOcclusion = ambientOcclusion;
+    float4 lighting = float4(ComputeLighting(false, IN.PositionWorld.xyz, viewDir, surfaceProperties), diffuse.w * globalScalars.x);
+
+    #ifdef EMISSIVE
+        diffuse.xyz *= IN.Color.xyz;
+        #ifdef EMISSIVE_IDK
+            lighting.xyz = diffuse.xyz * emissiveMultiplier;
+        #else
+            lighting.xyz += diffuse.xyz * emissiveMultiplier;
+        #endif //EMISSIVE_IDK
+
+        #ifdef EMISSIVE_NIGHT
+            lighting.xyz *= gDayNightEffects.w;
+        #endif //EMISSIVE_NIGHT
+    #endif //EMISSIVE
+
+    #ifdef DIFFUSE_ALPHA
+        AlphaClip(lighting.w, screenCoords);
+    #endif //DIFFUSE_ALPHA
+
+    float fogStartToEndFactor = saturate((IN.NormalWorldAndDepth.w - globalFogParams.x) / (globalFogParams.y - globalFogParams.x));
+    lighting.xyz = lerp(lighting, globalFogColor, fogStartToEndFactor).xyz;
+    
+    return lighting;
+}

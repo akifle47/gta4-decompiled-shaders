@@ -41,9 +41,14 @@ float3 ComputeDepthEffects(in float noSkyMask, in float3 color, in float linearD
         float3 normal = surfProperties.Normal;
         float3 directionalColor = gDirectionalColour.xyz * gDirectionalColour.w;
 
+        bool enableSpecular = shadowed;
+        #if defined(SPECULAR) && !defined(DEFERRED_LIGHTING)
+            enableSpecular = true;
+        #endif //SPECULAR && !DEFERRED_LIGHTING
+
         float3 R = reflect(viewDir, normal);
         float3 specularLight = 0;
-        if(shadowed)
+        if(enableSpecular)
         {
             #if defined(SPECULAR) || defined(DEFERRED_LIGHTING)
                 specularLight = saturate(dot(-gDirectionalLight.xyz, R)).xxx + 0.00001;
