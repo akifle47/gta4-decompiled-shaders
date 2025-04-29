@@ -1023,10 +1023,20 @@ float4 PS_TexturedZero(VS_Output IN, float2 screenCoords : VPOS) : COLOR
     return lighting;
 }
 
-float4 PS_TexturedBasic(VS_Output IN, float2 screenCoords : VPOS) : COLOR
+struct InputBasic
+{
+    float2 TexCoord;
+    float4 NormalWorldAndDepth;
+    //view pos to world pos 
+    float3 ViewDir;
+    float4 Color;
+    float2 ScreenCoords;
+};
+
+float4 TexturedBasic(InputBasic IN)
 {
     #ifndef DIFFUSE_ALPHA
-        AlphaClip(globalScalars.x, screenCoords);
+        AlphaClip(globalScalars.x, IN.ScreenCoords);
     #endif //!DIFFUSE_ALPHA
     
     float4 diffuse = tex2D(TextureSampler, IN.TexCoord);
@@ -1065,7 +1075,7 @@ float4 PS_TexturedBasic(VS_Output IN, float2 screenCoords : VPOS) : COLOR
     surfaceProperties.SpecularIntensity = specIntensity;
     surfaceProperties.SpecularPower = specPower;
     surfaceProperties.AmbientOcclusion = ambientOcclusion;
-    float4 lighting = float4(ComputeLighting(false, IN.PositionWorld.xyz, viewDir, surfaceProperties), diffuse.w * globalScalars.x);
+    float4 lighting = float4(ComputeLighting(false, float3(-1, -1, -1), viewDir, surfaceProperties), diffuse.w * globalScalars.x);
 
     #ifdef EMISSIVE
         diffuse.xyz *= IN.Color.xyz;
@@ -1081,11 +1091,45 @@ float4 PS_TexturedBasic(VS_Output IN, float2 screenCoords : VPOS) : COLOR
     #endif //EMISSIVE
 
     #ifdef DIFFUSE_ALPHA
-        AlphaClip(lighting.w, screenCoords);
+        AlphaClip(lighting.w, IN.ScreenCoords);
     #endif //DIFFUSE_ALPHA
 
     float fogStartToEndFactor = saturate((IN.NormalWorldAndDepth.w - globalFogParams.x) / (globalFogParams.y - globalFogParams.x));
     lighting.xyz = lerp(lighting, globalFogColor, fogStartToEndFactor).xyz;
-    
+
+    return lighting;
+}
+
+float4 PS_TexturedBasic(VS_Output IN, float2 screenCoords : VPOS) : COLOR
+{
+    InputBasic inputBasic;
+    inputBasic.TexCoord = IN.TexCoord;
+    inputBasic.NormalWorldAndDepth = IN.NormalWorldAndDepth;
+    #if defined(SPECULAR) || defined(ENVIRONMENT_MAP)
+        inputBasic.ViewDir = IN.ViewDir;
+    #else
+        inputBasic.ViewDir = float3(0, 0, 0);
+    #endif //SPECULAR || ENVIRONMENT_MAP
+    inputBasic.Color = IN.Color;
+    inputBasic.ScreenCoords = screenCoords;
+    return TexturedBasic(inputBasic);
+}
+
+float4 PS_TexturedBasicParaboloid(VS_OutputParaboloid IN, float2 screenCoords : VPOS) : COLOR
+{
+    clip(IN.ViewDir.z - PARABOLOID_HEIGHT_OFFSET);
+
+    InputBasic inputBasic;
+    inputBasic.TexCoord = IN.TexCoord;
+    inputBasic.NormalWorldAndDepth = IN.NormalWorldAndDepth;
+    inputBasic.ViewDir = IN.ViewDir;
+    inputBasic.Color = IN.Color;
+    inputBasic.ScreenCoords = screenCoords;
+    float4 lighting = TexturedBasic(inputBasic);
+
+    float fogStartToEndFactor = saturate((IN.NormalWorldAndDepth.w - globalFogParams.x) / (globalFogParams.y - globalFogParams.x));
+    lighting.xyz = lerp(lighting, globalFogColor, fogStartToEndFactor).xyz;
+    lighting.w *= saturate((64 - IN.NormalWorldAndDepth.w) / 4);
+
     return lighting;
 }
