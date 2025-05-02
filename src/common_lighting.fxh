@@ -32,7 +32,7 @@ float3 ComputeDepthEffects(in float noSkyMask, in float3 color, in float linearD
         float  AmbientOcclusion;
     };
 
-    float3 ComputeLighting(in bool shadowed, in float3 posWorld, in float3 viewDir, in SurfaceProperties surfProperties)
+    float3 ComputeLighting(in bool shadowed, in float3 posWorld, in float3 fragPosToViewPosDir, in SurfaceProperties surfProperties)
     {
         float shadow = 1;
         if(shadowed)
@@ -46,7 +46,7 @@ float3 ComputeDepthEffects(in float noSkyMask, in float3 color, in float linearD
             enableSpecular = true;
         #endif //SPECULAR && !DEFERRED_LIGHTING
 
-        float3 R = reflect(viewDir, normal);
+        float3 R = reflect(fragPosToViewPosDir, normal);
         float3 specularLight = 0;
         if(enableSpecular)
         {
@@ -63,10 +63,10 @@ float3 ComputeDepthEffects(in float noSkyMask, in float3 color, in float linearD
         }
 
         #ifdef DEFERRED_LIGHTING
-            float rimLighting = pow(1.0 - abs(dot(-viewDir, normal)), 4) * 0.75 + 0.25;
+            float rimLighting = pow(1.0 - abs(dot(-fragPosToViewPosDir, normal)), 4) * 0.75 + 0.25;
 
             float dist = distance(posWorld, gViewInverse[3].xyz);
-            float3 v3 = viewDir * saturate(dist / 50) + R;
+            float3 v3 = fragPosToViewPosDir * saturate(dist / 50) + R;
             v3 = normalize(v3 + 0.00001);
             float parabReflDistanceFade = 1.0 - saturate(dist / 100);
             float parabReflVerticalFade = saturate(v3.z * 5);
