@@ -32,11 +32,11 @@ float3 ComputeDepthEffects(in float noSkyMask, in float3 color, in float linearD
         float  AmbientOcclusion;
     };
 
-    float3 ComputeLighting(in bool shadowed, in float3 posWorld, in float3 fragPosToViewPosDir, in SurfaceProperties surfProperties)
+    float3 ComputeDirectionalighting(in bool shadowed, in float3 posWorld, in float3 fragPosToViewPosDir, in SurfaceProperties surfProperties)
     {
         float shadow = 1;
         if(shadowed)
-            shadow = ComputeShadow(posWorld);
+            shadow = ComputeDirectionalShadow(posWorld);
 
         float3 normal = surfProperties.Normal;
         float3 directionalColor = gDirectionalColour.xyz * gDirectionalColour.w;

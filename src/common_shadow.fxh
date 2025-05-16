@@ -1,5 +1,5 @@
 #if !defined(NO_SHADOW_CASTING) && !defined(NO_SHADOW_CASTING_VEHICLE)
-    float ComputeShadow(float3 posWorld)
+    float ComputeDirectionalShadow(in float3 posWorld)
     {
         const int numShadowSamples = 12;
         const float2 jitter[numShadowSamples] =
@@ -50,7 +50,7 @@
 
         return shadow;
     }
-
+    
     struct VS_ShadowDepthInput
     {
         float3 Position : POSITION;
