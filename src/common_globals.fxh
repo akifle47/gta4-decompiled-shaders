@@ -41,14 +41,14 @@ shared row_major float4x4 gViewInverse : ViewInverse : register(c12);
     shared float4 gLightPointPosY : LightPointPositionY : register(c33);
     shared float4 gLightPointPosZ : LightPointPositionZ : register(c34);
     shared float4 gLightPointColR : LightPointColR  : register(c35);
-    shared float4 gLightPointColG : LightPointColG  : register(c64);
-    shared float4 gLightPointColB : LightPointColB  : register(c65);
+    shared float4 gLightPointColG : LightPointColG;
+    shared float4 gLightPointColB : LightPointColB;
     shared float4 gLightPointFallOff : LightPointFallOff  : register(c36);
-    shared float4 gLightDir2X : LightDir2X : register(c67);
-    shared float4 gLightDir2Y : LightDir2Y : register(c68);
-    shared float4 gLightDir2Z : LightDir2Z : register(c69);
-    shared float4 gLightConeScale2 : LightConeScale2   : register(c70);
-    shared float4 gLightConeOffset2 : LightConeOffset2 : register(c71);
+    shared float4 gLightDir2X : LightDir2X;
+    shared float4 gLightDir2Y : LightDir2Y;
+    shared float4 gLightDir2Z : LightDir2Z;
+    shared float4 gLightConeScale2 : LightConeScale2;
+    shared float4 gLightConeOffset2 : LightConeOffset2;
     shared float4 gLightAmbient0 : LightAmbientColor0 : register(c37) <string UIWidget = "Ambient Light Color 0"; string Space = "material";> = float4(0.0, 0.0, 0.0, 1.0);
     shared float4 gLightAmbient1 : LightAmbientColor1 : register(c38) <string UIWidget = "Ambient Light Color 1"; string Space = "material";> = float4(0.0, 0.0, 0.0, 1.0);
     
@@ -161,8 +161,8 @@ shared row_major float4x4 gViewInverse : ViewInverse : register(c12);
 #endif
 
 #ifdef PTX_CLIP_PLANES
-    shared float4 NearFarPlane : NearFarPlane : register(c128);
-    shared float4 gInvScreenSize : InvScreenSize : register(c129);
+    shared float4 NearFarPlane : NearFarPlane;
+    shared float4 gInvScreenSize : InvScreenSize;
 #endif
 
 #ifdef PTX_DEPTH_MAP
