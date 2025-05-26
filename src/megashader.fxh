@@ -266,13 +266,9 @@ VS_OutputDeferred VS_TransformD(VS_Input IN)
 
     float4 posClip = mul(float4(IN.Position, 1.0), gWorldViewProj);
 
-    #ifdef DEPTH_SHIFT
-        OUT.Position.xyz = ComputeDepthShift(posClip);
-    #else
-        OUT.Position.xyz = posClip.xyz;
-    #endif //DEPTH_SHIFT
-
+    OUT.Position.xyz = posClip.xyz;
     OUT.Position.w = OUT.NormalWorldAndDepth.w = posClip.w;
+    
     #ifndef ANIMATED
         OUT.TexCoord = IN.TexCoord0;
     #endif //ANIMATED
