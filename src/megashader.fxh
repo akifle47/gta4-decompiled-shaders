@@ -904,7 +904,7 @@ float4 PS_TexturedUnlit(VS_OutputUnlit IN, float2 screenCoords : VPOS) : COLOR
     return color;
 }
 
-float4 PS_TexturedZero(VS_Output IN, float2 screenCoords : VPOS) : COLOR
+float4 TexturedLit(in int numLights, in VS_Output IN, in float2 screenCoords)
 {
     AlphaClip(globalScalars.x, screenCoords);
 
@@ -947,8 +947,7 @@ float4 PS_TexturedZero(VS_Output IN, float2 screenCoords : VPOS) : COLOR
             diffuse.w *= globalScalars.x;
         #endif //EMISSIVE_NIGHT
 
-        diffuse *= colorize;
-        return diffuse;
+        return diffuse * colorize;
     #else
         diffuse.w *= IN.Color.w;
     #endif //EMISSIVE
@@ -1011,10 +1010,20 @@ float4 PS_TexturedZero(VS_Output IN, float2 screenCoords : VPOS) : COLOR
     surfaceProperties.SpecularIntensity = specIntensity;
     surfaceProperties.SpecularPower = specPower;
     surfaceProperties.AmbientOcclusion = ambientOcclusion;
-    float4 lighting = float4(ComputeDirectionalighting(true, IN.PositionWorld.xyz, viewPosToFragPosDir, surfaceProperties), diffuse.w * globalScalars.x);
+    float4 lighting = float4(ComputeLighting(numLights, true, IN.PositionWorld.xyz, viewPosToFragPosDir, surfaceProperties), diffuse.w * globalScalars.x);
     lighting.xyz = ComputeDepthEffects(1.0, lighting.xyz, IN.NormalWorldAndDepth.w);
 
     return lighting;
+}
+
+float4 PS_TexturedZero(VS_Output IN, float2 screenCoords : VPOS) : COLOR
+{
+    return TexturedLit(0, IN, screenCoords);
+}
+
+float4 PS_TexturedFour(VS_Output IN, float2 screenCoords : VPOS) : COLOR
+{
+    return TexturedLit(4, IN, screenCoords);
 }
 
 struct InputBasic
@@ -1068,7 +1077,7 @@ float4 TexturedBasic(InputBasic IN)
     surfaceProperties.SpecularIntensity = specIntensity;
     surfaceProperties.SpecularPower = specPower;
     surfaceProperties.AmbientOcclusion = ambientOcclusion;
-    float4 lighting = float4(ComputeDirectionalighting(false, float3(-1, -1, -1), fragPosToViewPosDir, surfaceProperties), diffuse.w * globalScalars.x);
+    float4 lighting = float4(ComputeLighting(0, false, float3(-1, -1, -1), fragPosToViewPosDir, surfaceProperties), diffuse.w * globalScalars.x);
 
     #ifdef EMISSIVE
         diffuse.xyz *= IN.Color.xyz;

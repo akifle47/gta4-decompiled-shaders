@@ -32,8 +32,77 @@ float3 ComputeDepthEffects(in float noSkyMask, in float3 color, in float linearD
         float  AmbientOcclusion;
     };
 
-    float3 ComputeDirectionalighting(in bool shadowed, in float3 posWorld, in float3 fragPosToViewPosDir, in SurfaceProperties surfProperties)
+    struct ForwardLights
     {
+        float4 PositionsX; 
+        float4 PositionsY; 
+        float4 PositionsZ;
+        float4 DirectionsX; 
+        float4 DirectionsY; 
+        float4 DirectionsZ;
+        float4 ColorsR; 
+        float4 ColorsG; 
+        float4 ColorsB;
+        float4 InvSqrRadiuses;
+        float4 ConeScales;
+        float4 ConeOffsets;
+    };
+
+    void ComputeForwardLocalLighting(in ForwardLights lights, in SurfaceProperties surfProperties, in float3 posWorld, in float3 reflectDir, out float3 diffuseLight, out float3 specularLight)
+    {
+        float4 fragPosToLightPosDirsX = lights.PositionsX - posWorld.x;
+        float4 fragPosToLightPosDirsY = lights.PositionsY - posWorld.y;
+        float4 fragPosToLightPosDirsZ = lights.PositionsZ - posWorld.z;
+
+        float4 fragPosToLightPosDirsLengths = (fragPosToLightPosDirsX * fragPosToLightPosDirsX) +
+                                              (fragPosToLightPosDirsY * fragPosToLightPosDirsY) +
+                                              (fragPosToLightPosDirsZ * fragPosToLightPosDirsZ);
+        fragPosToLightPosDirsLengths += 0.00001;
+        
+        float4 distAttenuations = max(0.0, 1.0 - (fragPosToLightPosDirsLengths * lights.InvSqrRadiuses));
+        distAttenuations = pow(distAttenuations, 4);
+        distAttenuations = distAttenuations >= 0.1 ? distAttenuations * 1.11111116 : 0;
+        
+        fragPosToLightPosDirsLengths = rsqrt(fragPosToLightPosDirsLengths);
+
+        float4 nDotLs = (fragPosToLightPosDirsX * surfProperties.Normal.x) +
+                        (fragPosToLightPosDirsY * surfProperties.Normal.y) +
+                        (fragPosToLightPosDirsZ * surfProperties.Normal.z);
+        distAttenuations = saturate(nDotLs * distAttenuations * fragPosToLightPosDirsLengths);
+
+        float4 coneAttenuations = (fragPosToLightPosDirsX * lights.DirectionsX) +
+                                  (fragPosToLightPosDirsY * lights.DirectionsY) +
+                                  (fragPosToLightPosDirsZ * lights.DirectionsZ);
+        coneAttenuations *= fragPosToLightPosDirsLengths;
+        coneAttenuations = saturate(coneAttenuations * lights.ConeScales + lights.ConeOffsets);
+
+        float4 attenuations = distAttenuations * coneAttenuations;
+        
+        #ifdef SPECULAR
+            float specPower = surfProperties.SpecularPower * 0.25;
+
+            float4 lightDirsDotR = (reflectDir.x * fragPosToLightPosDirsX) + 
+                                   (reflectDir.y * fragPosToLightPosDirsZ) + 
+                                   (reflectDir.y * fragPosToLightPosDirsZ);
+            lightDirsDotR *= fragPosToLightPosDirsLengths;
+
+            float4 specularLights = log(abs(lightDirsDotR)) * specPower;
+            specularLights = exp(specularLights) * attenuations;
+
+            specularLight = float3(dot(lights.ColorsR, specularLights), dot(lights.ColorsG, specularLights), dot(lights.ColorsB, specularLights));
+        #else
+            specularLight = float3(0, 0, 0);
+        #endif //SPECULAR
+
+        diffuseLight = float3(dot(lights.ColorsR, attenuations), dot(lights.ColorsG, attenuations), dot(lights.ColorsB, attenuations));
+    }
+
+    float3 ComputeLighting(in int numLights, in bool shadowed, in float3 posWorld, in float3 fragPosToViewPosDir, in SurfaceProperties surfProperties)
+    {
+        #if numLights != 0 && numLights != 4 && numLights != 8
+            #error numLights must be 0, 4 or 8.
+        #endif
+
         float shadow = 1;
         if(shadowed)
             shadow = ComputeDirectionalShadow(posWorld);
@@ -80,8 +149,6 @@ float3 ComputeDepthEffects(in float noSkyMask, in float3 color, in float linearD
             
             specularLight += parabRefl;
         #endif //DEFERRED_LIGHTING
-
-        specularLight *= surfProperties.SpecularIntensity;
         
         float3 ambientLight = gLightAmbient1.xyz * saturate(normal.z * -0.5 + 0.5) + gLightAmbient0.xyz;
         #ifndef DIRT_DECAL_MASK
@@ -91,6 +158,29 @@ float3 ComputeDepthEffects(in float noSkyMask, in float3 color, in float linearD
         float nDotL = dot(-gDirectionalLight.xyz, normal);
         nDotL = saturate((nDotL - 0.25) * 1.33333337);
         float3 diffuseLight = (directionalColor * nDotL * shadow) + ambientLight;
+
+        if(numLights > 0)
+        {
+            ForwardLights lights;
+            lights.PositionsX  = gLightPosX;  lights.PositionsY  = gLightPosY;  lights.PositionsZ  = gLightPosZ;
+            lights.DirectionsX = gLightDirX;  lights.DirectionsY = gLightDirY;  lights.DirectionsZ = gLightDirZ;
+            lights.ColorsR     = gLightColR;  lights.ColorsG     = gLightColG;  lights.ColorsB     = gLightColB;
+            lights.InvSqrRadiuses = gLightFallOff;
+            lights.ConeScales = gLightConeScale;
+            lights.ConeOffsets = gLightConeOffset;
+            float3 lightsDiffuse;
+            float3 lightsSpecular;
+            ComputeForwardLocalLighting(lights, surfProperties, posWorld, R, lightsDiffuse, lightsSpecular);
+
+            diffuseLight += lightsDiffuse;
+            specularLight += lightsSpecular;
+
+            if(numLights == 8)
+            {
+            }
+        }
+
+        specularLight *= surfProperties.SpecularIntensity;
 
         return surfProperties.Diffuse * diffuseLight + specularLight;
     }

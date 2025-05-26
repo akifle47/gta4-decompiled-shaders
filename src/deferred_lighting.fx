@@ -2692,7 +2692,7 @@ float4 PS_LightShadowDirectionalAmbientReflectionDry(float2 texCoord : TEXCOORD0
     surfProperties.SpecularPower = specAoBuffer.y * specAoBuffer.y * 512;
     surfProperties.AmbientOcclusion = specAoBuffer.z;
 
-    return float4(ComputeDirectionalighting(true, posView, viewDir, surfProperties), 1);
+    return float4(ComputeLighting(0, true, posView, viewDir, surfProperties), 1);
 }
 
 float4 PS_LightShadowDirectionalAmbientReflectionWet(float2 texCoord : TEXCOORD0, float4 texCoord1 : TEXCOORD1) : COLOR
@@ -2726,7 +2726,7 @@ float4 PS_LightShadowDirectionalAmbientReflectionWet(float2 texCoord : TEXCOORD0
 
     surfProperties.AmbientOcclusion = specAoBuffer.z;
 
-    return float4(ComputeDirectionalighting(true, posView, viewDir, surfProperties), 1);
+    return float4(ComputeLighting(0, true, posView, viewDir, surfProperties), 1);
 }
 
 float4 PS_LightAmbientReflectionDry(float2 texCoord : TEXCOORD0, float4 texCoord1 : TEXCOORD1) : COLOR
@@ -2744,7 +2744,7 @@ float4 PS_LightAmbientReflectionDry(float2 texCoord : TEXCOORD0, float4 texCoord
     surfProperties.SpecularPower = specAoBuffer.y * specAoBuffer.y * 512;
     surfProperties.AmbientOcclusion = specAoBuffer.z;
 
-    return float4(ComputeDirectionalighting(false, posView, viewDir, surfProperties), 1);
+    return float4(ComputeLighting(0, false, posView, viewDir, surfProperties), 1);
 }
 
 float4 PS_LightAmbientReflectionWet(float2 texCoord : TEXCOORD0, float4 texCoord1 : TEXCOORD1) : COLOR
@@ -2778,7 +2778,7 @@ float4 PS_LightAmbientReflectionWet(float2 texCoord : TEXCOORD0, float4 texCoord
 
     surfProperties.AmbientOcclusion = specAoBuffer.z;
 
-    return float4(ComputeDirectionalighting(false, posView, viewDir, surfProperties), 1);
+    return float4(ComputeLighting(0, false, posView, viewDir, surfProperties), 1);
 }
 
 
@@ -2835,7 +2835,7 @@ float ComputeShadow(in float3 posWorld, in float3 normal, in float2 screenCoords
     return dot(shadowSamples, float4(0.25, 0.25, 0.25, 0.25));
 }
 
-float3 ComputeLighting(in bool shadowed, in bool fillerLight, in float3 posWorld, in float3 viewPosToFragPosDir, float2 screenCoords, in SurfaceProperties surfProperties)
+float3 ComputeDeferredLocalLighting(in bool shadowed, in bool fillerLight, in float3 posWorld, in float3 viewPosToFragPosDir, float2 screenCoords, in SurfaceProperties surfProperties)
 {
     float3 fragPosToLightPosDir = gDeferredLightPosition - posWorld;
     
@@ -2942,7 +2942,7 @@ float4 PS_LightPointOrSpot0(VS_OutputVolumePS IN, float2 screenCoords : VPOS) : 
     surfProperties.SpecularIntensity = specAoBuffer.x * 2;
     surfProperties.SpecularPower = specAoBuffer.y * specAoBuffer.y * 512;
     surfProperties.AmbientOcclusion = saturate(specAoBuffer.z * specAoBuffer.z + 0.5);
-    float4 lighting = float4(ComputeLighting(false, false, posWorld, viewPosToFragPosDir, screenCoords, surfProperties), 1);
+    float4 lighting = float4(ComputeDeferredLocalLighting(false, false, posWorld, viewPosToFragPosDir, screenCoords, surfProperties), 1);
     
     return lighting;
 }
@@ -2964,7 +2964,7 @@ float4 PS_LightPointOrSpot1(VS_OutputVolumePS IN, float2 screenCoords : VPOS) : 
     surfProperties.SpecularIntensity = specAoBuffer.x * 2;
     surfProperties.SpecularPower = specAoBuffer.y * specAoBuffer.y * 512;
     surfProperties.AmbientOcclusion = 1.0;
-    float4 lighting = float4(ComputeLighting(false, false, posWorld, viewPosToFragPosDir, screenCoords, surfProperties), 1);
+    float4 lighting = float4(ComputeDeferredLocalLighting(false, false, posWorld, viewPosToFragPosDir, screenCoords, surfProperties), 1);
 
     float stencil = tex2D(GBufferStencilTextureSampler, texCoord).x * 255;
     float entityAndInteriorMask = stencil >= 128 ? 128 : 0;
@@ -2992,7 +2992,7 @@ float4 PS_LightPointOrSpot2(VS_OutputVolumePS IN, float2 screenCoords : VPOS) : 
     surfProperties.SpecularIntensity = specAoBuffer.x * 2;
     surfProperties.SpecularPower = specAoBuffer.y * specAoBuffer.y * 512;
     surfProperties.AmbientOcclusion = saturate(specAoBuffer.z * specAoBuffer.z + 0.5);
-    float4 lighting = float4(ComputeLighting(false, false, posWorld, viewPosToFragPosDir, screenCoords, surfProperties), 1);
+    float4 lighting = float4(ComputeDeferredLocalLighting(false, false, posWorld, viewPosToFragPosDir, screenCoords, surfProperties), 1);
     
     float stencil = tex2D(GBufferStencilTextureSampler, texCoord).x * 255;
     float entityAndInteriorMask = stencil >= 128 ? 128 : 0;
@@ -3020,7 +3020,7 @@ float4 PS_LightPointOrSpot3(VS_OutputVolumePS IN, float2 screenCoords : VPOS) : 
     surfProperties.SpecularIntensity = specAoBuffer.x * 2;
     surfProperties.SpecularPower = specAoBuffer.y * specAoBuffer.y * 512;
     surfProperties.AmbientOcclusion = 1.0;
-    float4 lighting = float4(ComputeLighting(false, false, posWorld, viewPosToFragPosDir, screenCoords, surfProperties), 1);
+    float4 lighting = float4(ComputeDeferredLocalLighting(false, false, posWorld, viewPosToFragPosDir, screenCoords, surfProperties), 1);
     
     float stencil = tex2D(GBufferStencilTextureSampler, texCoord).x * 255;
     float interiorMask = stencil >= 128 ? 128 : 0;
@@ -3050,7 +3050,7 @@ float4 PS_FillerPointOrSpot0(VS_OutputVolumePS IN, float2 screenCoords : VPOS) :
     surfProperties.SpecularIntensity = 1;
     surfProperties.SpecularPower = 1;
     surfProperties.AmbientOcclusion = 1;
-    float4 lighting = float4(ComputeLighting(false, true, posWorld, viewPosToFragPosDir, screenCoords, surfProperties), 1);
+    float4 lighting = float4(ComputeDeferredLocalLighting(false, true, posWorld, viewPosToFragPosDir, screenCoords, surfProperties), 1);
     
     return lighting;
 }
@@ -3070,7 +3070,7 @@ float4 PS_FillerPointOrSpot1(VS_OutputVolumePS IN, float2 screenCoords : VPOS) :
     surfProperties.SpecularIntensity = 1;
     surfProperties.SpecularPower = 1;
     surfProperties.AmbientOcclusion = 1;
-    float4 lighting = float4(ComputeLighting(false, true, posWorld, viewPosToFragPosDir, screenCoords, surfProperties), 1);
+    float4 lighting = float4(ComputeDeferredLocalLighting(false, true, posWorld, viewPosToFragPosDir, screenCoords, surfProperties), 1);
 
     float stencil = tex2D(GBufferStencilTextureSampler, texCoord).x * 255;
     float entityAndInteriorMask = stencil >= 128 ? 128 : 0;
@@ -3096,7 +3096,7 @@ float4 PS_FillerPointOrSpot2(VS_OutputVolumePS IN, float2 screenCoords : VPOS) :
     surfProperties.SpecularIntensity = 1;
     surfProperties.SpecularPower = 1;
     surfProperties.AmbientOcclusion = 1;
-    float4 lighting = float4(ComputeLighting(false, true, posWorld, viewPosToFragPosDir, screenCoords, surfProperties), 1);
+    float4 lighting = float4(ComputeDeferredLocalLighting(false, true, posWorld, viewPosToFragPosDir, screenCoords, surfProperties), 1);
 
     float stencil = tex2D(GBufferStencilTextureSampler, texCoord).x * 255;
     float entityAndInteriorMask = stencil >= 128 ? 128 : 0;
@@ -3136,7 +3136,7 @@ float4 PS_LightShadowPointOrSpot(VS_OutputVolumePS IN, float2 screenCoords : VPO
     float entityAndInteriorMask = stencil >= 128 ? 128 : 0;
     surfProperties.AmbientOcclusion = stencil - entityAndInteriorMask >= 7.9 ? 1 : ambientOcclusion;
     
-    float4 lighting = float4(ComputeLighting(true, false, posWorld, viewPosToFragPosDir, screenCoords, surfProperties), 2);
+    float4 lighting = float4(ComputeDeferredLocalLighting(true, false, posWorld, viewPosToFragPosDir, screenCoords, surfProperties), 2);
 
     return lighting;
 }
@@ -3156,7 +3156,7 @@ float4 PS_FillerShadowPointOrSpot(VS_OutputVolumePS IN, float2 screenCoords : VP
     surfProperties.SpecularIntensity = 1;
     surfProperties.SpecularPower = 1;
     surfProperties.AmbientOcclusion = 1;
-    float4 lighting = float4(ComputeLighting(true, true, posWorld, viewPosToFragPosDir, screenCoords, surfProperties), 1);
+    float4 lighting = float4(ComputeDeferredLocalLighting(true, true, posWorld, viewPosToFragPosDir, screenCoords, surfProperties), 1);
     
     return lighting;
 }
@@ -3178,7 +3178,7 @@ float4 PS_LightTexPointOrSpot(VS_OutputVolumePS IN, float2 screenCoords : VPOS) 
     surfProperties.SpecularIntensity = specAoBuffer.x * 2;
     surfProperties.SpecularPower = specAoBuffer.y * specAoBuffer.y * 512;
     surfProperties.AmbientOcclusion = saturate(specAoBuffer.z * specAoBuffer.z + 0.5);
-    float4 lighting = float4(ComputeLighting(true, false, posWorld, viewPosToFragPosDir, screenCoords, surfProperties), 1);
+    float4 lighting = float4(ComputeDeferredLocalLighting(true, false, posWorld, viewPosToFragPosDir, screenCoords, surfProperties), 1);
     
     return lighting;
 }
@@ -3200,7 +3200,7 @@ float4 PS_LightShadowTexPointOrSpot(VS_OutputVolumePS IN, float2 screenCoords : 
     surfProperties.SpecularIntensity = specAoBuffer.x * 2;
     surfProperties.SpecularPower = specAoBuffer.y * specAoBuffer.y * 512;
     surfProperties.AmbientOcclusion = 1.0;
-    float4 lighting = float4(ComputeLighting(true, false, posWorld, viewPosToFragPosDir, screenCoords, surfProperties), 1);
+    float4 lighting = float4(ComputeDeferredLocalLighting(true, false, posWorld, viewPosToFragPosDir, screenCoords, surfProperties), 1);
     
     return lighting;
 }
