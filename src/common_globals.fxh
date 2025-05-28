@@ -1,7 +1,7 @@
 shared float4 gAllGlobals[64] : AllGlobals : register(c0);
 
 #ifndef NO_SKINNING
-    shared float4x3 gBoneMtx[48];
+    shared float4x3 gBoneMtx[48] : register(vs, c64);
 #endif
 
 shared row_major float4x4 gWorld : World : register(c0);
@@ -25,6 +25,7 @@ shared row_major float4x4 gViewInverse : ViewInverse : register(c12);
     shared float4 gDepthFxParams : DepthFxParams : register(c16) = float4(1.0, 1.0, 1.0, 1.0);
     shared float4 gDirectionalLight : DirectionalLight : register(c17);
     shared float4 gDirectionalColour : DirectionalColour : register(c18);
+
     shared float4 gLightPosX : LightPositionX : register(c19);
     shared float4 gLightPosY : LightPositionY : register(c20);
     shared float4 gLightPosZ : LightPositionZ : register(c21);
@@ -37,18 +38,20 @@ shared row_major float4x4 gViewInverse : ViewInverse : register(c12);
     shared float4 gLightColR : LightColR : register(c29);
     shared float4 gLightColG : LightColG : register(c30);
     shared float4 gLightColB : LightColB : register(c31);
+
     shared float4 gLightPointPosX : LightPointPositionX : register(c32);
     shared float4 gLightPointPosY : LightPointPositionY : register(c33);
     shared float4 gLightPointPosZ : LightPointPositionZ : register(c34);
     shared float4 gLightPointColR : LightPointColR  : register(c35);
     shared float4 gLightPointColG : LightPointColG;
     shared float4 gLightPointColB : LightPointColB;
-    shared float4 gLightPointFallOff : LightPointFallOff  : register(c36);
-    shared float4 gLightDir2X : LightDir2X;
-    shared float4 gLightDir2Y : LightDir2Y;
-    shared float4 gLightDir2Z : LightDir2Z;
-    shared float4 gLightConeScale2 : LightConeScale2;
-    shared float4 gLightConeOffset2 : LightConeOffset2;
+    shared float4 gLightPointFallOff : LightPointFallOff : register(c36);
+    shared float4 gLightDir2X : LightDir2X : register(c67);
+    shared float4 gLightDir2Y : LightDir2Y : register(c68);
+    shared float4 gLightDir2Z : LightDir2Z : register(c69);
+    shared float4 gLightConeScale2 : LightConeScale2 : register(c70);
+    shared float4 gLightConeOffset2 : LightConeOffset2 : register(c71);
+
     shared float4 gLightAmbient0 : LightAmbientColor0 : register(c37) <string UIWidget = "Ambient Light Color 0"; string Space = "material";> = float4(0.0, 0.0, 0.0, 1.0);
     shared float4 gLightAmbient1 : LightAmbientColor1 : register(c38) <string UIWidget = "Ambient Light Color 1"; string Space = "material";> = float4(0.0, 0.0, 0.0, 1.0);
     

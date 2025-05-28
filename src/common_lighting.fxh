@@ -56,12 +56,11 @@ float3 ComputeDepthEffects(in float noSkyMask, in float3 color, in float linearD
 
         float4 fragPosToLightPosDirsLengths = (fragPosToLightPosDirsX * fragPosToLightPosDirsX) +
                                               (fragPosToLightPosDirsY * fragPosToLightPosDirsY) +
-                                              (fragPosToLightPosDirsZ * fragPosToLightPosDirsZ);
-        fragPosToLightPosDirsLengths += 0.00001;
+                                              (fragPosToLightPosDirsZ * fragPosToLightPosDirsZ) + 0.00001;
         
         float4 distAttenuations = max(0.0, 1.0 - (fragPosToLightPosDirsLengths * lights.InvSqrRadiuses));
-        distAttenuations = pow(distAttenuations, 4);
-        distAttenuations = distAttenuations >= 0.1 ? distAttenuations * 1.11111116 : 0;
+        distAttenuations = pow(distAttenuations, 4) - 0.1;
+        distAttenuations = distAttenuations >= 0.0 ? distAttenuations * 1.11111116 : 0;
         
         fragPosToLightPosDirsLengths = rsqrt(fragPosToLightPosDirsLengths);
 
@@ -70,9 +69,9 @@ float3 ComputeDepthEffects(in float noSkyMask, in float3 color, in float linearD
                         (fragPosToLightPosDirsZ * surfProperties.Normal.z);
         distAttenuations = saturate(nDotLs * distAttenuations * fragPosToLightPosDirsLengths);
 
-        float4 coneAttenuations = (fragPosToLightPosDirsX * lights.DirectionsX) +
-                                  (fragPosToLightPosDirsY * lights.DirectionsY) +
-                                  (fragPosToLightPosDirsZ * lights.DirectionsZ);
+        float4 coneAttenuations = (fragPosToLightPosDirsX * -lights.DirectionsX) +
+                                  (fragPosToLightPosDirsY * -lights.DirectionsY) +
+                                  (fragPosToLightPosDirsZ * -lights.DirectionsZ);
         coneAttenuations *= fragPosToLightPosDirsLengths;
         coneAttenuations = saturate(coneAttenuations * lights.ConeScales + lights.ConeOffsets);
 
@@ -82,8 +81,8 @@ float3 ComputeDepthEffects(in float noSkyMask, in float3 color, in float linearD
             float specPower = surfProperties.SpecularPower * 0.25;
 
             float4 lightDirsDotR = (reflectDir.x * fragPosToLightPosDirsX) + 
-                                   (reflectDir.y * fragPosToLightPosDirsZ) + 
-                                   (reflectDir.y * fragPosToLightPosDirsZ);
+                                   (reflectDir.y * fragPosToLightPosDirsY) + 
+                                   (reflectDir.z * fragPosToLightPosDirsZ);
             lightDirsDotR *= fragPosToLightPosDirsLengths;
 
             float4 specularLights = log(abs(lightDirsDotR)) * specPower;
@@ -162,9 +161,15 @@ float3 ComputeDepthEffects(in float noSkyMask, in float3 color, in float linearD
         if(numLights > 0)
         {
             ForwardLights lights;
-            lights.PositionsX  = gLightPosX;  lights.PositionsY  = gLightPosY;  lights.PositionsZ  = gLightPosZ;
-            lights.DirectionsX = gLightDirX;  lights.DirectionsY = gLightDirY;  lights.DirectionsZ = gLightDirZ;
-            lights.ColorsR     = gLightColR;  lights.ColorsG     = gLightColG;  lights.ColorsB     = gLightColB;
+            lights.PositionsX = gLightPosX;
+            lights.PositionsY = gLightPosY;
+            lights.PositionsZ = gLightPosZ;
+            lights.DirectionsX = gLightDirX;
+            lights.DirectionsY = gLightDirY;
+            lights.DirectionsZ = gLightDirZ;
+            lights.ColorsR = gLightColR;
+            lights.ColorsG = gLightColG;
+            lights.ColorsB = gLightColB;
             lights.InvSqrRadiuses = gLightFallOff;
             lights.ConeScales = gLightConeScale;
             lights.ConeOffsets = gLightConeOffset;
@@ -177,6 +182,22 @@ float3 ComputeDepthEffects(in float noSkyMask, in float3 color, in float linearD
 
             if(numLights == 8)
             {
+                lights.PositionsX = gLightPointPosX;
+                lights.PositionsY = gLightPointPosY;
+                lights.PositionsZ = gLightPointPosZ;
+                lights.DirectionsX = gLightDir2X;
+                lights.DirectionsY = gLightDir2Y;
+                lights.DirectionsZ = gLightDir2Z;
+                lights.ColorsR = gLightPointColR;
+                lights.ColorsG = gLightPointColG;
+                lights.ColorsB = gLightPointColB;
+                lights.InvSqrRadiuses = gLightPointFallOff;
+                lights.ConeScales = gLightConeScale2;
+                lights.ConeOffsets = gLightConeOffset2;
+                ComputeForwardLocalLighting(lights, surfProperties, posWorld, R, lightsDiffuse, lightsSpecular);
+
+                diffuseLight += lightsDiffuse;
+                specularLight += lightsSpecular;
             }
         }
 

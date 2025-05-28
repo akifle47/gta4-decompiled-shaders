@@ -1022,6 +1022,11 @@ float4 PS_TexturedFour(VS_Output IN, float2 screenCoords : VPOS) : COLOR
     return TexturedLit(4, IN, screenCoords);
 }
 
+float4 PS_TexturedEight(VS_Output IN, float2 screenCoords : VPOS) : COLOR
+{
+    return TexturedLit(8, IN, screenCoords);
+}
+
 struct InputBasic
 {
     float2 TexCoord;
