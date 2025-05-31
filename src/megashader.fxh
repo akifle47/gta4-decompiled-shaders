@@ -900,9 +900,10 @@ float4 PS_TexturedUnlit(VS_OutputUnlit IN, float2 screenCoords : VPOS) : COLOR
     return color;
 }
 
-float4 TexturedLit(in int numLights, in VS_Output IN, in float2 screenCoords)
+float4 TexturedLit(in int numLights, in bool instanced, in VS_Output IN, in float2 screenCoords)
 {
-    AlphaClip(globalScalars.x, screenCoords);
+    if(!instanced)
+        AlphaClip(globalScalars.x, screenCoords);
 
     #if defined(PARALLAX)
         float2 texCoord;
@@ -927,26 +928,36 @@ float4 TexturedLit(in int numLights, in VS_Output IN, in float2 screenCoords)
     #endif //COLORIZE
 
     #ifdef EMISSIVE
-        diffuse *= IN.Color;
-        diffuse.xyz *= emissiveMultiplier;
-        #if defined(EMISSIVE_NIGHT)
-            diffuse.xyz *= gDayNightEffects.w;
-            diffuse.w *= globalScalars.x;
-        #elif defined(EMISSIVE_IDK)
-            float v0 = 1.0 - globalScalars.x;
-            v0 = 1.0 / (v0 * diffuse.w - 1.0);
-            float v1 = v0 * -globalScalars.x;
-            v0 = (globalScalars.x * v0) + globalScalars.x;
-            v0 = globalScalars.y * v0 + v1;
-            diffuse.w *= v0;
-        #else
-            diffuse.w *= globalScalars.x;
-        #endif //EMISSIVE_NIGHT
+        if(instanced)
+        {
+            diffuse *= colorize;
+        }
+        else
+        {
+            diffuse *= IN.Color;
+            diffuse.xyz *= emissiveMultiplier;
+            #if defined(EMISSIVE_NIGHT)
+                diffuse.xyz *= gDayNightEffects.w;
+                diffuse.w *= globalScalars.x;
+            #elif defined(EMISSIVE_IDK)
+                float v0 = 1.0 - globalScalars.x;
+                v0 = 1.0 / (v0 * diffuse.w - 1.0);
+                float v1 = v0 * -globalScalars.x;
+                v0 = (globalScalars.x * v0) + globalScalars.x;
+                v0 = globalScalars.y * v0 + v1;
+                diffuse.w *= v0;
+            #else
+                diffuse.w *= globalScalars.x;
+            #endif //EMISSIVE_NIGHT
 
-        return diffuse * colorize;
+            return diffuse * colorize;
+        }
     #else
         diffuse.w *= IN.Color.w;
     #endif //EMISSIVE
+
+    if(instanced)
+        diffuse.xyz *= IN.Color.xyz;
 
     #if defined(NORMAL_MAP) || defined(PARALLAX)
         float3x3 tbn = float3x3(IN.TangentWorld.xyz, IN.BitangentWorld.xyz, IN.NormalWorldAndDepth.xyz);
@@ -974,6 +985,10 @@ float4 TexturedLit(in int numLights, in VS_Output IN, in float2 screenCoords)
     #endif //SPECULAR
 
     float ambientOcclusion = IN.Color.x;
+    #ifdef EMISSIVE
+        if(instanced)
+            ambientOcclusion = globalScalars.z;
+    #endif //EMISSIVE
 
     #if defined(SPECULAR) || defined(ENVIRONMENT_MAP)
         float3 viewPosToFragPosDir = -normalize(IN.FragPosToViewPosDir.xyz + 0.00001);
@@ -1007,24 +1022,33 @@ float4 TexturedLit(in int numLights, in VS_Output IN, in float2 screenCoords)
     surfaceProperties.SpecularPower = specPower;
     surfaceProperties.AmbientOcclusion = ambientOcclusion;
     float4 lighting = float4(ComputeLighting(numLights, true, IN.PositionWorld.xyz, viewPosToFragPosDir, surfaceProperties), diffuse.w * globalScalars.x);
-    lighting.xyz = ComputeDepthEffects(1.0, lighting.xyz, IN.NormalWorldAndDepth.w);
+    if(!instanced)
+        lighting.xyz = ComputeDepthEffects(1.0, lighting.xyz, IN.NormalWorldAndDepth.w);
+
+    if(instanced)
+        AlphaClip(globalScalars.x, lighting.w);
 
     return lighting;
 }
 
 float4 PS_TexturedZero(VS_Output IN, float2 screenCoords : VPOS) : COLOR
 {
-    return TexturedLit(0, IN, screenCoords);
+    return TexturedLit(0, false, IN, screenCoords);
 }
 
 float4 PS_TexturedFour(VS_Output IN, float2 screenCoords : VPOS) : COLOR
 {
-    return TexturedLit(4, IN, screenCoords);
+    return TexturedLit(4, false, IN, screenCoords);
 }
 
 float4 PS_TexturedEight(VS_Output IN, float2 screenCoords : VPOS) : COLOR
 {
-    return TexturedLit(8, IN, screenCoords);
+    return TexturedLit(8, false, IN, screenCoords);
+}
+
+float4 PS_TexturedEightInst(VS_Output IN, float2 screenCoords : VPOS) : COLOR
+{
+    return TexturedLit(8, true, IN, screenCoords);
 }
 
 struct InputBasic
@@ -1135,4 +1159,9 @@ float4 PS_TexturedBasicParaboloid(VS_OutputParaboloid IN, float2 screenCoords : 
     lighting.w *= saturate((64 - IN.NormalWorldAndDepth.w) / 4);
 
     return lighting;
+}
+
+float4 PS_DeferredImposter() : COLOR
+{
+    return float4(0, 0, 0, 0);
 }
