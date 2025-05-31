@@ -3178,7 +3178,7 @@ float4 PS_LightTexPointOrSpot(VS_OutputVolumePS IN, float2 screenCoords : VPOS) 
     surfProperties.SpecularIntensity = specAoBuffer.x * 2;
     surfProperties.SpecularPower = specAoBuffer.y * specAoBuffer.y * 512;
     surfProperties.AmbientOcclusion = saturate(specAoBuffer.z * specAoBuffer.z + 0.5);
-    float4 lighting = float4(ComputeDeferredLocalLighting(true, false, posWorld, viewPosToFragPosDir, screenCoords, surfProperties), 1);
+    float4 lighting = float4(ComputeDeferredLocalLighting(false, false, posWorld, viewPosToFragPosDir, screenCoords, surfProperties), 1);
     
     return lighting;
 }
