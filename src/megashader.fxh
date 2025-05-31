@@ -1051,6 +1051,7 @@ float4 PS_TexturedEightInst(VS_Output IN, float2 screenCoords : VPOS) : COLOR
     return TexturedLit(8, true, IN, screenCoords);
 }
 
+
 struct InputBasic
 {
     float2 TexCoord;

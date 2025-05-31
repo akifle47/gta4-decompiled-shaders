@@ -7,10 +7,6 @@
 #include "common.fxh"
 #include "megashader.fxh"
 
-//Vertex shaders
-//Pixel shaders
-PixelShader PixelShader0 = NULL;
-
 technique draw
 {
     pass p0
