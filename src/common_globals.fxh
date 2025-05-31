@@ -44,7 +44,7 @@ shared row_major float4x4 gViewInverse : ViewInverse : register(c12);
     shared float4 gLightPointPosZ : LightPointPositionZ : register(c34);
     shared float4 gLightPointColR : LightPointColR  : register(c35);
     shared float4 gLightPointColG : LightPointColG;
-    shared float4 gLightPointColB : LightPointColB;
+    shared float4 gLightPointColB : LightPointColB  : register(c65);
     shared float4 gLightPointFallOff : LightPointFallOff : register(c36);
     shared float4 gLightDir2X : LightDir2X : register(c67);
     shared float4 gLightDir2Y : LightDir2Y : register(c68);
