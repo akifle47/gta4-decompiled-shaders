@@ -410,7 +410,7 @@ PS_OutputDeferred DeferredTextured(bool dither, VS_OutputDeferred IN, float2 scr
         #ifdef CUBEMAP_ENVIRONMENT_MAP
             float3 specular = texCUBE(EnvironmentSampler, R).xyz;
         #else
-            float3 specular = tex2D(EnvironmentSampler, (R.xy + 1.0) * -0.5).xyz;
+            float3 specular = tex2D(EnvironmentSampler, (R.xz + 1.0) * -0.5).xyz;
         #endif //CUBEMAP_ENVIRONMENT_MAP
 
         #ifdef SPECULAR
@@ -1032,7 +1032,7 @@ float4 TexturedLit(in int numLights, in bool instanced, in VS_Output IN, in floa
         #ifdef CUBEMAP_ENVIRONMENT_MAP
             float3 envRefl = texCUBE(EnvironmentSampler, normalize(R + 0.00001)).xyz;
         #else
-            float3 envRefl = tex2D(EnvironmentSampler, (normalize(R + 0.00001).xy + 1) * -0.5).xyz;
+            float3 envRefl = tex2D(EnvironmentSampler, (normalize(R + 0.00001).xz + 1) * -0.5).xyz;
         #endif //CUBEMAP_ENVIRONMENT_MAP
 
         envRefl *= reflectivePower;
