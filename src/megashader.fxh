@@ -128,6 +128,11 @@ struct VS_Output
 #ifdef PARALLAX
     //(tangent) view pos to vertex
     float4 FragPosToViewPosDirTangent : TEXCOORD7;
+#elif defined(WIRE)
+    //xyw = original clip pos, z = ndc delta * 320?
+    float4 WireParams1                : TEXCOORD7;
+    //clip pos
+    float4 WireParams2                : TEXCOORD8;
 #endif //PARALLAX
 };
 
@@ -173,14 +178,32 @@ VS_Output VS_Transform(VS_Input IN)
     #endif //DAY_NIGHT_EFFECTS
 
     float4 posClip = mul(float4(IN.Position, 1.0), gWorldViewProj);
-
+    
     #ifdef DEPTH_SHIFT
         OUT.Position.xyz = ComputeDepthShift(posClip);
-    #else
+    #elif defined(WIRE)
+        float4 originalPosClip = posClip;
+        float3 v0 = IN.Position + mul(gViewInverse[0].xyz * Fade_Thickness, transpose((float3x3)gWorld)).xyz;
+        float4 v1 = mul(float4(v0, 1), gWorldViewProj);
+
+        OUT.WireParams1.z = (v1.x / v1.w) - (originalPosClip.x / originalPosClip.w);
+        OUT.WireParams1.z = saturate(OUT.WireParams1.z * 320);
+
+        float distFromView = distance(posWorld, gViewInverse[3].xyz);
+
+        float4 v2 = mul(float4(IN.Position + IN.Normal, 1), gWorldViewProj);
+        posClip.xy = (originalPosClip.xy - v2.xy) * 0.002;
+        posClip.xy = originalPosClip.xy - (posClip.xy * distFromView);
+
+        OUT.WireParams1.xyw = originalPosClip.xyw;
+        OUT.Position = posClip;
+        OUT.WireParams2 = posClip;
+    #else //WIRE
         OUT.Position.xyz = posClip.xyz;
     #endif //DEPTH_SHIFT
 
     OUT.Position.w = OUT.NormalWorldAndDepth.w = posClip.w;
+    
     #ifndef ANIMATED
         OUT.TexCoord = IN.TexCoord0;
     #endif //ANIMATED
@@ -553,7 +576,15 @@ VS_OutputUnlit VS_TransformUnlit(VS_InputUnlit IN)
 
         #ifdef DEPTH_SHIFT
             OUT.Position.xyz = ComputeDepthShift(posClip);
-        #else
+    #elif defined(WIRE)
+            float distFromView = distance(posWorld, gViewInverse[3].xyz);
+
+            float4 v2 = mul(float4(IN.Position + IN.Normal, 1), gWorldViewProj);
+            posClip.xy = (posClip.xy - v2.xy) * 0.002;
+            posClip.xy = posClip.xy - (posClip.xy * distFromView);
+            OUT.Position = posClip;
+            OUT.WireParams1 = OUT.WireParams2 = float4(0, 0, 0, 0);
+        #else //WIRE
             OUT.Position.xyz = posClip.xyz;
         #endif //DEPTH_SHIFT
 
@@ -952,7 +983,7 @@ float4 TexturedLit(in int numLights, in bool instanced, in VS_Output IN, in floa
 
             return diffuse * colorize;
         }
-    #else
+    #elif !defined(WIRE)
         diffuse.w *= IN.Color.w;
     #endif //EMISSIVE
 
@@ -1021,9 +1052,19 @@ float4 TexturedLit(in int numLights, in bool instanced, in VS_Output IN, in floa
     surfaceProperties.SpecularIntensity = specIntensity;
     surfaceProperties.SpecularPower = specPower;
     surfaceProperties.AmbientOcclusion = ambientOcclusion;
-    float4 lighting = float4(ComputeLighting(numLights, true, IN.PositionWorld.xyz, viewPosToFragPosDir, surfaceProperties), diffuse.w * globalScalars.x);
+    float4 lighting = float4(ComputeLighting(numLights, true, IN.PositionWorld.xyz, viewPosToFragPosDir, surfaceProperties), globalScalars.x);
     if(!instanced)
         lighting.xyz = ComputeDepthEffects(1.0, lighting.xyz, IN.NormalWorldAndDepth.w);
+
+    #ifdef WIRE
+        float2 p1 = (IN.WireParams1.xy / IN.WireParams1.w) * float2(640, 576);
+        float2 p2 = (IN.WireParams2.xy / IN.WireParams2.w) * float2(640, 576);
+
+        float v0 = 1.0 - (distance(p1, p2) * 0.35);
+        lighting.w = v0 >= 0.0 ? v0 * IN.WireParams1.z : 0.0;
+    #else
+        lighting.w *= diffuse.w;
+    #endif //WIRE
 
     if(instanced)
         AlphaClip(globalScalars.x, lighting.w);

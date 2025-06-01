@@ -1,15 +1,17 @@
 #define DRAWBUCKET_ALPHA
 #define NO_LUMINANCE_CONSTANTS
 #define ANIMATED
+#define DAY_NIGHT_EFFECTS
 #define DIFFUSE_TEXTURE
 #define WIRE
 #define ALPHA_SHADOW
 
 #include "common.fxh"
-#include "megashader.fxh"
 
 float Fade_Thickness : FadeThickness<string UIName = "Thickness of object in metres"; string UIHelp = "Amount of thickness of object"; float UIMin = 0.000000; float UIMax = 10.000000; float UIStep = 0.010000;> = 0.070000;
 float3 LuminanceConstants : LuminanceConstants = float3(0.212500006, 0.715399981, 0.0720999986);
+
+#include "megashader.fxh"
 
 technique draw
 {
@@ -17,8 +19,8 @@ technique draw
     {
         ZWriteEnable = false;
 
-        VertexShader = VS_TransformWire;
-        PixelShader = PS_TexturedEightWire;
+        VertexShader = compile vs_3_0 VS_Transform();
+        PixelShader = compile ps_3_0 PS_TexturedEight();
     }
 }
 
@@ -26,8 +28,8 @@ technique drawskinned
 {
     pass p0
     {
-        VertexShader = VS_TransformSkinWire;
-        PixelShader = PS_TexturedEightWire;
+        VertexShader = compile vs_3_0 VS_TransformSkin();
+        PixelShader = compile ps_3_0 PS_TexturedEight();
     }
 }
 
@@ -55,7 +57,7 @@ technique deferred_draw
 {
     pass p0
     {
-        VertexShader = VS_TransformDWire;
+        VertexShader = compile vs_3_0 VS_TransformD();
         PixelShader = compile ps_3_0 PS_DeferredTextured();
     }
 }
@@ -64,7 +66,7 @@ technique deferredalphaclip_draw
 {
     pass p0
     {
-        VertexShader = VS_TransformAlphaClipDWire;
+        VertexShader = compile vs_3_0 VS_TransformAlphaClipD();
         PixelShader = compile ps_3_0 PS_DeferredTexturedAlphaClip();
     }
 }
@@ -145,7 +147,7 @@ technique reflection_draw
 {
     pass p0
     {
-        VertexShader = VS_TransformWire;
+        VertexShader = compile vs_3_0 VS_Transform();
         PixelShader = compile ps_3_0 PS_TexturedBasic();
     }
 }
@@ -154,7 +156,7 @@ technique reflection_drawskinned
 {
     pass p0
     {
-        VertexShader = VS_TransformWire;
+        VertexShader = compile vs_3_0 VS_Transform();
         PixelShader = compile ps_3_0 PS_TexturedBasic();
     }
 }
@@ -163,7 +165,7 @@ technique imposterdeferred_draw
 {
     pass p0
     {
-        VertexShader = VS_TransformDWire;
+        VertexShader = compile vs_3_0 VS_TransformD();
         PixelShader = compile ps_3_0 PS_DeferredImposter();
     }
 }
@@ -183,8 +185,8 @@ technique lightweight0_draw
     {
         ZWriteEnable = false;
 
-        VertexShader = VS_TransformWire;
-        PixelShader = PS_TexturedZeroWire;
+        VertexShader = compile vs_3_0 VS_Transform();
+        PixelShader = compile ps_3_0 PS_TexturedZero();
     }
 }
 
@@ -192,8 +194,8 @@ technique lightweight0_drawskinned
 {
     pass p0
     {
-        VertexShader = VS_TransformSkinWire;
-        PixelShader = PS_TexturedZeroWire;
+        VertexShader = compile vs_3_0 VS_TransformSkin();
+        PixelShader = compile ps_3_0 PS_TexturedZero();
     }
 }
 
@@ -203,8 +205,8 @@ technique lightweight4_draw
     {
         ZWriteEnable = false;
 
-        VertexShader = VS_TransformWire;
-        PixelShader = PS_TexturedFourWire;
+        VertexShader = compile vs_3_0 VS_Transform();
+        PixelShader = compile ps_3_0 PS_TexturedFour();
     }
 }
 
@@ -212,8 +214,8 @@ technique lightweight4_drawskinned
 {
     pass p0
     {
-        VertexShader = VS_TransformSkinWire;
-        PixelShader = PS_TexturedFourWire;
+        VertexShader = compile vs_3_0 VS_TransformSkin();
+        PixelShader = compile ps_3_0 PS_TexturedFour();
     }
 }
 
@@ -225,7 +227,7 @@ technique draw_inst
         CullMode = CW;
 
         VertexShader = compile vs_3_0 VS_TransformInst();
-        PixelShader = PS_TexturedEightInstWire;
+        PixelShader = compile ps_3_0 PS_TexturedEightInst();
     }
 }
 
