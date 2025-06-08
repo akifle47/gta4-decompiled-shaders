@@ -24,7 +24,7 @@
 
 #ifdef DIFFUSE_TEXTURE
     texture DiffuseTex;
-    sampler TextureSampler : register(s0) <string UIName = "Diffuse Texture";> = 
+    sampler TextureSampler <string UIName = "Diffuse Texture";> = 
     sampler_state
     {
         Texture = <DiffuseTex>;
@@ -38,9 +38,9 @@
 #endif
 
 #ifndef NO_SHADOW_CASTING
-    //unused
+    //both unused
     float shadowmap_res : ShadowMapResolution = 1280.0;
-    float2 facetMask[4] : facetMask : register(c208) = 
+    float2 facetMask[4] : facetMask = 
     {
         float2(-1.0, 0.0), 
         float2(1.0, 0.0), 

@@ -59,18 +59,6 @@
     #endif //ALPHA_SHADOW
     };
 
-    #ifndef NO_SKINNING
-        struct VS_ShadowDepthSkinInput
-        {
-            float3 Position : POSITION;
-            float4 BlendWeights : BLENDWEIGHT;
-            float4 BlendIndices : BLENDINDICES;
-        #ifdef ALPHA_SHADOW
-            float2 TexCoord : TEXCOORD0;
-        #endif //ALPHA_SHADOW
-        };
-    #endif //NO_SKINNING
-
     struct VS_ShadowDepthOutput
     {
         float4 Position              : POSITION;
@@ -96,17 +84,10 @@
         return OUT;
     }
 
-    #ifndef NO_SKINNING
-        VS_ShadowDepthOutput VS_ShadowDepthSkin(VS_ShadowDepthSkinInput IN)
+    #ifndef DEFERRED_LIGHTING
+        float4 ComputeCascadeMask(in float4 posClip)
         {
-            VS_ShadowDepthOutput OUT;
-            float4x3 skinMtx = ComputeSkinMatrix(IN.BlendIndices, IN.BlendWeights);
-            float3 posWorld = mul(float4(IN.Position, 1.0), skinMtx).xyz + gWorld[3].xyz;
-            float4 posClip = mul(float4(posWorld, 1), gShadowMatrix);
-
-            OUT.Position.z = 1.0 - min(posClip.z, 1.0);
             float4 cascadeMask;
-
             //only this branch seems to ever be used for directional shadows
             if(gShadowParam14151617.x == 0)
             {
@@ -135,6 +116,61 @@
                 cascadeMask.w = -posClip.z;
             }
 
+            return cascadeMask;
+        }
+
+        struct VS_ShadowDepthPedOutput
+        {
+            float4 Position                : POSITION;
+            float4 PositionWorldAndUnknown : TEXCOORD1;
+        };
+
+        VS_ShadowDepthPedOutput VS_ShadowDepthPed(VS_ShadowDepthInput IN)
+        {
+            VS_ShadowDepthPedOutput OUT;
+
+            float3 posWorld = mul(float4(IN.Position, 1.0), gWorld).xyz;
+            float4 posClip =  mul(float4(posWorld, 1), gShadowMatrix);
+            float4 cascadeMask = ComputeCascadeMask(posClip);
+
+            float3 a;
+            a.xy = float2(cascadeMask.w, posWorld.z);
+            a.z = cascadeMask.w * gShadowParam0123.w + cascadeMask.w;
+            a.z = a.z * (gShadowParam14151617.x == 3) + cascadeMask.w;
+            float3 b = float3(1, cascadeMask.wz);
+            float3 v4 = lerp(a, b, gShadowParam14151617.x == 0.0);
+
+            OUT.Position.xyz = cascadeMask.xyz;
+            OUT.Position.w = v4.x;
+            OUT.PositionWorldAndUnknown.xy = posWorld.xy;
+            OUT.PositionWorldAndUnknown.zw = v4.yz;
+
+            return OUT;
+        }
+    #endif //!DEFERRED_LIGHTING
+
+    #ifndef NO_SKINNING
+        struct VS_ShadowDepthSkinInput
+        {
+            float3 Position     : POSITION;
+            float4 BlendWeights : BLENDWEIGHT;
+            float4 BlendIndices : BLENDINDICES;
+        #ifdef ALPHA_SHADOW
+            float2 TexCoord     : TEXCOORD0;
+        #endif //ALPHA_SHADOW
+        };
+    
+        VS_ShadowDepthOutput VS_ShadowDepthSkin(VS_ShadowDepthSkinInput IN)
+        {
+            VS_ShadowDepthOutput OUT;
+
+            float4x3 skinMtx = ComputeSkinMatrix(IN.BlendIndices, IN.BlendWeights);
+            float3 posWorld = mul(float4(IN.Position, 1.0), skinMtx).xyz + gWorld[3].xyz;
+            float4 posClip = mul(float4(posWorld, 1), gShadowMatrix);
+
+            OUT.Position.z = 1.0 - min(posClip.z, 1.0);
+            float4 cascadeMask = ComputeCascadeMask(posClip);
+
             OUT.Position.x = dot(cascadeMask, float4(1, 1, 1, 1)) * 0.00001 + posClip.x;
             OUT.Position.yw = posClip.yw * float2(1, 0) + float2(0, 0);
 
@@ -146,7 +182,8 @@
             #endif //ALPHA_SHADOW
             return OUT;
         }
-    #endif //NO_SKINNING
+    #endif //!NO_SKINNING
+
 
     #ifdef ALPHA_SHADOW
         float4 PS_ShadowDepth(VS_ShadowDepthOutput IN, float2 screenCoords : VPOS) : COLOR
