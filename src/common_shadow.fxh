@@ -182,6 +182,30 @@
             #endif //ALPHA_SHADOW
             return OUT;
         }
+
+        VS_ShadowDepthPedOutput VS_ShadowDepthSkinPed(VS_ShadowDepthSkinInput IN)
+        {
+            VS_ShadowDepthPedOutput OUT;
+
+            float4x3 skinMtx = ComputeSkinMatrix(IN.BlendIndices, IN.BlendWeights);
+            float3 posWorld = mul(float4(IN.Position, 1.0), skinMtx).xyz + gWorld[3].xyz;
+            float4 posClip =  mul(float4(posWorld, 1), gShadowMatrix);
+            float4 cascadeMask = ComputeCascadeMask(posClip);
+
+            float3 a;
+            a.xy = float2(cascadeMask.w, posWorld.z);
+            a.z = cascadeMask.w * gShadowParam0123.w + cascadeMask.w;
+            a.z = a.z * (gShadowParam14151617.x == 3) + cascadeMask.w;
+            float3 b = float3(1, cascadeMask.wz);
+            float3 v4 = lerp(a, b, gShadowParam14151617.x == 0.0);
+
+            OUT.Position.xyz = cascadeMask.xyz;
+            OUT.Position.w = v4.x;
+            OUT.PositionWorldAndUnknown.xy = posWorld.xy;
+            OUT.PositionWorldAndUnknown.zw = v4.yz;
+
+            return OUT;
+        }
     #endif //!NO_SKINNING
 
 
