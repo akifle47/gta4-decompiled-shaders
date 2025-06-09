@@ -42,15 +42,15 @@
 #endif //DEPTH_SHIFT
 
 #ifdef PARALLAX
-    void ComputeParallax(in float3 fragPosToViewPosDirTangent, in float2 texCoordIn, out float2 texCoordOut, out float4 normalMapOut)
+    void ComputeParallax(in float3 fragToViewDirTangent, in float2 texCoordIn, out float2 texCoordOut, out float4 normalMapOut)
     {
-        fragPosToViewPosDirTangent.xy = normalize(fragPosToViewPosDirTangent + 0.00001).xy;
+        fragToViewDirTangent.xy = normalize(fragToViewDirTangent + 0.00001).xy;
 
         #if defined(PARALLAX_STEEP)
             const int numSamples = 8;
             const float stepSize = 1.0 / numSamples;
             
-            fragPosToViewPosDirTangent.xy = -fragPosToViewPosDirTangent.xy * parallaxScaleBias;
+            fragToViewDirTangent.xy = -fragToViewDirTangent.xy * parallaxScaleBias;
             texCoordOut = texCoordIn;
             normalMapOut = tex2D(BumpSampler, texCoordOut);
             float height = -normalMapOut.w;
@@ -58,7 +58,7 @@
 
             for(int i = 0; i < numSamples; i++)
             {
-                float2 sampleTexCoord = texCoordOut + (fragPosToViewPosDirTangent.xy * stepSize);
+                float2 sampleTexCoord = texCoordOut + (fragToViewDirTangent.xy * stepSize);
                 float4 sampleNormalMap = tex2D(BumpSampler, sampleTexCoord);
 
                 if(layerHeight <= height)
@@ -74,7 +74,7 @@
             #ifndef DEPTH_SHIFT_SCALE
                 height = saturate(height);
             #endif //DEPTH_SHIFT_SCALE
-            texCoordOut = saturate(fragPosToViewPosDirTangent.xy * height + texCoordIn);
+            texCoordOut = saturate(fragToViewDirTangent.xy * height + texCoordIn);
             normalMapOut = tex2D(BumpSampler, texCoordOut);
         #endif //PARALLAX_STEEP
     }
@@ -112,27 +112,27 @@ struct VS_Input
 
 struct VS_Output
 {
-    float4 Position                   : POSITION;
-    float2 TexCoord                   : TEXCOORD0;
-    float4 NormalWorldAndDepth        : TEXCOORD1;
+    float4 Position             : POSITION;
+    float2 TexCoord             : TEXCOORD0;
+    float4 NormalWorldAndDepth  : TEXCOORD1;
 #if defined(SPECULAR) || defined(ENVIRONMENT_MAP)
     //view pos to vertex
-    float3 FragPosToViewPosDir        : TEXCOORD3;
+    float3 FragToViewDir        : TEXCOORD3;
 #endif //SPECULAR || ENVIRONMENT_MAP
 #if defined(NORMAL_MAP) || defined(PARALLAX)
-    float3 TangentWorld               : TEXCOORD4; 
-    float3 BitangentWorld             : TEXCOORD5; 
+    float3 TangentWorld         : TEXCOORD4; 
+    float3 BitangentWorld       : TEXCOORD5; 
 #endif //NORMAL_MAP || PARALLAX
-    float4 Color                      : COLOR0;
-    float4 PositionWorld              : TEXCOORD6;
+    float4 Color                : COLOR0;
+    float4 PositionWorld        : TEXCOORD6;
 #ifdef PARALLAX
     //(tangent) view pos to vertex
-    float4 FragPosToViewPosDirTangent : TEXCOORD7;
+    float4 FragToViewDirTangent : TEXCOORD7;
 #elif defined(WIRE)
     //xyw = original clip pos, z = ndc delta * 320?
-    float4 WireParams1                : TEXCOORD7;
+    float4 WireParams1          : TEXCOORD7;
     //clip pos
-    float4 WireParams2                : TEXCOORD8;
+    float4 WireParams2          : TEXCOORD8;
 #endif //PARALLAX
 };
 
@@ -143,8 +143,8 @@ VS_Output VS_Transform(VS_Input IN)
     float3 posWorld = mul(float4(IN.Position, 1.0), gWorld).xyz;
 
     #if defined(SPECULAR) || defined(ENVIRONMENT_MAP)
-        float3 fragPosToViewPosDir = gViewInverse[3].xyz - posWorld;
-        OUT.FragPosToViewPosDir = fragPosToViewPosDir;
+        float3 fragToViewDir = gViewInverse[3].xyz - posWorld;
+        OUT.FragToViewDir = fragToViewDir;
     #endif //SPECULAR || ENVIRONMENT_MAP
     OUT.PositionWorld.xyz = posWorld;
     
@@ -162,9 +162,9 @@ VS_Output VS_Transform(VS_Input IN)
     #endif //NORMAL_MAP || PARALLAX
 
     #ifdef PARALLAX
-        OUT.FragPosToViewPosDirTangent.x = dot(tangentWorld, fragPosToViewPosDir);
-        OUT.FragPosToViewPosDirTangent.y = dot(bitangentWorld, fragPosToViewPosDir);
-        OUT.FragPosToViewPosDirTangent.z = dot(normalWorld, fragPosToViewPosDir);
+        OUT.FragToViewDirTangent.x = dot(tangentWorld, fragToViewDir);
+        OUT.FragToViewDirTangent.y = dot(bitangentWorld, fragToViewDir);
+        OUT.FragToViewDirTangent.z = dot(normalWorld, fragToViewDir);
     #endif //PARALLAX
 
     #ifdef ANIMATED
@@ -211,7 +211,7 @@ VS_Output VS_Transform(VS_Input IN)
 
     OUT.PositionWorld.w = 1.0;
     #ifdef PARALLAX
-        OUT.FragPosToViewPosDirTangent.w = 1.0;
+        OUT.FragToViewDirTangent.w = 1.0;
     #endif
     return OUT;
 }
@@ -219,20 +219,20 @@ VS_Output VS_Transform(VS_Input IN)
 
 struct VS_OutputDeferred
 {
-    float4 Position                   : POSITION;
-    float2 TexCoord                   : TEXCOORD0;
-    float4 NormalWorldAndDepth        : TEXCOORD1;
+    float4 Position             : POSITION;
+    float2 TexCoord             : TEXCOORD0;
+    float4 NormalWorldAndDepth  : TEXCOORD1;
 #ifdef ENVIRONMENT_MAP
-    float3 FragPosToViewPosDir        : TEXCOORD3;
+    float3 FragToViewDir        : TEXCOORD3;
 #endif //ENVIRONMENT_MAP
 #if defined(NORMAL_MAP) || defined(PARALLAX)
-    float3 TangentWorld               : TEXCOORD4; 
-    float3 BitangentWorld             : TEXCOORD5; 
+    float3 TangentWorld         : TEXCOORD4; 
+    float3 BitangentWorld       : TEXCOORD5; 
 #endif //NORMAL_MAP || PARALLAX
-    float4 Color                      : COLOR0;
-    float4 PositionWorld              : TEXCOORD6;
+    float4 Color                : COLOR0;
+    float4 PositionWorld        : TEXCOORD6;
 #ifdef PARALLAX
-    float4 FragPosToViewPosDirTangent : TEXCOORD7;
+    float4 FragToViewDirTangent : TEXCOORD7;
 #endif //PARALLAX
 };
 
@@ -242,25 +242,25 @@ VS_OutputDeferred VS_TransformD(VS_Input IN)
     VS_OutputDeferred OUT;
     
     float3 posWorld = mul(float4(IN.Position, 1.0), gWorld).xyz;
-    float3 fragPosToViewPosDir = gViewInverse[3].xyz - posWorld;
+    float3 fragToViewDir = gViewInverse[3].xyz - posWorld;
 
     #ifdef ENVIRONMENT_MAP
-        OUT.FragPosToViewPosDir = fragPosToViewPosDir;
+        OUT.FragToViewDir = fragToViewDir;
     #endif //ENVIRONMENT_MAP
     OUT.PositionWorld.xyz = posWorld;
     
     #ifdef PARALLAX
         float3 tangentWorld = normalize(mul(IN.Tangent.xyz, (float3x3)gWorld) + 0.00001);
-        OUT.FragPosToViewPosDirTangent.x = dot(tangentWorld, fragPosToViewPosDir);
+        OUT.FragToViewDirTangent.x = dot(tangentWorld, fragToViewDir);
         
         float3 normalWorld = normalize(mul(IN.Normal, (float3x3)gWorld) + 0.00001);
         float3 bitangentWorld = cross(tangentWorld, normalWorld);
 
         OUT.TangentWorld.xyz = tangentWorld;
         bitangentWorld *= IN.Tangent.w;
-        OUT.FragPosToViewPosDirTangent.y = dot(bitangentWorld, fragPosToViewPosDir);
+        OUT.FragToViewDirTangent.y = dot(bitangentWorld, fragToViewDir);
         OUT.BitangentWorld.xyz = bitangentWorld;
-        OUT.FragPosToViewPosDirTangent.z = dot(normalWorld, fragPosToViewPosDir);
+        OUT.FragToViewDirTangent.z = dot(normalWorld, fragToViewDir);
         OUT.NormalWorldAndDepth.xyz = normalWorld;
     #else
         float3 normalWorld = normalize(mul(IN.Normal, (float3x3)gWorld) + 0.00001);
@@ -299,7 +299,7 @@ VS_OutputDeferred VS_TransformD(VS_Input IN)
 
     OUT.PositionWorld.w = 1.0;
     #ifdef PARALLAX
-        OUT.FragPosToViewPosDirTangent.w = 1.0;
+        OUT.FragToViewDirTangent.w = 1.0;
     #endif
     return OUT;
 }
@@ -326,7 +326,7 @@ PS_OutputDeferred DeferredTextured(bool dither, VS_OutputDeferred IN, float2 scr
     #if defined(PARALLAX)
         float2 texCoord;
         float4 normalMap;
-        ComputeParallax(IN.FragPosToViewPosDirTangent.xyz, IN.TexCoord, texCoord, normalMap);
+        ComputeParallax(IN.FragToViewDirTangent.xyz, IN.TexCoord, texCoord, normalMap);
     #elif defined(NORMAL_MAP)
         float2 texCoord = IN.TexCoord;
         float4 normalMap = tex2D(BumpSampler, texCoord);
@@ -403,8 +403,8 @@ PS_OutputDeferred DeferredTextured(bool dither, VS_OutputDeferred IN, float2 scr
     #endif //SPECULAR_MAP
 
     #ifdef ENVIRONMENT_MAP
-        float3 viewPosToFragPosDir = -normalize(IN.FragPosToViewPosDir + 0.00001);
-        float3 R = reflect(viewPosToFragPosDir, normal);
+        float3 viewToFragDir = -normalize(IN.FragToViewDir + 0.00001);
+        float3 R = reflect(viewToFragDir, normal);
         R = normalize(R + 0.00001);
 
         #ifdef CUBEMAP_ENVIRONMENT_MAP
@@ -536,10 +536,10 @@ VS_OutputUnlit VS_TransformUnlit(VS_InputUnlit IN)
 
         float4x3 skinMtx = ComputeSkinMatrix(IN.BlendIndices, IN.BlendWeights);
         float3 posWorld = mul(float4(IN.Position, 1.0), skinMtx).xyz;
-        float3 fragPosToViewPosDir = gViewInverse[3].xyz - posWorld;
+        float3 fragToViewDir = gViewInverse[3].xyz - posWorld;
 
         #if defined(SPECULAR) || defined(ENVIRONMENT_MAP)
-            OUT.FragPosToViewPosDir = fragPosToViewPosDir;
+            OUT.FragToViewDir = fragToViewDir;
         #endif //SPECULAR || ENVIRONMENT_MAP
         OUT.PositionWorld.xyz = posWorld + gWorld[3].xyz;
         
@@ -557,9 +557,9 @@ VS_OutputUnlit VS_TransformUnlit(VS_InputUnlit IN)
         #endif //NORMAL_MAP || PARALLAX
 
         #ifdef PARALLAX
-            OUT.FragPosToViewPosDirTangent.x = dot(tangentWorld, fragPosToViewPosDir);
-            OUT.FragPosToViewPosDirTangent.y = dot(bitangentWorld, fragPosToViewPosDir);
-            OUT.FragPosToViewPosDirTangent.z = dot(normalWorld, fragPosToViewPosDir);
+            OUT.FragToViewDirTangent.x = dot(tangentWorld, fragToViewDir);
+            OUT.FragToViewDirTangent.y = dot(bitangentWorld, fragToViewDir);
+            OUT.FragToViewDirTangent.z = dot(normalWorld, fragToViewDir);
         #endif //PARALLAX
 
         #ifdef ANIMATED
@@ -596,7 +596,7 @@ VS_OutputUnlit VS_TransformUnlit(VS_InputUnlit IN)
 
         OUT.PositionWorld.w = 1.0;
         #ifdef PARALLAX
-            OUT.FragPosToViewPosDirTangent.w = 1.0;
+            OUT.FragToViewDirTangent.w = 1.0;
         #endif
         
         return OUT;
@@ -609,25 +609,25 @@ VS_OutputUnlit VS_TransformUnlit(VS_InputUnlit IN)
 
         float4x3 skinMtx = ComputeSkinMatrix(IN.BlendIndices, IN.BlendWeights);
         float3 posWorld = mul(float4(IN.Position, 1.0), skinMtx).xyz;
-        float3 fragPosToViewPosDir = gViewInverse[3].xyz - posWorld;
+        float3 fragToViewDir = gViewInverse[3].xyz - posWorld;
 
         #ifdef ENVIRONMENT_MAP
-            OUT.FragPosToViewPosDir = fragPosToViewPosDir;
+            OUT.FragToViewDir = fragToViewDir;
         #endif //ENVIRONMENT_MAP
         OUT.PositionWorld.xyz = posWorld;
         
         #ifdef PARALLAX
             float3 tangentWorld = mul(IN.Tangent.xyz, (float3x3)skinMtx);
-            OUT.FragPosToViewPosDirTangent.x = dot(tangentWorld, fragPosToViewPosDir);
+            OUT.FragToViewDirTangent.x = dot(tangentWorld, fragToViewDir);
             
             float3 normalWorld = mul(IN.Normal, (float3x3)skinMtx);
             float3 bitangentWorld = cross(tangentWorld, normalWorld);
 
             OUT.TangentWorld.xyz = tangentWorld;
             bitangentWorld *= IN.Tangent.w;
-            OUT.FragPosToViewPosDirTangent.y = dot(bitangentWorld, fragPosToViewPosDir);
+            OUT.FragToViewDirTangent.y = dot(bitangentWorld, fragToViewDir);
             OUT.BitangentWorld.xyz = bitangentWorld;
-            OUT.FragPosToViewPosDirTangent.z = dot(normalWorld, fragPosToViewPosDir);
+            OUT.FragToViewDirTangent.z = dot(normalWorld, fragToViewDir);
             OUT.NormalWorldAndDepth.xyz = normalWorld;
         #else
             float3 normalWorld = mul(IN.Normal, (float3x3)skinMtx);
@@ -666,7 +666,7 @@ VS_OutputUnlit VS_TransformUnlit(VS_InputUnlit IN)
 
         OUT.PositionWorld.w = 1.0;
         #ifdef PARALLAX
-            OUT.FragPosToViewPosDirTangent.w = 1.0;
+            OUT.FragToViewDirTangent.w = 1.0;
         #endif
 
         return OUT;
@@ -718,20 +718,20 @@ struct VS_InputInst
 
 struct VS_OutputInst
 {
-    float4 Position                   : POSITION;
-    float2 TexCoord                   : TEXCOORD0;
-    float4 NormalWorldAndDepth        : TEXCOORD1;
+    float4 Position             : POSITION;
+    float2 TexCoord             : TEXCOORD0;
+    float4 NormalWorldAndDepth  : TEXCOORD1;
 #if defined(SPECULAR) || defined(ENVIRONMENT_MAP)
-    float3 FragPosToViewPosDir        : TEXCOORD3;
+    float3 FragToViewDir        : TEXCOORD3;
 #endif //SPECULAR || ENVIRONMENT_MAP
 #if defined(NORMAL_MAP) || defined(PARALLAX)
-    float3 TangentWorld               : TEXCOORD4; 
-    float3 BitangentWorld             : TEXCOORD5; 
+    float3 TangentWorld         : TEXCOORD4; 
+    float3 BitangentWorld       : TEXCOORD5; 
 #endif //NORMAL_MAP || PARALLAX
-    float4 Color                      : COLOR0;
-    float4 PositionWorld              : TEXCOORD6;
+    float4 Color                : COLOR0;
+    float4 PositionWorld        : TEXCOORD6;
 #ifdef PARALLAX
-    float4 FragPosToViewPosDirTangent : TEXCOORD7;
+    float4 FragToViewDirTangent : TEXCOORD7;
 #endif //PARALLAX
 };
 
@@ -744,8 +744,8 @@ VS_OutputInst VS_TransformInst(VS_InputInst IN)
 
     OUT.PositionWorld.xyz = mul(float4(posWorld, 1.0), gWorld).xyz;
     #if defined(SPECULAR) || defined(ENVIRONMENT_MAP)
-        float3 fragPosToViewPosDir = gViewInverse[3].xyz - OUT.PositionWorld.xyz;
-        OUT.FragPosToViewPosDir = fragPosToViewPosDir;
+        float3 fragToViewDir = gViewInverse[3].xyz - OUT.PositionWorld.xyz;
+        OUT.FragToViewDir = fragToViewDir;
     #endif //SPECULAR
 
     float3 normalWorld = normalize(mul(IN.Normal, (float3x3)gWorld) + 0.00001);
@@ -766,9 +766,9 @@ VS_OutputInst VS_TransformInst(VS_InputInst IN)
     #endif //NORMAL_MAP || PARALLAX
     
     #ifdef PARALLAX
-        OUT.FragPosToViewPosDirTangent.x = dot(tangentWorld, fragPosToViewPosDir);
-        OUT.FragPosToViewPosDirTangent.y = dot(bitangentWorld, fragPosToViewPosDir);
-        OUT.FragPosToViewPosDirTangent.z = dot(normalWorld, fragPosToViewPosDir);
+        OUT.FragToViewDirTangent.x = dot(tangentWorld, fragToViewDir);
+        OUT.FragToViewDirTangent.y = dot(bitangentWorld, fragToViewDir);
+        OUT.FragToViewDirTangent.z = dot(normalWorld, fragToViewDir);
     #endif //PARALLAX
 
     #ifdef ANIMATED
@@ -797,7 +797,7 @@ VS_OutputInst VS_TransformInst(VS_InputInst IN)
     OUT.Color.zw = vertexColor.zw;
     OUT.PositionWorld.w = 1.0;
     #ifdef PARALLAX
-        OUT.FragPosToViewPosDirTangent.w = 1.0;
+        OUT.FragToViewDirTangent.w = 1.0;
     #endif
 
     return OUT;
@@ -858,7 +858,7 @@ struct VS_OutputParaboloid
     float4 Position            : POSITION;
     float2 TexCoord            : TEXCOORD0;
     float4 NormalWorldAndDepth : TEXCOORD1;
-    float3 ViewPosToFragPosDir : TEXCOORD3;
+    float3 ViewToFragDir       : TEXCOORD3;
     float4 Color               : COLOR0;
 };
 
@@ -869,7 +869,7 @@ VS_OutputParaboloid VS_TransformParaboloid(VS_InputParaboloid IN)
     OUT.NormalWorldAndDepth.xyz = normalize(mul(IN.Normal, (float3x3)gWorld) + 0.00001);
 
     float3 posWorld = mul(float4(IN.Position, 1.0), gWorld).xyz;
-    OUT.ViewPosToFragPosDir = -(gViewInverse[3].xyz - posWorld);
+    OUT.ViewToFragDir = -(gViewInverse[3].xyz - posWorld);
 
     float3 posView = mul(float4(IN.Position, 1.0), gWorldView).xyz;
     posView.z += PARABOLOID_HEIGHT_OFFSET;
@@ -939,7 +939,7 @@ float4 TexturedLit(in int numLights, in bool instanced, in VS_Output IN, in floa
     #if defined(PARALLAX)
         float2 texCoord;
         float4 normalMap;
-        ComputeParallax(IN.FragPosToViewPosDirTangent.xyz, IN.TexCoord, texCoord, normalMap);
+        ComputeParallax(IN.FragToViewDirTangent.xyz, IN.TexCoord, texCoord, normalMap);
     #elif defined(NORMAL_MAP)
         float2 texCoord = IN.TexCoord;
         float4 normalMap = tex2D(BumpSampler, texCoord);
@@ -1022,10 +1022,10 @@ float4 TexturedLit(in int numLights, in bool instanced, in VS_Output IN, in floa
     #endif //EMISSIVE
 
     #if defined(SPECULAR) || defined(ENVIRONMENT_MAP)
-        float3 viewPosToFragPosDir = -normalize(IN.FragPosToViewPosDir.xyz + 0.00001);
-        float3 R = reflect(viewPosToFragPosDir, normal);
+        float3 viewToFragDir = -normalize(IN.FragToViewDir.xyz + 0.00001);
+        float3 R = reflect(viewToFragDir, normal);
     #else
-        float3 viewPosToFragPosDir = float3(0, 0, 0);
+        float3 viewToFragDir = float3(0, 0, 0);
     #endif //SPECULAR || ENVIRONMENT_MAP
 
     #ifdef ENVIRONMENT_MAP
@@ -1052,7 +1052,7 @@ float4 TexturedLit(in int numLights, in bool instanced, in VS_Output IN, in floa
     surfaceProperties.SpecularIntensity = specIntensity;
     surfaceProperties.SpecularPower = specPower;
     surfaceProperties.AmbientOcclusion = ambientOcclusion;
-    float4 lighting = float4(ComputeLighting(numLights, true, IN.PositionWorld.xyz, viewPosToFragPosDir, surfaceProperties), globalScalars.x);
+    float4 lighting = float4(ComputeLighting(numLights, true, IN.PositionWorld.xyz, viewToFragDir, surfaceProperties), globalScalars.x);
     if(!instanced)
         lighting.xyz = ComputeDepthEffects(1.0, lighting.xyz, IN.NormalWorldAndDepth.w);
 
@@ -1097,7 +1097,7 @@ struct InputBasic
 {
     float2 TexCoord;
     float4 NormalWorldAndDepth;
-    float3 FragPosToViewPosDir;
+    float3 FragToViewDir;
     float4 Color;
     float2 ScreenCoords;
 };
@@ -1133,9 +1133,9 @@ float4 TexturedBasic(InputBasic IN)
     #endif //SPECULAR
 
     #if defined(SPECULAR) || defined(ENVIRONMENT_MAP)
-        float3 fragPosToViewPosDir = normalize(IN.FragPosToViewPosDir.xyz + 0.00001);
+        float3 fragToViewDir = normalize(IN.FragToViewDir.xyz + 0.00001);
     #else
-        float3 fragPosToViewPosDir = float3(0, 0, 0);
+        float3 fragToViewDir = float3(0, 0, 0);
     #endif //SPECULAR || ENVIRONMENT_MAP
 
     SurfaceProperties surfaceProperties;
@@ -1144,7 +1144,7 @@ float4 TexturedBasic(InputBasic IN)
     surfaceProperties.SpecularIntensity = specIntensity;
     surfaceProperties.SpecularPower = specPower;
     surfaceProperties.AmbientOcclusion = ambientOcclusion;
-    float4 lighting = float4(ComputeLighting(0, false, float3(-1, -1, -1), fragPosToViewPosDir, surfaceProperties), diffuse.w * globalScalars.x);
+    float4 lighting = float4(ComputeLighting(0, false, float3(-1, -1, -1), fragToViewDir, surfaceProperties), diffuse.w * globalScalars.x);
 
     #ifdef EMISSIVE
         diffuse.xyz *= IN.Color.xyz;
@@ -1175,9 +1175,9 @@ float4 PS_TexturedBasic(VS_Output IN, float2 screenCoords : VPOS) : COLOR
     inputBasic.TexCoord = IN.TexCoord;
     inputBasic.NormalWorldAndDepth = IN.NormalWorldAndDepth;
     #if defined(SPECULAR) || defined(ENVIRONMENT_MAP)
-        inputBasic.FragPosToViewPosDir = IN.FragPosToViewPosDir;
+        inputBasic.FragToViewDir = IN.FragToViewDir;
     #else
-        inputBasic.FragPosToViewPosDir = float3(0, 0, 0);
+        inputBasic.FragToViewDir = float3(0, 0, 0);
     #endif //SPECULAR || ENVIRONMENT_MAP
     inputBasic.Color = IN.Color;
     inputBasic.ScreenCoords = screenCoords;
@@ -1186,12 +1186,12 @@ float4 PS_TexturedBasic(VS_Output IN, float2 screenCoords : VPOS) : COLOR
 
 float4 PS_TexturedBasicParaboloid(VS_OutputParaboloid IN, float2 screenCoords : VPOS) : COLOR
 {
-    clip(IN.ViewPosToFragPosDir.z - PARABOLOID_HEIGHT_OFFSET);
+    clip(IN.ViewToFragDir.z - PARABOLOID_HEIGHT_OFFSET);
 
     InputBasic inputBasic;
     inputBasic.TexCoord = IN.TexCoord;
     inputBasic.NormalWorldAndDepth = IN.NormalWorldAndDepth;
-    inputBasic.FragPosToViewPosDir = IN.ViewPosToFragPosDir;
+    inputBasic.FragToViewDir = IN.ViewToFragDir;
     inputBasic.Color = IN.Color;
     inputBasic.ScreenCoords = screenCoords;
     float4 lighting = TexturedBasic(inputBasic);

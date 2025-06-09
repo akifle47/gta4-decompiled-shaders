@@ -546,7 +546,7 @@ asm
 struct VS_OutputVolumePS
 {
     float4 Position                    : POSITION;
-    float4 FragPosToViewPosDirAndDepth : TEXCOORD0;
+    float4 FragToViewDirAndDepth : TEXCOORD0;
 };
 
 VertexShader VS_VolumeTransformPS
@@ -2835,25 +2835,25 @@ float ComputeShadow(in float3 posWorld, in float3 normal, in float2 screenCoords
     return dot(shadowSamples, float4(0.25, 0.25, 0.25, 0.25));
 }
 
-float3 ComputeDeferredLocalLighting(in bool shadowed, in bool fillerLight, in float3 posWorld, in float3 viewPosToFragPosDir, float2 screenCoords, in SurfaceProperties surfProperties)
+float3 ComputeDeferredLocalLighting(in bool shadowed, in bool fillerLight, in float3 posWorld, in float3 viewToFragDir, float2 screenCoords, in SurfaceProperties surfProperties)
 {
-    float3 fragPosToLightPosDir = gDeferredLightPosition - posWorld;
+    float3 fragToLightDir = gDeferredLightPosition - posWorld;
     
-    float distAttenuation = saturate(1.0 - (dot(fragPosToLightPosDir, fragPosToLightPosDir) * gDeferredLightInvSqrRadius));
+    float distAttenuation = saturate(1.0 - (dot(fragToLightDir, fragToLightDir) * gDeferredLightInvSqrRadius));
     if(fillerLight)
         distAttenuation = distAttenuation * distAttenuation - 0.33;
     else
         distAttenuation = pow(distAttenuation, 4) - 0.1;
 
-    fragPosToLightPosDir = normalize(fragPosToLightPosDir + 0.00001);
+    fragToLightDir = normalize(fragToLightDir + 0.00001);
 
     float shadow = ComputeShadow(posWorld, surfProperties.Normal, screenCoords);
 
-    float3 R = reflect(viewPosToFragPosDir, surfProperties.Normal);
-    float3 specularLight = saturate(dot(fragPosToLightPosDir, R).xxx);
+    float3 R = reflect(viewToFragDir, surfProperties.Normal);
+    float3 specularLight = saturate(dot(fragToLightDir, R).xxx);
     specularLight = pow(specularLight, surfProperties.SpecularPower) * surfProperties.SpecularIntensity;
 
-    float nDotL = dot(fragPosToLightPosDir, surfProperties.Normal);
+    float nDotL = dot(fragToLightDir, surfProperties.Normal);
     if(fillerLight && shadowed)
         nDotL = saturate((nDotL - 0.33) * 1.5);
     else if(fillerLight && !shadowed)
@@ -2861,7 +2861,7 @@ float3 ComputeDeferredLocalLighting(in bool shadowed, in bool fillerLight, in fl
     else
         nDotL = saturate(nDotL);
 
-    float coneAttenuation = dot(fragPosToLightPosDir, -gDeferredLightDirection);
+    float coneAttenuation = dot(fragToLightDir, -gDeferredLightDirection);
     coneAttenuation -= gDeferredLightConeOffset;
     coneAttenuation = saturate(coneAttenuation * gDeferredLightConeScale);
     float attenuation;
@@ -2890,13 +2890,12 @@ float3 ComputeDeferredLocalLighting(in bool shadowed, in bool fillerLight, in fl
 
 float3 GetLightTexture(in float3 posWorld)
 {
-    float3 fragPosToLightPosDir = gDeferredLightPosition - posWorld;
-    
+    float3 fragToLightDir = gDeferredLightPosition - posWorld;
     float3 lightBitangent = cross(gDeferredLightTangent, gDeferredLightDirection);
-    float3 fragPosToLightPosDirTangent;
-    fragPosToLightPosDirTangent.x = dot(lightBitangent, fragPosToLightPosDir);
-    fragPosToLightPosDirTangent.y = dot(gDeferredLightTangent, fragPosToLightPosDir);
-    fragPosToLightPosDirTangent.z = dot(-gDeferredLightDirection, fragPosToLightPosDir);
+    float3 fragToLightDirTangent;
+    fragToLightDirTangent.x = dot(lightBitangent, fragToLightDir);
+    fragToLightDirTangent.y = dot(gDeferredLightTangent, fragToLightDir);
+    fragToLightDirTangent.z = dot(-gDeferredLightDirection, fragToLightDir);
 
     float3 lightTexture;
     //spot
@@ -2904,20 +2903,20 @@ float3 GetLightTexture(in float3 posWorld)
     {
         float v0 = 1.0 - (gDeferredLightConeOffset * gDeferredLightConeOffset);
         v0 = gDeferredLightConeOffset / sqrt(v0);
-        v0 /= fragPosToLightPosDirTangent.z;
+        v0 /= fragToLightDirTangent.z;
         float4 lightTexCoord;
-        lightTexCoord.xy = (fragPosToLightPosDirTangent.xy * v0) * 0.5 + 0.5;
+        lightTexCoord.xy = (fragToLightDirTangent.xy * v0) * 0.5 + 0.5;
         lightTexCoord.zw = float2(0, 0);
         lightTexture = tex2Dlod(gDeferredLightSampler, lightTexCoord).xyz;
     }
     //point
     else
     {
-        float fragPosToLightPosDirLength = length(fragPosToLightPosDir);
-        float v0 = 1.0 - (fragPosToLightPosDirTangent.z / fragPosToLightPosDirLength);
+        float fragPosToLightPosDirLength = length(fragToLightDir);
+        float v0 = 1.0 - (fragToLightDirTangent.z / fragPosToLightPosDirLength);
         v0 *= fragPosToLightPosDirLength;
         float4 lightTexCoord;
-        lightTexCoord.xy = (fragPosToLightPosDirTangent.xy / v0) * 0.5 + 0.5;
+        lightTexCoord.xy = (fragToLightDirTangent.xy / v0) * 0.5 + 0.5;
         lightTexCoord.zw = float2(0, 0);
         lightTexture = tex2Dlod(gDeferredLightSampler, lightTexCoord).xyz;
     }
@@ -2930,9 +2929,9 @@ float4 PS_LightPointOrSpot0(VS_OutputVolumePS IN, float2 screenCoords : VPOS) : 
     float2 texCoord = (screenCoords.xy + 0.50999999) * gooDeferredLightScreenSize.zw;
 
     float linearDepth = tex2D(GBufferTextureSampler3, texCoord).x * gDeferredProjParams.z - gDeferredProjParams.w;
-    linearDepth *= IN.FragPosToViewPosDirAndDepth.w;
-    float3 viewPosToFragPosDir = normalize(0.00001 - (IN.FragPosToViewPosDirAndDepth.xyz / linearDepth));
-    float3 posWorld = gViewInverse[3].xyz - (IN.FragPosToViewPosDirAndDepth.xyz / linearDepth);
+    linearDepth *= IN.FragToViewDirAndDepth.w;
+    float3 viewToFragDir = normalize(0.00001 - (IN.FragToViewDirAndDepth.xyz / linearDepth));
+    float3 posWorld = gViewInverse[3].xyz - (IN.FragToViewDirAndDepth.xyz / linearDepth);
     
     float3 specAoBuffer = tex2D(GBufferTextureSampler2, texCoord).xyz;
 
@@ -2942,7 +2941,7 @@ float4 PS_LightPointOrSpot0(VS_OutputVolumePS IN, float2 screenCoords : VPOS) : 
     surfProperties.SpecularIntensity = specAoBuffer.x * 2;
     surfProperties.SpecularPower = specAoBuffer.y * specAoBuffer.y * 512;
     surfProperties.AmbientOcclusion = saturate(specAoBuffer.z * specAoBuffer.z + 0.5);
-    float4 lighting = float4(ComputeDeferredLocalLighting(false, false, posWorld, viewPosToFragPosDir, screenCoords, surfProperties), 1);
+    float4 lighting = float4(ComputeDeferredLocalLighting(false, false, posWorld, viewToFragDir, screenCoords, surfProperties), 1);
     
     return lighting;
 }
@@ -2952,9 +2951,9 @@ float4 PS_LightPointOrSpot1(VS_OutputVolumePS IN, float2 screenCoords : VPOS) : 
     float2 texCoord = (screenCoords.xy + 0.50999999) * gooDeferredLightScreenSize.zw;
 
     float linearDepth = tex2D(GBufferTextureSampler3, texCoord).x * gDeferredProjParams.z - gDeferredProjParams.w;
-    linearDepth *= IN.FragPosToViewPosDirAndDepth.w;
-    float3 viewPosToFragPosDir = normalize(0.00001 - (IN.FragPosToViewPosDirAndDepth.xyz / linearDepth));
-    float3 posWorld = gViewInverse[3].xyz - (IN.FragPosToViewPosDirAndDepth.xyz / linearDepth);
+    linearDepth *= IN.FragToViewDirAndDepth.w;
+    float3 viewToFragDir = normalize(0.00001 - (IN.FragToViewDirAndDepth.xyz / linearDepth));
+    float3 posWorld = gViewInverse[3].xyz - (IN.FragToViewDirAndDepth.xyz / linearDepth);
     
     float3 specAoBuffer = tex2D(GBufferTextureSampler2, texCoord).xyz;
 
@@ -2964,7 +2963,7 @@ float4 PS_LightPointOrSpot1(VS_OutputVolumePS IN, float2 screenCoords : VPOS) : 
     surfProperties.SpecularIntensity = specAoBuffer.x * 2;
     surfProperties.SpecularPower = specAoBuffer.y * specAoBuffer.y * 512;
     surfProperties.AmbientOcclusion = 1.0;
-    float4 lighting = float4(ComputeDeferredLocalLighting(false, false, posWorld, viewPosToFragPosDir, screenCoords, surfProperties), 1);
+    float4 lighting = float4(ComputeDeferredLocalLighting(false, false, posWorld, viewToFragDir, screenCoords, surfProperties), 1);
 
     float stencil = tex2D(GBufferStencilTextureSampler, texCoord).x * 255;
     float entityAndInteriorMask = stencil >= 128 ? 128 : 0;
@@ -2980,9 +2979,9 @@ float4 PS_LightPointOrSpot2(VS_OutputVolumePS IN, float2 screenCoords : VPOS) : 
     float2 texCoord = (screenCoords.xy + 0.50999999) * gooDeferredLightScreenSize.zw;
 
     float linearDepth = tex2D(GBufferTextureSampler3, texCoord).x * gDeferredProjParams.z - gDeferredProjParams.w;
-    linearDepth *= IN.FragPosToViewPosDirAndDepth.w;
-    float3 viewPosToFragPosDir = normalize(0.00001 - (IN.FragPosToViewPosDirAndDepth.xyz / linearDepth));
-    float3 posWorld = gViewInverse[3].xyz - (IN.FragPosToViewPosDirAndDepth.xyz / linearDepth);
+    linearDepth *= IN.FragToViewDirAndDepth.w;
+    float3 viewToFragDir = normalize(0.00001 - (IN.FragToViewDirAndDepth.xyz / linearDepth));
+    float3 posWorld = gViewInverse[3].xyz - (IN.FragToViewDirAndDepth.xyz / linearDepth);
     
     float3 specAoBuffer = tex2D(GBufferTextureSampler2, texCoord).xyz;
 
@@ -2992,7 +2991,7 @@ float4 PS_LightPointOrSpot2(VS_OutputVolumePS IN, float2 screenCoords : VPOS) : 
     surfProperties.SpecularIntensity = specAoBuffer.x * 2;
     surfProperties.SpecularPower = specAoBuffer.y * specAoBuffer.y * 512;
     surfProperties.AmbientOcclusion = saturate(specAoBuffer.z * specAoBuffer.z + 0.5);
-    float4 lighting = float4(ComputeDeferredLocalLighting(false, false, posWorld, viewPosToFragPosDir, screenCoords, surfProperties), 1);
+    float4 lighting = float4(ComputeDeferredLocalLighting(false, false, posWorld, viewToFragDir, screenCoords, surfProperties), 1);
     
     float stencil = tex2D(GBufferStencilTextureSampler, texCoord).x * 255;
     float entityAndInteriorMask = stencil >= 128 ? 128 : 0;
@@ -3008,9 +3007,9 @@ float4 PS_LightPointOrSpot3(VS_OutputVolumePS IN, float2 screenCoords : VPOS) : 
     float2 texCoord = (screenCoords.xy + 0.50999999) * gooDeferredLightScreenSize.zw;
 
     float linearDepth = tex2D(GBufferTextureSampler3, texCoord).x * gDeferredProjParams.z - gDeferredProjParams.w;
-    linearDepth *= IN.FragPosToViewPosDirAndDepth.w;
-    float3 viewPosToFragPosDir = normalize(0.00001 - (IN.FragPosToViewPosDirAndDepth.xyz / linearDepth));
-    float3 posWorld = gViewInverse[3].xyz - (IN.FragPosToViewPosDirAndDepth.xyz / linearDepth);
+    linearDepth *= IN.FragToViewDirAndDepth.w;
+    float3 viewToFragDir = normalize(0.00001 - (IN.FragToViewDirAndDepth.xyz / linearDepth));
+    float3 posWorld = gViewInverse[3].xyz - (IN.FragToViewDirAndDepth.xyz / linearDepth);
     
     float3 specAoBuffer = tex2D(GBufferTextureSampler2, texCoord).xyz;
 
@@ -3020,7 +3019,7 @@ float4 PS_LightPointOrSpot3(VS_OutputVolumePS IN, float2 screenCoords : VPOS) : 
     surfProperties.SpecularIntensity = specAoBuffer.x * 2;
     surfProperties.SpecularPower = specAoBuffer.y * specAoBuffer.y * 512;
     surfProperties.AmbientOcclusion = 1.0;
-    float4 lighting = float4(ComputeDeferredLocalLighting(false, false, posWorld, viewPosToFragPosDir, screenCoords, surfProperties), 1);
+    float4 lighting = float4(ComputeDeferredLocalLighting(false, false, posWorld, viewToFragDir, screenCoords, surfProperties), 1);
     
     float stencil = tex2D(GBufferStencilTextureSampler, texCoord).x * 255;
     float interiorMask = stencil >= 128 ? 128 : 0;
@@ -3040,9 +3039,9 @@ float4 PS_FillerPointOrSpot0(VS_OutputVolumePS IN, float2 screenCoords : VPOS) :
     float2 texCoord = (screenCoords.xy + 0.50999999) * gooDeferredLightScreenSize.zw;
 
     float linearDepth = tex2D(GBufferTextureSampler3, texCoord).x * gDeferredProjParams.z - gDeferredProjParams.w;
-    linearDepth *= IN.FragPosToViewPosDirAndDepth.w;
-    float3 viewPosToFragPosDir = normalize(0.00001 - (IN.FragPosToViewPosDirAndDepth.xyz / linearDepth));
-    float3 posWorld = gViewInverse[3].xyz - (IN.FragPosToViewPosDirAndDepth.xyz / linearDepth);
+    linearDepth *= IN.FragToViewDirAndDepth.w;
+    float3 viewToFragDir = normalize(0.00001 - (IN.FragToViewDirAndDepth.xyz / linearDepth));
+    float3 posWorld = gViewInverse[3].xyz - (IN.FragToViewDirAndDepth.xyz / linearDepth);
 
     SurfaceProperties surfProperties;
     surfProperties.Diffuse = tex2D(GBufferTextureSampler0, texCoord).xyz;
@@ -3050,7 +3049,7 @@ float4 PS_FillerPointOrSpot0(VS_OutputVolumePS IN, float2 screenCoords : VPOS) :
     surfProperties.SpecularIntensity = 1;
     surfProperties.SpecularPower = 1;
     surfProperties.AmbientOcclusion = 1;
-    float4 lighting = float4(ComputeDeferredLocalLighting(false, true, posWorld, viewPosToFragPosDir, screenCoords, surfProperties), 1);
+    float4 lighting = float4(ComputeDeferredLocalLighting(false, true, posWorld, viewToFragDir, screenCoords, surfProperties), 1);
     
     return lighting;
 }
@@ -3060,9 +3059,9 @@ float4 PS_FillerPointOrSpot1(VS_OutputVolumePS IN, float2 screenCoords : VPOS) :
     float2 texCoord = (screenCoords.xy + 0.50999999) * gooDeferredLightScreenSize.zw;
 
     float linearDepth = tex2D(GBufferTextureSampler3, texCoord).x * gDeferredProjParams.z - gDeferredProjParams.w;
-    linearDepth *= IN.FragPosToViewPosDirAndDepth.w;
-    float3 viewPosToFragPosDir = normalize(0.00001 - (IN.FragPosToViewPosDirAndDepth.xyz / linearDepth));
-    float3 posWorld = gViewInverse[3].xyz - (IN.FragPosToViewPosDirAndDepth.xyz / linearDepth);
+    linearDepth *= IN.FragToViewDirAndDepth.w;
+    float3 viewToFragDir = normalize(0.00001 - (IN.FragToViewDirAndDepth.xyz / linearDepth));
+    float3 posWorld = gViewInverse[3].xyz - (IN.FragToViewDirAndDepth.xyz / linearDepth);
 
     SurfaceProperties surfProperties;
     surfProperties.Diffuse = tex2D(GBufferTextureSampler0, texCoord).xyz;
@@ -3070,7 +3069,7 @@ float4 PS_FillerPointOrSpot1(VS_OutputVolumePS IN, float2 screenCoords : VPOS) :
     surfProperties.SpecularIntensity = 1;
     surfProperties.SpecularPower = 1;
     surfProperties.AmbientOcclusion = 1;
-    float4 lighting = float4(ComputeDeferredLocalLighting(false, true, posWorld, viewPosToFragPosDir, screenCoords, surfProperties), 1);
+    float4 lighting = float4(ComputeDeferredLocalLighting(false, true, posWorld, viewToFragDir, screenCoords, surfProperties), 1);
 
     float stencil = tex2D(GBufferStencilTextureSampler, texCoord).x * 255;
     float entityAndInteriorMask = stencil >= 128 ? 128 : 0;
@@ -3086,9 +3085,9 @@ float4 PS_FillerPointOrSpot2(VS_OutputVolumePS IN, float2 screenCoords : VPOS) :
     float2 texCoord = (screenCoords.xy + 0.50999999) * gooDeferredLightScreenSize.zw;
 
     float linearDepth = tex2D(GBufferTextureSampler3, texCoord).x * gDeferredProjParams.z - gDeferredProjParams.w;
-    linearDepth *= IN.FragPosToViewPosDirAndDepth.w;
-    float3 viewPosToFragPosDir = normalize(0.00001 - (IN.FragPosToViewPosDirAndDepth.xyz / linearDepth));
-    float3 posWorld = gViewInverse[3].xyz - (IN.FragPosToViewPosDirAndDepth.xyz / linearDepth);
+    linearDepth *= IN.FragToViewDirAndDepth.w;
+    float3 viewToFragDir = normalize(0.00001 - (IN.FragToViewDirAndDepth.xyz / linearDepth));
+    float3 posWorld = gViewInverse[3].xyz - (IN.FragToViewDirAndDepth.xyz / linearDepth);
 
     SurfaceProperties surfProperties;
     surfProperties.Diffuse = tex2D(GBufferTextureSampler0, texCoord).xyz;
@@ -3096,7 +3095,7 @@ float4 PS_FillerPointOrSpot2(VS_OutputVolumePS IN, float2 screenCoords : VPOS) :
     surfProperties.SpecularIntensity = 1;
     surfProperties.SpecularPower = 1;
     surfProperties.AmbientOcclusion = 1;
-    float4 lighting = float4(ComputeDeferredLocalLighting(false, true, posWorld, viewPosToFragPosDir, screenCoords, surfProperties), 1);
+    float4 lighting = float4(ComputeDeferredLocalLighting(false, true, posWorld, viewToFragDir, screenCoords, surfProperties), 1);
 
     float stencil = tex2D(GBufferStencilTextureSampler, texCoord).x * 255;
     float entityAndInteriorMask = stencil >= 128 ? 128 : 0;
@@ -3118,9 +3117,9 @@ float4 PS_LightShadowPointOrSpot(VS_OutputVolumePS IN, float2 screenCoords : VPO
     float2 texCoord = (screenCoords.xy + 0.50999999) * gooDeferredLightScreenSize.zw;
 
     float linearDepth = tex2D(GBufferTextureSampler3, texCoord).x * gDeferredProjParams.z - gDeferredProjParams.w;
-    linearDepth *= IN.FragPosToViewPosDirAndDepth.w;
-    float3 viewPosToFragPosDir = normalize(0.00001 - (IN.FragPosToViewPosDirAndDepth.xyz / linearDepth));
-    float3 posWorld = gViewInverse[3].xyz - (IN.FragPosToViewPosDirAndDepth.xyz / linearDepth);
+    linearDepth *= IN.FragToViewDirAndDepth.w;
+    float3 viewToFragDir = normalize(0.00001 - (IN.FragToViewDirAndDepth.xyz / linearDepth));
+    float3 posWorld = gViewInverse[3].xyz - (IN.FragToViewDirAndDepth.xyz / linearDepth);
     
     float3 specAoBuffer = tex2D(GBufferTextureSampler2, texCoord).xyz;
 
@@ -3136,7 +3135,7 @@ float4 PS_LightShadowPointOrSpot(VS_OutputVolumePS IN, float2 screenCoords : VPO
     float entityAndInteriorMask = stencil >= 128 ? 128 : 0;
     surfProperties.AmbientOcclusion = stencil - entityAndInteriorMask >= 7.9 ? 1 : ambientOcclusion;
     
-    float4 lighting = float4(ComputeDeferredLocalLighting(true, false, posWorld, viewPosToFragPosDir, screenCoords, surfProperties), 2);
+    float4 lighting = float4(ComputeDeferredLocalLighting(true, false, posWorld, viewToFragDir, screenCoords, surfProperties), 2);
 
     return lighting;
 }
@@ -3146,9 +3145,9 @@ float4 PS_FillerShadowPointOrSpot(VS_OutputVolumePS IN, float2 screenCoords : VP
     float2 texCoord = (screenCoords.xy + 0.50999999) * gooDeferredLightScreenSize.zw;
 
     float linearDepth = tex2D(GBufferTextureSampler3, texCoord).x * gDeferredProjParams.z - gDeferredProjParams.w;
-    linearDepth *= IN.FragPosToViewPosDirAndDepth.w;
-    float3 viewPosToFragPosDir = normalize(0.00001 - (IN.FragPosToViewPosDirAndDepth.xyz / linearDepth));
-    float3 posWorld = gViewInverse[3].xyz - (IN.FragPosToViewPosDirAndDepth.xyz / linearDepth);
+    linearDepth *= IN.FragToViewDirAndDepth.w;
+    float3 viewToFragDir = normalize(0.00001 - (IN.FragToViewDirAndDepth.xyz / linearDepth));
+    float3 posWorld = gViewInverse[3].xyz - (IN.FragToViewDirAndDepth.xyz / linearDepth);
 
     SurfaceProperties surfProperties;
     surfProperties.Diffuse = tex2D(GBufferTextureSampler0, texCoord).xyz;
@@ -3156,7 +3155,7 @@ float4 PS_FillerShadowPointOrSpot(VS_OutputVolumePS IN, float2 screenCoords : VP
     surfProperties.SpecularIntensity = 1;
     surfProperties.SpecularPower = 1;
     surfProperties.AmbientOcclusion = 1;
-    float4 lighting = float4(ComputeDeferredLocalLighting(true, true, posWorld, viewPosToFragPosDir, screenCoords, surfProperties), 1);
+    float4 lighting = float4(ComputeDeferredLocalLighting(true, true, posWorld, viewToFragDir, screenCoords, surfProperties), 1);
     
     return lighting;
 }
@@ -3166,9 +3165,9 @@ float4 PS_LightTexPointOrSpot(VS_OutputVolumePS IN, float2 screenCoords : VPOS) 
     float2 texCoord = (screenCoords.xy + 0.50999999) * gooDeferredLightScreenSize.zw;
 
     float linearDepth = tex2D(GBufferTextureSampler3, texCoord).x * gDeferredProjParams.z - gDeferredProjParams.w;
-    linearDepth *= IN.FragPosToViewPosDirAndDepth.w;
-    float3 viewPosToFragPosDir = normalize(0.00001 - (IN.FragPosToViewPosDirAndDepth.xyz / linearDepth));
-    float3 posWorld = gViewInverse[3].xyz - (IN.FragPosToViewPosDirAndDepth.xyz / linearDepth);
+    linearDepth *= IN.FragToViewDirAndDepth.w;
+    float3 viewToFragDir = normalize(0.00001 - (IN.FragToViewDirAndDepth.xyz / linearDepth));
+    float3 posWorld = gViewInverse[3].xyz - (IN.FragToViewDirAndDepth.xyz / linearDepth);
     
     float3 specAoBuffer = tex2D(GBufferTextureSampler2, texCoord).xyz;
 
@@ -3178,7 +3177,7 @@ float4 PS_LightTexPointOrSpot(VS_OutputVolumePS IN, float2 screenCoords : VPOS) 
     surfProperties.SpecularIntensity = specAoBuffer.x * 2;
     surfProperties.SpecularPower = specAoBuffer.y * specAoBuffer.y * 512;
     surfProperties.AmbientOcclusion = saturate(specAoBuffer.z * specAoBuffer.z + 0.5);
-    float4 lighting = float4(ComputeDeferredLocalLighting(false, false, posWorld, viewPosToFragPosDir, screenCoords, surfProperties), 1);
+    float4 lighting = float4(ComputeDeferredLocalLighting(false, false, posWorld, viewToFragDir, screenCoords, surfProperties), 1);
     
     return lighting;
 }
@@ -3188,9 +3187,9 @@ float4 PS_LightShadowTexPointOrSpot(VS_OutputVolumePS IN, float2 screenCoords : 
     float2 texCoord = (screenCoords.xy + 0.50999999) * gooDeferredLightScreenSize.zw;
 
     float linearDepth = tex2D(GBufferTextureSampler3, texCoord).x * gDeferredProjParams.z - gDeferredProjParams.w;
-    linearDepth *= IN.FragPosToViewPosDirAndDepth.w;
-    float3 viewPosToFragPosDir = normalize(0.00001 - (IN.FragPosToViewPosDirAndDepth.xyz / linearDepth));
-    float3 posWorld = gViewInverse[3].xyz - (IN.FragPosToViewPosDirAndDepth.xyz / linearDepth);
+    linearDepth *= IN.FragToViewDirAndDepth.w;
+    float3 viewToFragDir = normalize(0.00001 - (IN.FragToViewDirAndDepth.xyz / linearDepth));
+    float3 posWorld = gViewInverse[3].xyz - (IN.FragToViewDirAndDepth.xyz / linearDepth);
     
     float3 specAoBuffer = tex2D(GBufferTextureSampler2, texCoord).xyz;
 
@@ -3200,7 +3199,7 @@ float4 PS_LightShadowTexPointOrSpot(VS_OutputVolumePS IN, float2 screenCoords : 
     surfProperties.SpecularIntensity = specAoBuffer.x * 2;
     surfProperties.SpecularPower = specAoBuffer.y * specAoBuffer.y * 512;
     surfProperties.AmbientOcclusion = 1.0;
-    float4 lighting = float4(ComputeDeferredLocalLighting(true, false, posWorld, viewPosToFragPosDir, screenCoords, surfProperties), 1);
+    float4 lighting = float4(ComputeDeferredLocalLighting(true, false, posWorld, viewToFragDir, screenCoords, surfProperties), 1);
     
     return lighting;
 }

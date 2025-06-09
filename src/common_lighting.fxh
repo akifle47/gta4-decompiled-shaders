@@ -50,29 +50,29 @@ float3 ComputeDepthEffects(in float noSkyMask, in float3 color, in float linearD
 
     void ComputeForwardLocalLighting(in ForwardLights lights, in SurfaceProperties surfProperties, in float3 posWorld, in float3 reflectDir, out float3 diffuseLight, out float3 specularLight)
     {
-        float4 fragPosToLightPosDirsX = lights.PositionsX - posWorld.x;
-        float4 fragPosToLightPosDirsY = lights.PositionsY - posWorld.y;
-        float4 fragPosToLightPosDirsZ = lights.PositionsZ - posWorld.z;
+        float4 fragToLightDirsX = lights.PositionsX - posWorld.x;
+        float4 fragToLightDirsY = lights.PositionsY - posWorld.y;
+        float4 fragToLightDirsZ = lights.PositionsZ - posWorld.z;
 
-        float4 fragPosToLightPosDirsLengths = (fragPosToLightPosDirsX * fragPosToLightPosDirsX) +
-                                              (fragPosToLightPosDirsY * fragPosToLightPosDirsY) +
-                                              (fragPosToLightPosDirsZ * fragPosToLightPosDirsZ) + 0.00001;
+        float4 fragToLightDirsLengths = (fragToLightDirsX * fragToLightDirsX) +
+                                              (fragToLightDirsY * fragToLightDirsY) +
+                                              (fragToLightDirsZ * fragToLightDirsZ) + 0.00001;
         
-        float4 distAttenuations = max(0.0, 1.0 - (fragPosToLightPosDirsLengths * lights.InvSqrRadiuses));
+        float4 distAttenuations = max(0.0, 1.0 - (fragToLightDirsLengths * lights.InvSqrRadiuses));
         distAttenuations = pow(distAttenuations, 4) - 0.1;
         distAttenuations = distAttenuations >= 0.0 ? distAttenuations * 1.11111116 : 0;
         
-        fragPosToLightPosDirsLengths = rsqrt(fragPosToLightPosDirsLengths);
+        fragToLightDirsLengths = rsqrt(fragToLightDirsLengths);
 
-        float4 nDotLs = (fragPosToLightPosDirsX * surfProperties.Normal.x) +
-                        (fragPosToLightPosDirsY * surfProperties.Normal.y) +
-                        (fragPosToLightPosDirsZ * surfProperties.Normal.z);
-        distAttenuations = saturate(nDotLs * distAttenuations * fragPosToLightPosDirsLengths);
+        float4 nDotLs = (fragToLightDirsX * surfProperties.Normal.x) +
+                        (fragToLightDirsY * surfProperties.Normal.y) +
+                        (fragToLightDirsZ * surfProperties.Normal.z);
+        distAttenuations = saturate(nDotLs * distAttenuations * fragToLightDirsLengths);
 
-        float4 coneAttenuations = (fragPosToLightPosDirsX * -lights.DirectionsX) +
-                                  (fragPosToLightPosDirsY * -lights.DirectionsY) +
-                                  (fragPosToLightPosDirsZ * -lights.DirectionsZ);
-        coneAttenuations *= fragPosToLightPosDirsLengths;
+        float4 coneAttenuations = (fragToLightDirsX * -lights.DirectionsX) +
+                                  (fragToLightDirsY * -lights.DirectionsY) +
+                                  (fragToLightDirsZ * -lights.DirectionsZ);
+        coneAttenuations *= fragToLightDirsLengths;
         coneAttenuations = saturate(coneAttenuations * lights.ConeScales + lights.ConeOffsets);
 
         float4 attenuations = distAttenuations * coneAttenuations;
@@ -80,10 +80,10 @@ float3 ComputeDepthEffects(in float noSkyMask, in float3 color, in float linearD
         #ifdef SPECULAR
             float specPower = surfProperties.SpecularPower * 0.25;
 
-            float4 lightDirsDotR = (reflectDir.x * fragPosToLightPosDirsX) + 
-                                   (reflectDir.y * fragPosToLightPosDirsY) + 
-                                   (reflectDir.z * fragPosToLightPosDirsZ);
-            lightDirsDotR *= fragPosToLightPosDirsLengths;
+            float4 lightDirsDotR = (reflectDir.x * fragToLightDirsX) + 
+                                   (reflectDir.y * fragToLightDirsY) + 
+                                   (reflectDir.z * fragToLightDirsZ);
+            lightDirsDotR *= fragToLightDirsLengths;
 
             float4 specularLights = log(abs(lightDirsDotR)) * specPower;
             specularLights = exp(specularLights) * attenuations;
@@ -96,7 +96,7 @@ float3 ComputeDepthEffects(in float noSkyMask, in float3 color, in float linearD
         diffuseLight = float3(dot(lights.ColorsR, attenuations), dot(lights.ColorsG, attenuations), dot(lights.ColorsB, attenuations));
     }
 
-    float3 ComputeLighting(in int numLights, in bool shadowed, in float3 posWorld, in float3 fragPosToViewPosDir, in SurfaceProperties surfProperties)
+    float3 ComputeLighting(in int numLights, in bool shadowed, in float3 posWorld, in float3 fragToViewDir, in SurfaceProperties surfProperties)
     {
         #if numLights != 0 && numLights != 4 && numLights != 8
             #error numLights must be 0, 4 or 8.
@@ -114,7 +114,7 @@ float3 ComputeDepthEffects(in float noSkyMask, in float3 color, in float linearD
             enableSpecular = true;
         #endif //SPECULAR && !DEFERRED_LIGHTING
 
-        float3 R = reflect(fragPosToViewPosDir, normal);
+        float3 R = reflect(fragToViewDir, normal);
         float3 specularLight = 0;
         if(enableSpecular)
         {
@@ -131,10 +131,10 @@ float3 ComputeDepthEffects(in float noSkyMask, in float3 color, in float linearD
         }
 
         #ifdef DEFERRED_LIGHTING
-            float rimLighting = pow(1.0 - abs(dot(-fragPosToViewPosDir, normal)), 4) * 0.75 + 0.25;
+            float rimLighting = pow(1.0 - abs(dot(-fragToViewDir, normal)), 4) * 0.75 + 0.25;
 
             float dist = distance(posWorld, gViewInverse[3].xyz);
-            float3 v3 = fragPosToViewPosDir * saturate(dist / 50) + R;
+            float3 v3 = fragToViewDir * saturate(dist / 50) + R;
             v3 = normalize(v3 + 0.00001);
             float parabReflDistanceFade = 1.0 - saturate(dist / 100);
             float parabReflVerticalFade = saturate(v3.z * 5);
