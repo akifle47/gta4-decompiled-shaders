@@ -52,7 +52,7 @@
 float4 matMaterialColorScale : MaterialColorScale = float4(1.0, 1.0, 1.0, 1.0);
 
 float4 gBoneDamage0[14] : CustomBoneDamageArray;
-bool gBoneDamageEnabled : CustomBoneDamageEnabled : register(b11);
+bool gBoneDamageEnabled : CustomBoneDamageEnabled;
 
 #ifdef SUBSURFACE_SCATTERING
     float4 SubColor : SubColor<string UIWidget = "Color"; string UIName = "Subsurface \"Bleed-thru\" Color";> = float4(0.200000003, 0.0825000033, 0.0250000004, 1.0);
