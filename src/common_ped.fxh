@@ -35,7 +35,7 @@
         MinFilter = ANISOTROPIC;
         MagFilter = LINEAR;
     };
-#endif
+#endif //DIFFUSE_TEXTURE
 
 #ifndef NO_SHADOW_CASTING
     //both unused
@@ -47,22 +47,18 @@
         float2(0.0, -1.0), 
         float2(0.0, 1.0)
     };
-#endif
+#endif //NO_SHADOW_CASTING
 
-#ifdef PED_MATERIAL_COLOR_SCALE 
-    float4 matMaterialColorScale : MaterialColorScale = float4(1.0, 1.0, 1.0, 1.0);
-#endif
+float4 matMaterialColorScale : MaterialColorScale = float4(1.0, 1.0, 1.0, 1.0);
 
-#ifdef PED_BONE_DAMAGE
-    float4 gBoneDamage0[14] : CustomBoneDamageArray;
-    bool gBoneDamageEnabled : CustomBoneDamageEnabled;
-#endif
+float4 gBoneDamage0[14] : CustomBoneDamageArray;
+bool gBoneDamageEnabled : CustomBoneDamageEnabled : register(b11);
 
 #ifdef SUBSURFACE_SCATTERING
     float4 SubColor : SubColor<string UIWidget = "Color"; string UIName = "Subsurface \"Bleed-thru\" Color";> = float4(0.200000003, 0.0825000033, 0.0250000004, 1.0);
     float SubScatWrap : SubWrap = 0.400000006;
     float SubScatWidth : SubScatterWidth = 0.150000006;
-#endif
+#endif //SUBSURFACE_SCATTERING
 
 #ifdef ENVIRONMENT_MAP
     float reflectivePower : Reflectivity<string UIName = "Reflectivity"; float UIMin = -10.0; float UIMax = 10.0; float UIStep = 0.100000;> = 0.450000;
@@ -75,35 +71,33 @@
         MagFilter = LINEAR;
         MipFilter = LINEAR;
     };
-#endif
+#endif //ENVIRONMENT_MAP
 
-#ifdef PED_BONE_DAMAGE
-    texture damageTex;
-    sampler damageTextureSampler = 
-    sampler_state
-    {
-        Texture = <damageTex>;
-        AddressU = WRAP;
-        AddressV = WRAP;
-        AddressW = WRAP;
-        MipFilter = LINEAR;
-        MinFilter = ANISOTROPIC;
-        MagFilter = LINEAR;
-    };
-    
-    texture damageSpecTex;
-    sampler damageSpecTextureSampler = 
-    sampler_state
-    {
-        Texture = <damageSpecTex>;
-        AddressU = WRAP;
-        AddressV = WRAP;
-        AddressW = WRAP;
-        MipFilter = LINEAR;
-        MinFilter = ANISOTROPIC;
-        MagFilter = LINEAR;
-    };
-#endif
+texture damageTex;
+sampler damageTextureSampler = 
+sampler_state
+{
+    Texture = <damageTex>;
+    AddressU = WRAP;
+    AddressV = WRAP;
+    AddressW = WRAP;
+    MipFilter = LINEAR;
+    MinFilter = ANISOTROPIC;
+    MagFilter = LINEAR;
+};
+
+texture damageSpecTex;
+sampler damageSpecTextureSampler = 
+sampler_state
+{
+    Texture = <damageSpecTex>;
+    AddressU = WRAP;
+    AddressV = WRAP;
+    AddressW = WRAP;
+    MipFilter = LINEAR;
+    MinFilter = ANISOTROPIC;
+    MagFilter = LINEAR;
+};
 
 #ifdef NORMAL_MAP
     texture BumpTex;
@@ -118,12 +112,12 @@
         MinFilter = ANISOTROPIC;
         MagFilter = LINEAR;
     };
-#endif
+#endif //NORMAL_MAP
 
 #ifdef SPECULAR
     float specularFactor : Specular<string UIName = "Specular Falloff"; float UIMin = 0.0; float UIMax = 10000.0; float UIStep = 0.1;> = 100.0;
     float specularColorFactor : SpecularColor<string UIName = "Specular Intensity"; float UIMin = 0.0; float UIMax = 10000.0; float UIStep = 0.1;> = 1.0;
-#endif
+#endif //SPECULAR
 
 #ifdef SPECULAR_MAP
     float3 specMapIntMask : SpecularMapIntensityMask<string UIWidget = "slider"; float UIMin = 0.0; float UIMax = 1.0; float UIStep = 0.010000; string UIName = "specular map intensity mask color";> = float3(1.0, 0.0, 0.0);
@@ -139,10 +133,10 @@
         MinFilter = ANISOTROPIC;
         MagFilter = LINEAR;
     };
-#endif
+#endif //SPECULAR_MAP
 
 #ifdef NORMAL_MAP
     float bumpiness : Bumpiness<string UIWidget = "slider"; float UIMin = 0.0; float UIMax = 200.0; float UIStep = 0.010000; string UIName = "Bumpiness";> = 1.0;
-#endif
+#endif //NORMAL_MAP
 
 float3 LuminanceConstants : LuminanceConstants = float3(0.212500006, 0.715399981, 0.0720999986);

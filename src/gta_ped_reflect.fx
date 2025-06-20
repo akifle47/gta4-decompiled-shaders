@@ -1,10 +1,9 @@
 #define DIFFUSE_TEXTURE
-#define PED_BONE_DAMAGE
-#define PED_MATERIAL_COLOR_SCALE
 #define ENVIRONMENT_MAP
 #define NORMAL_MAP
 #define SPECULAR_MAP
 #define SPECULAR
+#define PED_BONE_DAMAGE
 #include "common_ped.fxh"
 #include "megashader_ped.fxh"
 

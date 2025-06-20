@@ -1,8 +1,6 @@
 int orderNumber : OrderNumber<string UIName = "Draw Order"; int UIMin = 0; int UIMax = 9; int UIStep = 1;> = 0;
 
 #define DIFFUSE_TEXTURE
-#define PED_MATERIAL_COLOR_SCALE
-#define PED_BONE_DAMAGE
 #define SPECULAR
 #define SPECULAR_MAP
 #define NORMAL_MAP
