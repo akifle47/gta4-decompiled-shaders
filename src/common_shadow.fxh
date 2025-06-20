@@ -238,4 +238,10 @@
             return PS_ShadowDepth(IN);
         #endif //ALPHA_SHADOW
     }
+
+    float4 PS_ShadowDepthPed(VS_ShadowDepthPedOutput IN) : COLOR
+    {
+        clip(gShadowParam14151617.x == 0 ? 0.0099 - IN.PositionWorldAndUnknown.z : 0);
+        return IN.PositionWorldAndUnknown.w;
+    }
 #endif //NO_SHADOW_CASTING
