@@ -67,9 +67,6 @@ VS_OutputPed VS_PedTransform(VS_InputPed IN)
     #if defined(NORMAL_MAP) || defined(PARALLAX)
         float3 tangentWorld = normalize(mul(IN.Tangent.xyz, (float3x3)gWorld) + 0.00001);
         float3 bitangentWorld = cross(tangentWorld, normalWorld);
-    #endif //NORMAL_MAP || PARALLAX
-
-    #if defined(NORMAL_MAP) || defined(PARALLAX)
         OUT.TangentWorld.xyz = tangentWorld;
         OUT.BitangentWorld.xyz = bitangentWorld * IN.Tangent.w;
     #endif //NORMAL_MAP || PARALLAX
@@ -159,6 +156,45 @@ struct VS_OutputDeferredPed
 #endif //ENVIRONMENT_MAP
     float  DamageMask           : TEXCOORD6;
 };
+
+VS_OutputDeferredPed VS_PedTransformD(VS_InputPed IN)
+{
+    VS_OutputDeferredPed OUT;
+
+    float3 posWorld = mul(float4(IN.Position, 0.0), gWorld).xyz;
+    float4 posClip = mul(float4(IN.Position, 1.0), gWorldViewProj);
+    OUT.PositionWorld = float4(posWorld + gWorld[3].xyz * 2, 1);
+    OUT.Position = posClip;
+
+    #ifdef ENVIRONMENT_MAP
+        OUT.FragToViewDir = gViewInverse[3].xyz - posWorld;
+    #endif //ENVIRONMENT_MAP
+
+    float3 normalWorld = normalize(mul(IN.Normal, (float3x3)gWorld) + 0.00001);
+    OUT.NormalWorldAndDepth.xyz = normalWorld;
+    OUT.NormalWorldAndDepth.w = posClip.w;
+
+    #if defined(NORMAL_MAP) || defined(PARALLAX)
+        float3 tangentWorld = normalize(mul(IN.Tangent.xyz, (float3x3)gWorld) + 0.00001);
+        float3 bitangentWorld = cross(tangentWorld, normalWorld);
+        OUT.TangentWorld.xyz = tangentWorld;
+        OUT.BitangentWorld.xyz = bitangentWorld * IN.Tangent.w;
+    #endif //NORMAL_MAP || PARALLAX
+
+    OUT.Color.x = (globalScalars2.y * globalScalars2.z) * (IN.Color.x * globalScalars.z - 1) + 1;
+    OUT.Color.y = globalScalars2.w * IN.Color.y;
+    #ifdef SUBSURFACE_SCATTERING
+        OUT.Color.z = 1.0 - (IN.Color.y * IN.Color.x);
+    #else
+        OUT.Color.z = IN.Color.z;
+    #endif //SUBSURFACE_SCATTERING
+    OUT.Color.w = IN.Color.w;
+
+    OUT.TexCoord = IN.TexCoord;
+    OUT.DamageMask = 0;
+
+    return OUT;
+}
 
 VS_OutputDeferredPed VS_PedTransformSkinD(VS_InputSkinPed IN)
 {
