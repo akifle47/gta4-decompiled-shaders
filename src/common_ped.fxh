@@ -49,15 +49,15 @@
     };
 #endif //NO_SHADOW_CASTING
 
-float4 matMaterialColorScale : MaterialColorScale = float4(1.0, 1.0, 1.0, 1.0);
+float4 matMaterialColorScale : MaterialColorScale : register(c66) = float4(1.0, 1.0, 1.0, 1.0);
 
 float4 gBoneDamage0[14] : CustomBoneDamageArray;
 bool gBoneDamageEnabled : CustomBoneDamageEnabled;
 
 #ifdef SUBSURFACE_SCATTERING
-    float4 SubColor : SubColor<string UIWidget = "Color"; string UIName = "Subsurface \"Bleed-thru\" Color";> = float4(0.200000003, 0.0825000033, 0.0250000004, 1.0);
-    float SubScatWrap : SubWrap = 0.400000006;
-    float SubScatWidth : SubScatterWidth = 0.150000006;
+    float4 SubColor : SubColor : register(c72) <string UIWidget = "Color"; string UIName = "Subsurface \"Bleed-thru\" Color";> = float4(0.200000003, 0.0825000033, 0.0250000004, 1.0);
+    float SubScatWrap : SubWrap : register(c73)  = 0.400000006;
+    float SubScatWidth : SubScatterWidth : register(c74) = 0.150000006;
 #endif //SUBSURFACE_SCATTERING
 
 #ifdef ENVIRONMENT_MAP
@@ -115,12 +115,32 @@ sampler_state
 #endif //NORMAL_MAP
 
 #ifdef SPECULAR
-    float specularFactor : Specular<string UIName = "Specular Falloff"; float UIMin = 0.0; float UIMax = 10000.0; float UIStep = 0.1;> = 100.0;
-    float specularColorFactor : SpecularColor<string UIName = "Specular Intensity"; float UIMin = 0.0; float UIMax = 10000.0; float UIStep = 0.1;> = 1.0;
+    float specularFactor : Specular
+    #if defined(SUBSURFACE_SCATTERING)
+        : register(c75)
+    #else
+        : register(c72)
+    #endif //SUBSURFACE_SCATTERING
+    <string UIName = "Specular Falloff"; float UIMin = 0.0; float UIMax = 10000.0; float UIStep = 0.1;> = 100.0;
+
+    float specularColorFactor : SpecularColor
+    #if defined(SUBSURFACE_SCATTERING)
+        : register(c76)
+    #else
+        : register(c73)
+    #endif //SUBSURFACE_SCATTERING
+    <string UIName = "Specular Intensity"; float UIMin = 0.0; float UIMax = 10000.0; float UIStep = 0.1;> = 1.0;
 #endif //SPECULAR
 
 #ifdef SPECULAR_MAP
-    float3 specMapIntMask : SpecularMapIntensityMask<string UIWidget = "slider"; float UIMin = 0.0; float UIMax = 1.0; float UIStep = 0.010000; string UIName = "specular map intensity mask color";> = float3(1.0, 0.0, 0.0);
+    float3 specMapIntMask : SpecularMapIntensityMask
+    #if defined(SUBSURFACE_SCATTERING)
+        : register(c77)
+    #else
+        : register(c74)
+    #endif //SUBSURFACE_SCATTERING
+    <string UIWidget = "slider"; float UIMin = 0.0; float UIMax = 1.0; float UIStep = 0.010000; string UIName = "specular map intensity mask color";> = float3(1.0, 0.0, 0.0);
+    
     texture SpecularTex;
     sampler SpecSampler<string UIName = "Specular Texture"; string UIHint = "specularmap";> = 
     sampler_state
@@ -136,7 +156,15 @@ sampler_state
 #endif //SPECULAR_MAP
 
 #ifdef NORMAL_MAP
-    float bumpiness : Bumpiness<string UIWidget = "slider"; float UIMin = 0.0; float UIMax = 200.0; float UIStep = 0.010000; string UIName = "Bumpiness";> = 1.0;
+    float bumpiness : Bumpiness
+    #if defined(SUBSURFACE_SCATTERING)
+        : register(c78)
+    #elif defined(HAIR_SORTED_EXP)
+        : register(c72)
+    #else
+        : register(c75)
+    #endif //SUBSURFACE_SCATTERING
+    <string UIWidget = "slider"; float UIMin = 0.0; float UIMax = 200.0; float UIStep = 0.010000; string UIName = "Bumpiness";> = 1.0;
 #endif //NORMAL_MAP
 
 float3 LuminanceConstants : LuminanceConstants = float3(0.212500006, 0.715399981, 0.0720999986);

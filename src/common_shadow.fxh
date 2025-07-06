@@ -239,9 +239,12 @@
         #endif //ALPHA_SHADOW
     }
 
-    float4 PS_ShadowDepthPed(VS_ShadowDepthPedOutput IN) : COLOR
-    {
-        clip(gShadowParam14151617.x == 0 ? 0.0099 - IN.PositionWorldAndUnknown.z : 0);
-        return IN.PositionWorldAndUnknown.w;
-    }
+    #ifndef DEFERRED_LIGHTING
+        float4 PS_ShadowDepthPed(VS_ShadowDepthPedOutput IN) : COLOR
+        {
+            clip(gShadowParam14151617.x == 0 ? 0.0099 - IN.PositionWorldAndUnknown.z : 0);
+            return IN.PositionWorldAndUnknown.w;
+        }
+    #endif //!DEFERRED_LIGHTING
+
 #endif //NO_SHADOW_CASTING

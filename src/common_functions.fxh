@@ -59,3 +59,34 @@ float4 VS_BlitPositionOnly(VS_BlitPositionOnlyInput IN) : POSITION
         return skinMtx;
     }
 #endif //NO_SKINNING
+
+float4 EncodeGBufferNormal(in float3 normal)
+{
+    normal = normal + 1.0;
+    float3 intPart = floor(normal * 64.0);
+    float3 fracPart = normal * 64.0 - intPart;
+
+    float3 v0 = floor(fracPart * float3(8.0, 8.0, 4.0));
+    float v1 = dot(v0, float3(32.0, 4.0, 1.0));
+
+    return float4(intPart / 128, v1 / 255);
+}
+
+#if defined(NORMAL_MAP) || defined(PARALLAX)
+    float3 UnpackNormalMap(in float4 normalMap)
+    {
+        float3 normal;
+        #ifdef PARALLAX
+            normal.xy = normalMap.xy;
+        #else
+            //use wy as the xy axis if the alpha channel is not white and the red channel is black. gives better precision if using dxt5 compression
+            normal.xy = (1.0 - normalMap.w) - normalMap.x >= 0.0 ? normalMap.wy : normalMap.xy;
+        #endif //PARALLAX
+
+        normal.z = sqrt(dot(normal.xy, -normal.xy) + 1.0);
+        #ifndef NO_BUMPINESS
+            normal.xy = (normal.xy - 0.5) * bumpiness;
+        #endif //NO_BUMPINESS
+        return normal;
+    }
+#endif //NORMAL_MAP || PARALLAX

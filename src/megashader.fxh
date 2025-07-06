@@ -80,24 +80,6 @@
     }
 #endif //PARALLAX
 
-#if defined(NORMAL_MAP) || defined(PARALLAX)
-    float3 UnpackNormalMap(float4 normalMap)
-    {
-        float3 normal;
-        #ifdef PARALLAX
-            normal.xy = normalMap.xy;
-        #else
-            //use wy as the xy axis if the alpha channel is not white and the red channel is black. gives better precision if using dxt5 compression
-            normal.xy = (1.0 - normalMap.w) - normalMap.x >= 0.0 ? normalMap.wy : normalMap.xy;
-        #endif //PARALLAX
-        normal.xy = (normal.xy - 0.5) * bumpiness;
-        normal.z = sqrt(dot(normal.xy, -normal.xy) + 1.0);
-
-        return normal;
-    }
-#endif //NORMAL_MAP || PARALLAX
-
-
 struct VS_Input
 {
     float3 Position  : POSITION;
