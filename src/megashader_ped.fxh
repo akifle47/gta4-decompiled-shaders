@@ -1,5 +1,6 @@
 #include "common_functions.fxh"
 #include "common_shadow.fxh"
+#include "shader_inputs.fxh"
 
 #if defined(SPECULAR_MAP) && !defined(HAIR_SORTED_EXP)
     #define USE_SPECULAR_MAP 
@@ -84,20 +85,7 @@ VS_OutputPed VS_PedTransform(VS_InputPed IN)
 }
 
 
-struct VS_InputSkinPed
-{
-    float3 Position     : POSITION;
-    float4 BlendWeights : BLENDWEIGHT;
-    float4 BlendIndices : BLENDINDICES;
-    float2 TexCoord     : TEXCOORD0;
-    float3 Normal       : NORMAL;
-#if defined(NORMAL_MAP) || defined(PARALLAX)
-    float4 Tangent      : TANGENT; 
-#endif //NORMAL_MAP || PARALLAX
-    float4 Color        : COLOR0;
-};
-
-VS_OutputPed VS_PedTransformSkin(VS_InputSkinPed IN)
+VS_OutputPed VS_PedTransformSkin(VS_InputSkin IN)
 {
     VS_OutputPed OUT;
 
@@ -200,7 +188,7 @@ VS_OutputDeferredPed VS_PedTransformD(VS_InputPed IN)
     return OUT;
 }
 
-VS_OutputDeferredPed VS_PedTransformSkinD(VS_InputSkinPed IN)
+VS_OutputDeferredPed VS_PedTransformSkinD(VS_InputSkin IN)
 {
     VS_OutputDeferredPed OUT;
 
@@ -255,15 +243,6 @@ VS_OutputDeferredPed VS_PedTransformSkinD(VS_InputSkinPed IN)
     return OUT;
 }
 
-
-struct PS_OutputDeferred
-{
-    float4 Diffuse       : COLOR0;
-    float4 Normal        : COLOR1;
-    //intensity and power/glossiness
-    float4 SpecularAndAO : COLOR2;
-    float4 Stencil       : COLOR3;
-};
 
 PS_OutputDeferred PS_DeferredPedTextured(VS_OutputDeferredPed IN, float2 screenCoords : VPOS)
 {

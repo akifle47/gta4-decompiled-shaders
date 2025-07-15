@@ -5,6 +5,7 @@
 #include "common_functions.fxh"
 #include "common_shadow.fxh"
 #include "common_lighting.fxh"
+#include "shader_inputs.fxh"
 
 #ifndef NO_LIGHTING
     float2 ComputeDayNightEffects(in float2 vertexColor)
@@ -292,15 +293,6 @@ VS_OutputDeferred VS_TransformAlphaClipD(VS_Input IN)
 }
 
 
-struct PS_OutputDeferred
-{
-    float4 Diffuse       : COLOR0;
-    float4 Normal        : COLOR1;
-    //intensity and power/glossiness
-    float4 SpecularAndAO : COLOR2;
-    float4 Stencil       : COLOR3;
-};
-
 PS_OutputDeferred DeferredTextured(bool dither, VS_OutputDeferred IN, float2 screenCoords)
 {
     PS_OutputDeferred OUT;
@@ -499,19 +491,6 @@ VS_OutputUnlit VS_TransformUnlit(VS_InputUnlit IN)
 
 
 #ifndef NO_SKINNING
-    struct VS_InputSkin
-    {
-        float3 Position     : POSITION;
-        float4 BlendWeights : BLENDWEIGHT;
-        float4 BlendIndices : BLENDINDICES;
-        float2 TexCoord0    : TEXCOORD0;
-        float3 Normal       : NORMAL;
-    #if defined(NORMAL_MAP) || defined(PARALLAX)
-        float4 Tangent      : TANGENT;
-    #endif //NORMAL_MAP || PARALLAX
-        float4 Color        : COLOR;
-    };
-
     VS_Output VS_TransformSkin(VS_InputSkin IN)
     {
         VS_Output OUT;
@@ -545,7 +524,7 @@ VS_OutputUnlit VS_TransformUnlit(VS_InputUnlit IN)
         #endif //PARALLAX
 
         #ifdef ANIMATED
-            OUT.TexCoord = ComputeUvAnimation(IN.TexCoord0);
+            OUT.TexCoord = ComputeUvAnimation(IN.TexCoord);
         #endif //ANIMATED
 
         #ifdef DAY_NIGHT_EFFECTS
@@ -572,7 +551,7 @@ VS_OutputUnlit VS_TransformUnlit(VS_InputUnlit IN)
 
         OUT.Position.w = OUT.NormalWorldAndDepth.w = posClip.w;
         #ifndef ANIMATED
-            OUT.TexCoord = IN.TexCoord0;
+            OUT.TexCoord = IN.TexCoord;
         #endif //ANIMATED
         OUT.Color.zw = IN.Color.zw;
 
@@ -627,7 +606,7 @@ VS_OutputUnlit VS_TransformUnlit(VS_InputUnlit IN)
         #endif //PARALLAX
 
         #ifdef ANIMATED
-            OUT.TexCoord = ComputeUvAnimation(IN.TexCoord0);
+            OUT.TexCoord = ComputeUvAnimation(IN.TexCoord);
         #endif //ANIMATED
 
         #ifdef DAY_NIGHT_EFFECTS
@@ -642,7 +621,7 @@ VS_OutputUnlit VS_TransformUnlit(VS_InputUnlit IN)
 
         OUT.Position.w = OUT.NormalWorldAndDepth.w = posClip.w;
         #ifndef ANIMATED
-            OUT.TexCoord = IN.TexCoord0;
+            OUT.TexCoord = IN.TexCoord;
         #endif //ANIMATED
         OUT.Color.zw = IN.Color.zw;
 
@@ -668,9 +647,9 @@ VS_OutputUnlit VS_TransformUnlit(VS_InputUnlit IN)
         #endif //DEPTH_SHIFT
 
         #ifdef ANIMATED
-            OUT.TexCoord = ComputeUvAnimation(IN.TexCoord0);
+            OUT.TexCoord = ComputeUvAnimation(IN.TexCoord);
         #else
-            OUT.TexCoord = IN.TexCoord0;
+            OUT.TexCoord = IN.TexCoord;
         #endif //ANIMATED
 
         #ifdef DEPTH_SHIFT
