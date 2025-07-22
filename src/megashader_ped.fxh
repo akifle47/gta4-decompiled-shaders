@@ -1,5 +1,6 @@
 #include "common_functions.fxh"
 #include "common_shadow.fxh"
+#include "common_lighting.fxh"
 #include "shader_inputs.fxh"
 
 #if defined(SPECULAR_MAP) && !defined(HAIR_SORTED_EXP)
@@ -251,6 +252,12 @@ PS_OutputDeferred PS_DeferredPedTextured(VS_OutputDeferredPed IN, float2 screenC
     float4 diffuse = tex2D(TextureSampler, IN.TexCoord);
     diffuse.w *= globalScalars.x;
 
+    #ifdef HAIR_SORTED
+        AlphaClip(diffuse.w, screenCoords);
+    #else
+        AlphaClip(globalScalars.x, screenCoords);
+    #endif //HAIR_SORTED
+
     #ifdef USE_SPECULAR_MAP
         float4 specMap = tex2D(SpecSampler, IN.TexCoord);
         float specPower = specMap.w * specularFactor;
@@ -279,12 +286,6 @@ PS_OutputDeferred PS_DeferredPedTextured(VS_OutputDeferredPed IN, float2 screenC
             diffuse.xyz = diffuse.xyz * damageAlpha + damage;
         }
     }
-
-    #ifdef HAIR_SORTED
-        AlphaClip(diffuse.w, screenCoords);
-    #else
-        AlphaClip(globalScalars.x, screenCoords);
-    #endif //HAIR_SORTED
 
     float4 normalMap = tex2D(BumpSampler, IN.TexCoord);
     float3 normal = UnpackNormalMap(normalMap);
@@ -354,4 +355,80 @@ PS_OutputDeferred PS_DeferredPedTextured(VS_OutputDeferredPed IN, float2 screenC
     OUT.Stencil = float4(stencil.x, 0, 0, 0);
 
     return OUT;
+}
+
+
+float4 TexturedLit(in int numLights, in VS_OutputPed IN, in float2 screenCoords)
+{
+    float4 diffuse = tex2D(TextureSampler, IN.TexCoord);
+    #ifdef SUBSURFACE_SCATTERING
+        diffuse.w = IN.Color.w;
+    #else
+        diffuse.w *= IN.Color.w;
+    #endif //SUBSURFACE_SCATTERING
+
+    float4 normalMap = tex2D(BumpSampler, IN.TexCoord);
+    float3 normal = UnpackNormalMap(normalMap);
+    float3x3 tbn = float3x3(IN.TangentWorld.xyz, IN.BitangentWorld.xyz, IN.NormalWorldAndDepth.xyz);
+    normal = normalize(mul(normal, tbn) + 0.00001);
+
+    float4 specMap = tex2D(SpecSampler, IN.TexCoord);
+    float specPower = specMap.w * specularFactor;
+    float specIntensity = dot(specMap.xyz, specMapIntMask.xyz) * specularColorFactor;
+    float specIntensityUndamaged = specIntensity;
+
+    if(IN.DamageMask > 0)
+    {
+        float4 damageDiffTex = tex2D(damageTextureSampler, IN.TexCoord);
+        if(damageDiffTex.w > 0)
+        {
+            #ifdef USE_SPECULAR_MAP
+                float4 damageSpecTex = tex2D(damageSpecTextureSampler, IN.TexCoord);
+                specPower = lerp(damageSpecTex.w * specularFactor, specPower, IN.DamageMask);
+                float damageSpecInt = damageSpecTex.x + damageSpecTex.y + damageSpecTex.z;
+                damageSpecInt = (damageSpecInt * IN.DamageMask * specularColorFactor) / 3;
+                specIntensity = (1 - IN.DamageMask) * specIntensity + damageSpecInt;
+            #endif //USE_SPECULAR_MAP
+
+            float damageAlpha = 1 - (IN.DamageMask * damageDiffTex.w);
+            float3 damage = damageDiffTex.xyz * damageDiffTex.w * IN.DamageMask;
+
+            diffuse.xyz = diffuse.xyz * damageAlpha + damage;
+        }
+    }
+
+    float3 fragToViewDir = -normalize(IN.FragToViewDir + 0.00001);
+
+    #ifdef ENVIRONMENT_MAP
+        float3 R = reflect(fragToViewDir, normal);
+        R = normalize(R + 0.00001);
+
+        float3 envRefl = tex2D(EnvironmentSampler, (R.xz + 1) * -0.5).xyz;
+        envRefl *= tex2D(EnvironmentSampler, IN.TexCoord).w * specIntensityUndamaged * reflectivePower;
+        diffuse.xyz += envRefl;
+    #endif //ENVIRONMENT_MAP
+
+    SurfaceProperties surfaceProperties;
+    surfaceProperties.Diffuse = diffuse.xyz;
+    surfaceProperties.Normal = normal;
+    surfaceProperties.SpecularIntensity = specIntensity;
+    surfaceProperties.SpecularPower = specPower;
+    surfaceProperties.AmbientOcclusion = IN.Color.x;
+    float4 lighting = float4(ComputeLighting(numLights, true, IN.PositionWorld.xyz, fragToViewDir, surfaceProperties), globalScalars.x);
+
+    lighting.xyz = ComputeDepthEffects(1.0, lighting.xyz, IN.NormalWorldAndDepth.w) * matMaterialColorScale.x;
+
+    lighting.w *= diffuse.w;
+    #ifdef ENVIRONMENT_MAP
+        AlphaClip(globalScalars.x, screenCoords);
+    #else
+        AlphaClip(lighting.w, screenCoords);
+    #endif //ENVIRONMENT_MAP
+
+    return lighting;
+}
+
+float4 PS_PedTexturedZero(VS_OutputPed IN, float2 screenCoords : VPOS) : COLOR
+{
+    return TexturedLit(0, IN, screenCoords);
 }
