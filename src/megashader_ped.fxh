@@ -437,3 +437,8 @@ float4 PS_PedTexturedFour(VS_OutputPed IN, float2 screenCoords : VPOS) : COLOR
 {
     return TexturedLit(4, IN, screenCoords);
 }
+
+float4 PS_PedTexturedEight(VS_OutputPed IN, float2 screenCoords : VPOS) : COLOR
+{
+    return TexturedLit(8, IN, screenCoords);
+}
