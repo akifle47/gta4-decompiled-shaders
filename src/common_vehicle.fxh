@@ -61,10 +61,7 @@
     float BoundRadius : BoundRadius;
 #endif
 
-#ifndef NO_SHADOW_CASTING
-    //unused
-    float shadowmap_res : ShadowMapResolution = 1280.0;
-#endif
+float shadowmap_res : ShadowMapResolution = 1280.0;
 
 #ifndef NO_SHADOW_CASTING_VEHICLE
     float2 facetMask[4] : facetMask : register(c208) = 
@@ -110,8 +107,7 @@ float specularColorFactorED : SpecularColor<string UIName = "Specular Intensity"
 
 #ifdef SPECULAR_MAP
     float3 specMapIntMask : SpecularMapIntensityMask<string UIWidget = "slider"; float UIMin = 0.0; float UIMax = 1.0; float UIStep = 0.010000; string UIName = "specular map intensity mask color";> = float3(1.0, 0.0, 0.0);
-#endif
-#ifdef SPECULAR_MAP_LOD_BIAS
+#elif defined(SPECULAR_MAP_LOD_BIAS)
     float3 specMapIntMask : SpecularMapIntensityMask<string UIWidget = "slider"; float UIMin = 0.0; float UIMax = 1.0; float UIStep = 0.010000; string UIName = "specular map intensity mask color";> = float3(1.0, 0.0, 0.0);
 #endif
 
@@ -121,7 +117,7 @@ float specularColorFactorED : SpecularColor<string UIName = "Specular Intensity"
     #endif
 #endif
 
-#ifdef SPECULAR2_RE
+#ifdef VEHICLE_RIMS
     float specular2Factor : specular2Factor = 40.000000;
 #endif
 
@@ -129,7 +125,7 @@ float specularColorFactorED : SpecularColor<string UIName = "Specular Intensity"
     float specular2FactorED : Specular2Factor<string UIName = "Specular2 Falloff"; float UIMin = 0.0; float UIMax = 10000.0; float UIStep = 0.100000;> = 1.0;
 #endif
 
-#ifdef SPECULAR2_RE
+#ifdef VEHICLE_RIMS
     float specular2ColorIntensityRE : specular2ColorIntensityRE = 1.700000;
 #endif
 

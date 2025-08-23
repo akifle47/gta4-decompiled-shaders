@@ -1,3 +1,5 @@
+//TODO put every shader struct here?
+
 struct VS_InputSkin
 {
     float3 Position     : POSITION;
