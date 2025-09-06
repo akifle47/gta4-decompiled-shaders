@@ -2,74 +2,6 @@
 #include "common_functions.fxh"
 #include "common_shadow.fxh"
 
-struct VS_InputUnlitVehicle
-{
-    float3 Position : POSITION;
-    float4 Color    : COLOR;
-    float2 TexCoord : TEXCOORD0;
-};
-
-struct VS_OutputUnlitVehicle
-{
-    float4 Position : POSITION;
-    float2 TexCoord : TEXCOORD0;
-    float4 Color    : COLOR;
-};
-
-VS_OutputUnlitVehicle VS_VehicleTransformUnlit(VS_InputUnlitVehicle IN)
-{
-    VS_OutputUnlitVehicle OUT;
-
-    OUT.Position = mul(float4(IN.Position, 1.0), gWorldViewProj);
-    OUT.TexCoord = IN.TexCoord;
-    OUT.Color = IN.Color;
-    return OUT;
-}
-
-#if defined(DIRT_UV) && defined(USE_TEXCOORD1)
-    #error DIRT_UV and USE_TEXCOORD1 are mutually exclusive
-#endif //DIRT_UV && USE_TEXCOORD1
-
-struct VS_InputSkinVehicle
-{
-    float3 Position     : POSITION;
-    float4 BlendIndices : BLENDINDICES;
-    float2 TexCoord0    : TEXCOORD0;
-#ifdef DIRT_UV
-    float2 DirtTexCoord : TEXCOORD1;
-#elif defined(USE_TEXCOORD1)
-    float2 TexCoord1    : TEXCOORD1;
-#endif //DIRT_UV
-    float3 Normal       : NORMAL;
-#ifdef NORMAL_MAP
-    float4 Tangent      : TANGENT;
-#endif //NORMAL_MAP
-    float4 Color        : COLOR;
-};
-
-struct VS_OutputVehicle
-{
-    float4 Position            : POSITION;
-#ifdef DIRT_UV
-    float2 TexCoord0           : TEXCOORD0;
-    float2 DirtTexCoord        : TEXCOORD7;
-#elif defined(USE_TEXCOORD1)
-    float4 TexCoord0And1       : TEXCOORD0;
-#else
-    float2 TexCoord0           : TEXCOORD0;
-#endif //DIRT_UV
-    float4 NormalWorldAndDepth : TEXCOORD1;
-#ifdef NORMAL_MAP
-    float3 TangentWorld        : TEXCOORD4;
-    float3 BitangentWorld      : TEXCOORD5;
-#endif //NORMAL_MAP
-#ifdef COMPUTE_VIEW_DIR
-    float3 FragToViewDir       : TEXCOORD3;
-#endif //COMPUTE_VIEW_DIR
-    float4 Color               : COLOR;
-    float4 PositionWorld       : TEXCOORD6;
-};
-
 #ifdef VEHICLE_DAMAGE
     float3 DecodeDamageSample(in float dmgSample)
     {
@@ -201,9 +133,152 @@ struct VS_OutputVehicle
     }
 #endif //VEHICLE_DAMAGE
 
-VS_OutputVehicle VS_VehicleTransformSkinD(VS_InputSkinVehicle IN)
+struct VS_InputUnlitVehicle
+{
+    float3 Position : POSITION;
+    float4 Color    : COLOR;
+    float2 TexCoord : TEXCOORD0;
+};
+
+struct VS_OutputUnlitVehicle
+{
+    float4 Position : POSITION;
+    float2 TexCoord : TEXCOORD0;
+    float4 Color    : COLOR;
+};
+
+VS_OutputUnlitVehicle VS_VehicleTransformUnlit(VS_InputUnlitVehicle IN)
+{
+    VS_OutputUnlitVehicle OUT;
+
+    OUT.Position = mul(float4(IN.Position, 1.0), gWorldViewProj);
+    OUT.TexCoord = IN.TexCoord;
+    OUT.Color = IN.Color;
+    return OUT;
+}
+
+#if defined(DIRT_UV) && defined(USE_TEXCOORD1)
+    #error DIRT_UV and USE_TEXCOORD1 are mutually exclusive
+#endif //DIRT_UV && USE_TEXCOORD1
+
+struct VS_InputSkinVehicle
+{
+    float3 Position     : POSITION;
+    float4 BlendIndices : BLENDINDICES;
+    float2 TexCoord0    : TEXCOORD0;
+#ifdef DIRT_UV
+    float2 DirtTexCoord : TEXCOORD1;
+#elif defined(USE_TEXCOORD1)
+    float2 TexCoord1    : TEXCOORD1;
+#endif //DIRT_UV
+    float3 Normal       : NORMAL;
+#ifdef NORMAL_MAP
+    float4 Tangent      : TANGENT;
+#endif //NORMAL_MAP
+    float4 Color        : COLOR;
+};
+
+struct VS_OutputVehicle
+{
+    float4 Position            : POSITION;
+#ifdef DIRT_UV
+    float2 TexCoord0           : TEXCOORD0;
+    float2 DirtTexCoord        : TEXCOORD7;
+#elif defined(USE_TEXCOORD1)
+    float4 TexCoord0And1       : TEXCOORD0;
+#else
+    float2 TexCoord0           : TEXCOORD0;
+#endif //DIRT_UV
+    float4 NormalWorldAndDepth : TEXCOORD1;
+    float4 PositionWorld       : TEXCOORD2;
+#ifdef NORMAL_MAP
+    float3 TangentWorld        : TEXCOORD4;
+    float3 BitangentWorld      : TEXCOORD5;
+#endif //NORMAL_MAP
+    float3 FragToViewDir       : TEXCOORD3;
+    float4 Color               : COLOR;
+};
+
+VS_OutputVehicle VS_VehicleTransformSkin(VS_InputSkinVehicle IN)
 {
     VS_OutputVehicle OUT;
+
+    float3 position = IN.Position;
+    float3 normal = IN.Normal;
+
+    #ifdef VEHICLE_DAMAGE
+        ComputeVehicleDamage(position, normal);
+    #endif
+
+    int i = D3DCOLORtoUBYTE4(IN.BlendIndices).b;
+    float4x3 skinMtx = gBoneMtx[i];
+    float3 posWorld = mul(float4(position, 1.0), skinMtx).xyz;
+    float4 posClip = mul(float4(posWorld, 1.0), gWorldViewProj);
+
+    posWorld += gWorld[3].xyz;
+    OUT.FragToViewDir = gViewInverse[3].xyz - posWorld;
+
+    OUT.Position = posClip;
+    OUT.PositionWorld = float4(posWorld, 1.0);
+    
+    float3 normalWorld = mul(normal, (float3x3)skinMtx);
+    OUT.NormalWorldAndDepth.xyz = normalWorld;
+    OUT.NormalWorldAndDepth.w = posClip.w;
+    #ifdef NORMAL_MAP
+        float3 tangentWorld = mul(IN.Tangent.xyz, (float3x3)skinMtx);
+        float3 bitangentWorld = cross(tangentWorld, normalWorld);
+        OUT.TangentWorld.xyz = tangentWorld;
+        OUT.BitangentWorld.xyz = bitangentWorld * IN.Tangent.w;
+    #endif //NORMAL_MAP
+
+    #ifdef USE_TEXCOORD1
+        OUT.TexCoord0And1.xy = IN.TexCoord0;
+        OUT.TexCoord0And1.zw = IN.TexCoord1;
+    #else
+        OUT.TexCoord0 = IN.TexCoord0;
+    #endif //USE_TEXCOORD1
+
+    #ifdef DIRT_UV
+        OUT.DirtTexCoord = IN.DirtTexCoord;
+    #endif //DIRT_UV
+
+    #ifdef DIMMER_SET
+        int index = int(IN.Color.w * 255.0 + 0.5);
+        OUT.Color.xyz = IN.Color.xyz * dimmerSet[index];
+    #else
+        OUT.Color.xyz = IN.Color.xyz;
+    #endif //DIMMER_SET
+    OUT.Color.w = 1.0;
+
+    return OUT;
+}
+
+struct VS_OutputVehicleDeferred
+{
+    float4 Position            : POSITION;
+#ifdef DIRT_UV
+    float2 TexCoord0           : TEXCOORD0;
+    float2 DirtTexCoord        : TEXCOORD7;
+#elif defined(USE_TEXCOORD1)
+    float4 TexCoord0And1       : TEXCOORD0;
+#else
+    float2 TexCoord0           : TEXCOORD0;
+#endif //DIRT_UV
+    float4 NormalWorldAndDepth : TEXCOORD1;
+#ifdef NORMAL_MAP
+    float3 TangentWorld        : TEXCOORD4;
+    float3 BitangentWorld      : TEXCOORD5;
+#endif //NORMAL_MAP
+#ifdef COMPUTE_VIEW_DIR
+    float3 FragToViewDir       : TEXCOORD3;
+#endif //COMPUTE_VIEW_DIR
+    float4 Color               : COLOR;
+    float4 PositionWorld       : TEXCOORD6;
+};
+
+VS_OutputVehicleDeferred VS_VehicleTransformSkinD(VS_InputSkinVehicle IN)
+{
+    VS_OutputVehicleDeferred OUT;
 
     float3 position = IN.Position;
     float3 normal = IN.Normal;
