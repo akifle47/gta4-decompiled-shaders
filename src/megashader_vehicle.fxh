@@ -199,6 +199,63 @@ struct VS_OutputVehicle
     float4 Color               : COLOR;
 };
 
+VS_OutputVehicle VS_VehicleTransform(VS_InputSkinVehicle IN)
+{
+    VS_OutputVehicle OUT;
+
+    float3 position = IN.Position;
+    float3 normal = IN.Normal;
+
+    #ifdef VEHICLE_DAMAGE
+        ComputeVehicleDamage(position, normal);
+    #endif
+
+    float4x4 worldMtx = gWorld;
+    #ifdef TIRE_DEFORMATION
+        worldMtx = matWheelTransform;
+    #endif //TIRE_DEFORMATION
+    float3 posWorld = mul(float4(position, 1.0), worldMtx).xyz;
+    float4 posClip = mul(float4(posWorld, 1.0), gWorldViewProj);
+
+    posWorld += gWorld[3].xyz;
+    OUT.FragToViewDir = gViewInverse[3].xyz - posWorld;
+
+    OUT.Position = posClip;
+    OUT.PositionWorld = float4(posWorld, 1.0);
+    
+    float3 normalWorld = normalize(mul(normal, (float3x3)worldMtx) + 0.00001);
+    OUT.NormalWorldAndDepth.xyz = normalWorld;
+    OUT.NormalWorldAndDepth.w = posClip.w;
+    #ifdef NORMAL_MAP
+        float3 tangentWorld = normalize(mul(IN.Tangent.xyz, (float3x3)worldMtx) + 0.00001);
+        float3 bitangentWorld = cross(tangentWorld, normalWorld);
+        OUT.TangentWorld.xyz = tangentWorld;
+        OUT.BitangentWorld.xyz = bitangentWorld * IN.Tangent.w;
+    #endif //NORMAL_MAP
+
+    #ifdef USE_TEXCOORD1
+        OUT.TexCoord0And1.xy = IN.TexCoord0;
+        OUT.TexCoord0And1.zw = IN.TexCoord1;
+    #else
+        OUT.TexCoord0 = IN.TexCoord0;
+    #endif //USE_TEXCOORD1
+
+    #ifdef DIRT_UV
+        OUT.DirtTexCoord = IN.DirtTexCoord;
+    #endif //DIRT_UV
+
+    #ifdef DIMMER_SET
+        int index = int(IN.Color.w * 255.0 + 0.5);
+        OUT.Color.xyz = IN.Color.xyz * dimmerSet[index];
+    #else
+        OUT.Color.xyz = IN.Color.xyz;
+    #endif //DIMMER_SET
+    OUT.Color.w = 1.0;
+
+    return OUT;
+}
+
+//todo: this can probably be merged with VS_VehicleTransform
 VS_OutputVehicle VS_VehicleTransformSkin(VS_InputSkinVehicle IN)
 {
     VS_OutputVehicle OUT;

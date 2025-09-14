@@ -1,4 +1,4 @@
-//TODO put every shader struct here?
+//todo put every shader struct here?
 
 struct VS_InputSkin
 {

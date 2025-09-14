@@ -20,7 +20,7 @@
     bool tyreDeformSwitchOn : tyreDeformSwitchOn = true;
     float4 tyreDeformParams : tyreDeformParams = float4(0.0, 0.0, 0.0, 1.0);
     float4 tyreDeformParams2 : tyreDeformParams2 = float4(0.261999995, 1495.05005, 0, 0);
-    float4x4 matWheelTransform : matWheelTransform0;
+    row_major float4x4 matWheelTransform : matWheelTransform0;
 #endif
 
 #ifdef DRAWBUCKET_ALPHA
