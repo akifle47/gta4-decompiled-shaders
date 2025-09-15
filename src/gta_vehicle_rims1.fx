@@ -1768,7 +1768,7 @@ technique unlit_draw
 {
     pass p0
     {
-        VertexShader = VS_VehicleTransformUnlitRims;
+        VertexShader = compile vs_3_0 VS_VehicleTransformUnlit();
         PixelShader = PS_VehicleTexturedUnlit;
     }
 }

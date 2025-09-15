@@ -133,27 +133,57 @@
     }
 #endif //VEHICLE_DAMAGE
 
-struct VS_InputUnlitVehicle
+struct VS_InputVehicleUnlit
 {
-    float3 Position : POSITION;
-    float4 Color    : COLOR;
-    float2 TexCoord : TEXCOORD0;
+    float3 Position     : POSITION;
+    float4 Color        : COLOR;
+    float2 TexCoord0    : TEXCOORD0;
+#ifdef DIRT_UV
+    float2 DirtTexCoord : TEXCOORD1;
+#elif defined(DIFFUSE_TEXTURE2)
+    float2 TexCoord1    : TEXCOORD1;
+#endif //DIRT_UV
 };
 
-struct VS_OutputUnlitVehicle
+struct VS_OutputVehicleUnlit
 {
-    float4 Position : POSITION;
-    float2 TexCoord : TEXCOORD0;
-    float4 Color    : COLOR;
+    float4 Position      : POSITION;
+#ifdef DIRT_UV
+    float2 TexCoord0     : TEXCOORD0;
+    float2 DirtTexCoord  : TEXCOORD7;
+#elif defined(DIFFUSE_TEXTURE2)
+    float4 TexCoord0And1 : TEXCOORD0;
+#else
+    float2 TexCoord0     : TEXCOORD0;
+#endif //DIRT_UV
+    float4 Color         : COLOR;
 };
 
-VS_OutputUnlitVehicle VS_VehicleTransformUnlit(VS_InputUnlitVehicle IN)
+VS_OutputVehicleUnlit VS_VehicleTransformUnlit(VS_InputVehicleUnlit IN)
 {
-    VS_OutputUnlitVehicle OUT;
+    VS_OutputVehicleUnlit OUT;
 
-    OUT.Position = mul(float4(IN.Position, 1.0), gWorldViewProj);
-    OUT.TexCoord = IN.TexCoord;
+    float3 position = IN.Position;
+    float3 normal = float3(0, 0, 0);
+    
+    #ifdef VEHICLE_DAMAGE
+        ComputeVehicleDamage(position, normal);
+    #endif
+
+    OUT.Position = mul(float4(position, 1.0), gWorldViewProj);
     OUT.Color = IN.Color;
+
+    #ifdef DIFFUSE_TEXTURE2
+        OUT.TexCoord0And1.xy = IN.TexCoord0;
+        OUT.TexCoord0And1.zw = IN.TexCoord1;
+    #else
+        OUT.TexCoord0 = IN.TexCoord0;
+    #endif //DIFFUSE_TEXTURE2
+
+    #ifdef DIRT_UV
+        OUT.DirtTexCoord = IN.DirtTexCoord;
+    #endif //DIRT_UV
+
     return OUT;
 }
 
