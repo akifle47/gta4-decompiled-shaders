@@ -17,10 +17,10 @@
 #endif
 
 #ifdef TIRE_DEFORMATION
-    bool tyreDeformSwitchOn : tyreDeformSwitchOn = true;
-    float4 tyreDeformParams : tyreDeformParams = float4(0.0, 0.0, 0.0, 1.0);
-    float4 tyreDeformParams2 : tyreDeformParams2 = float4(0.261999995, 1495.05005, 0, 0);
-    row_major float4x4 matWheelTransform : matWheelTransform0;
+    bool tyreDeformSwitchOn : tyreDeformSwitchOn : register(b9) = true;
+    float4 tyreDeformParams : tyreDeformParams  : register(vs, c68) = float4(0.0, 0.0, 0.0, 1.0);
+    float4 tyreDeformParams2 : tyreDeformParams2 : register(vs, c69) = float4(0.261999995, 1495.05005, 0, 0);
+    row_major float4x4 matWheelTransform : matWheelTransform0 : register(vs, c64);
 #endif
 
 #ifdef DRAWBUCKET_ALPHA
@@ -57,14 +57,14 @@
         MinFilter = POINT;
         MagFilter = POINT;
     };
-    bool switchOn : switchOn = false;
+    bool switchOn : switchOn : register(b8) = false;
     float BoundRadius : BoundRadius;
 #endif
 
 float shadowmap_res : ShadowMapResolution = 1280.0;
 
 #ifndef NO_SHADOW_CASTING_VEHICLE
-    float2 facetMask[4] : facetMask : register(c208) = 
+    float2 facetMask[4] : facetMask =
     {
         float2(-1.0, 0.0), 
         float2(1.0, 0.0), 

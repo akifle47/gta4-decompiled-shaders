@@ -161,6 +161,22 @@ VS_OutputUnlitVehicle VS_VehicleTransformUnlit(VS_InputUnlitVehicle IN)
     #error DIRT_UV and USE_TEXCOORD1 are mutually exclusive
 #endif //DIRT_UV && USE_TEXCOORD1
 
+struct VS_InputVehicle
+{
+    float3 Position     : POSITION;
+    float2 TexCoord0    : TEXCOORD0;
+#ifdef DIRT_UV
+    float2 DirtTexCoord : TEXCOORD1;
+#elif defined(USE_TEXCOORD1)
+    float2 TexCoord1    : TEXCOORD1;
+#endif //DIRT_UV
+    float3 Normal       : NORMAL;
+#ifdef NORMAL_MAP
+    float4 Tangent      : TANGENT;
+#endif //NORMAL_MAP
+    float4 Color        : COLOR;
+};
+
 struct VS_InputSkinVehicle
 {
     float3 Position     : POSITION;
@@ -255,7 +271,6 @@ VS_OutputVehicle VS_VehicleTransform(VS_InputSkinVehicle IN)
     return OUT;
 }
 
-//todo: this can probably be merged with VS_VehicleTransform
 VS_OutputVehicle VS_VehicleTransformSkin(VS_InputSkinVehicle IN)
 {
     VS_OutputVehicle OUT;
@@ -332,6 +347,95 @@ struct VS_OutputVehicleDeferred
     float4 Color               : COLOR;
     float4 PositionWorld       : TEXCOORD6;
 };
+
+VS_OutputVehicleDeferred VS_VehicleTransformD(VS_InputVehicle IN)
+{
+    VS_OutputVehicleDeferred OUT;
+
+    float3 position = IN.Position;
+    float3 normal = IN.Normal;
+
+    #ifdef VEHICLE_DAMAGE
+        ComputeVehicleDamage(position, normal);
+    #endif
+
+    float4x4 worldMtx = gWorld;
+    #ifdef TIRE_DEFORMATION
+        worldMtx = matWheelTransform;
+    #endif //TIRE_DEFORMATION
+    float3 posWorld = mul(float4(position, 1.0), worldMtx).xyz;
+
+    #ifdef COMPUTE_VIEW_DIR
+        OUT.FragToViewDir = gViewInverse[3].xyz - (posWorld + worldMtx[3].xyz);
+    #endif //COMPUTE_VIEW_DIR
+
+    #ifdef TIRE_DEFORMATION
+        if(tyreDeformSwitchOn)
+        {
+            float2 v0 = position.yz * position.yz;
+            
+            float3 v2 = position * tyreDeformParams2.w;
+            float v3 = (v0.x + v0.y) * tyreDeformParams2.w;
+            v3 = v3 > pow(tyreDeformParams2.x * 1.1, 2);
+            float v5 = tyreDeformParams2.y + 0.03;
+            float v6 = posWorld.z < v5;
+            float v7 = tyreDeformParams2.y - posWorld.z;
+            float v9 = v7 - (v7 * (v7 < 0));
+            v5 -= posWorld.z;
+            float v10 = v5 * tyreDeformParams2.z;
+            v5 = 1.0 - (v5 * tyreDeformParams2.z);
+            v5 = (v10 > 1) * v5 + v10;
+            
+            float t = (tyreDeformParams2.x * tyreDeformParams2.x) < (v0.x + v0.y);
+            float3 targetPos;
+            targetPos.x = v2.x - (tyreDeformParams.w * v5);
+            targetPos.x += (tyreDeformParams.x * position.x * v5);
+            targetPos.yz = tyreDeformParams.yz * v9 + v2.yz;
+
+            targetPos -= (position * tyreDeformParams2.w);
+            targetPos *= v6;
+            targetPos = v2 + (targetPos * v3);
+            position = lerp(position, targetPos, t);
+        }
+    #endif //TIRE_DEFORMATION
+
+    posWorld = mul(float4(position, 1.0), worldMtx).xyz;
+    float4 posClip = mul(float4(posWorld, 1.0), gWorldViewProj);
+
+    OUT.Position = posClip;
+    OUT.PositionWorld = float4(posWorld, 1.0);
+    
+    float3 normalWorld = normalize(mul(normal, (float3x3)worldMtx) + 0.00001);
+    OUT.NormalWorldAndDepth.xyz = normalWorld;
+    OUT.NormalWorldAndDepth.w = posClip.w;
+    #ifdef NORMAL_MAP
+        float3 tangentWorld = normalize(mul(IN.Tangent.xyz, (float3x3)worldMtx) + 0.00001);
+        float3 bitangentWorld = cross(tangentWorld, normalWorld);
+        OUT.TangentWorld.xyz = tangentWorld;
+        OUT.BitangentWorld.xyz = bitangentWorld * IN.Tangent.w;
+    #endif //NORMAL_MAP
+
+    #ifdef USE_TEXCOORD1
+        OUT.TexCoord0And1.xy = IN.TexCoord0;
+        OUT.TexCoord0And1.zw = IN.TexCoord1;
+    #else
+        OUT.TexCoord0 = IN.TexCoord0;
+    #endif //USE_TEXCOORD1
+
+    #ifdef DIRT_UV
+        OUT.DirtTexCoord = IN.DirtTexCoord;
+    #endif //DIRT_UV
+
+    #ifdef DIMMER_SET
+        int index = int(IN.Color.w * 255.0 + 0.5);
+        OUT.Color.xyz = IN.Color.xyz * dimmerSet[index];
+    #else
+        OUT.Color.xyz = IN.Color.xyz;
+    #endif //DIMMER_SET
+    OUT.Color.w = 1.0;
+
+    return OUT;
+}
 
 VS_OutputVehicleDeferred VS_VehicleTransformSkinD(VS_InputSkinVehicle IN)
 {
