@@ -157,9 +157,9 @@ VS_OutputUnlitVehicle VS_VehicleTransformUnlit(VS_InputUnlitVehicle IN)
     return OUT;
 }
 
-#if defined(DIRT_UV) && defined(USE_TEXCOORD1)
-    #error DIRT_UV and USE_TEXCOORD1 are mutually exclusive
-#endif //DIRT_UV && USE_TEXCOORD1
+#if defined(DIRT_UV) && defined(DIFFUSE_TEXTURE2)
+    #error DIRT_UV and DIFFUSE_TEXTURE2 are mutually exclusive
+#endif //DIRT_UV && DIFFUSE_TEXTURE2
 
 struct VS_InputVehicle
 {
@@ -167,7 +167,7 @@ struct VS_InputVehicle
     float2 TexCoord0    : TEXCOORD0;
 #ifdef DIRT_UV
     float2 DirtTexCoord : TEXCOORD1;
-#elif defined(USE_TEXCOORD1)
+#elif defined(DIFFUSE_TEXTURE2)
     float2 TexCoord1    : TEXCOORD1;
 #endif //DIRT_UV
     float3 Normal       : NORMAL;
@@ -184,7 +184,7 @@ struct VS_InputSkinVehicle
     float2 TexCoord0    : TEXCOORD0;
 #ifdef DIRT_UV
     float2 DirtTexCoord : TEXCOORD1;
-#elif defined(USE_TEXCOORD1)
+#elif defined(DIFFUSE_TEXTURE2)
     float2 TexCoord1    : TEXCOORD1;
 #endif //DIRT_UV
     float3 Normal       : NORMAL;
@@ -200,7 +200,7 @@ struct VS_OutputVehicle
 #ifdef DIRT_UV
     float2 TexCoord0           : TEXCOORD0;
     float2 DirtTexCoord        : TEXCOORD7;
-#elif defined(USE_TEXCOORD1)
+#elif defined(DIFFUSE_TEXTURE2)
     float4 TexCoord0And1       : TEXCOORD0;
 #else
     float2 TexCoord0           : TEXCOORD0;
@@ -249,12 +249,12 @@ VS_OutputVehicle VS_VehicleTransform(VS_InputSkinVehicle IN)
         OUT.BitangentWorld.xyz = bitangentWorld * IN.Tangent.w;
     #endif //NORMAL_MAP
 
-    #ifdef USE_TEXCOORD1
+    #ifdef DIFFUSE_TEXTURE2
         OUT.TexCoord0And1.xy = IN.TexCoord0;
         OUT.TexCoord0And1.zw = IN.TexCoord1;
     #else
         OUT.TexCoord0 = IN.TexCoord0;
-    #endif //USE_TEXCOORD1
+    #endif //DIFFUSE_TEXTURE2
 
     #ifdef DIRT_UV
         OUT.DirtTexCoord = IN.DirtTexCoord;
@@ -303,12 +303,12 @@ VS_OutputVehicle VS_VehicleTransformSkin(VS_InputSkinVehicle IN)
         OUT.BitangentWorld.xyz = bitangentWorld * IN.Tangent.w;
     #endif //NORMAL_MAP
 
-    #ifdef USE_TEXCOORD1
+    #ifdef DIFFUSE_TEXTURE2
         OUT.TexCoord0And1.xy = IN.TexCoord0;
         OUT.TexCoord0And1.zw = IN.TexCoord1;
     #else
         OUT.TexCoord0 = IN.TexCoord0;
-    #endif //USE_TEXCOORD1
+    #endif //DIFFUSE_TEXTURE2
 
     #ifdef DIRT_UV
         OUT.DirtTexCoord = IN.DirtTexCoord;
@@ -331,7 +331,7 @@ struct VS_OutputVehicleDeferred
 #ifdef DIRT_UV
     float2 TexCoord0           : TEXCOORD0;
     float2 DirtTexCoord        : TEXCOORD7;
-#elif defined(USE_TEXCOORD1)
+#elif defined(DIFFUSE_TEXTURE2)
     float4 TexCoord0And1       : TEXCOORD0;
 #else
     float2 TexCoord0           : TEXCOORD0;
@@ -373,7 +373,7 @@ VS_OutputVehicleDeferred VS_VehicleTransformD(VS_InputVehicle IN)
         if(tyreDeformSwitchOn)
         {
             float2 v0 = position.yz * position.yz;
-            
+
             float3 v2 = position * tyreDeformParams2.w;
             float v3 = (v0.x + v0.y) * tyreDeformParams2.w;
             v3 = v3 > pow(tyreDeformParams2.x * 1.1, 2);
@@ -415,12 +415,12 @@ VS_OutputVehicleDeferred VS_VehicleTransformD(VS_InputVehicle IN)
         OUT.BitangentWorld.xyz = bitangentWorld * IN.Tangent.w;
     #endif //NORMAL_MAP
 
-    #ifdef USE_TEXCOORD1
+    #ifdef DIFFUSE_TEXTURE2
         OUT.TexCoord0And1.xy = IN.TexCoord0;
         OUT.TexCoord0And1.zw = IN.TexCoord1;
     #else
         OUT.TexCoord0 = IN.TexCoord0;
-    #endif //USE_TEXCOORD1
+    #endif //DIFFUSE_TEXTURE2
 
     #ifdef DIRT_UV
         OUT.DirtTexCoord = IN.DirtTexCoord;
@@ -470,12 +470,12 @@ VS_OutputVehicleDeferred VS_VehicleTransformSkinD(VS_InputSkinVehicle IN)
         OUT.BitangentWorld.xyz = bitangentWorld * IN.Tangent.w;
     #endif //NORMAL_MAP
 
-    #ifdef USE_TEXCOORD1
+    #ifdef DIFFUSE_TEXTURE2
         OUT.TexCoord0And1.xy = IN.TexCoord0;
         OUT.TexCoord0And1.zw = IN.TexCoord1;
     #else
         OUT.TexCoord0 = IN.TexCoord0;
-    #endif //USE_TEXCOORD1
+    #endif //DIFFUSE_TEXTURE2
 
     #ifdef DIRT_UV
         OUT.DirtTexCoord = IN.DirtTexCoord;
