@@ -145,6 +145,19 @@ struct VS_InputVehicleUnlit
 #endif //DIRT_UV
 };
 
+struct VS_InputSkinVehicleUnlit
+{
+    float3 Position     : POSITION;
+    float4 BlendIndices : BLENDINDICES;
+    float4 Color        : COLOR;
+    float2 TexCoord0    : TEXCOORD0;
+#ifdef DIRT_UV
+    float2 DirtTexCoord : TEXCOORD1;
+#elif defined(DIFFUSE_TEXTURE2)
+    float2 TexCoord1    : TEXCOORD1;
+#endif //DIRT_UV
+};
+
 struct VS_OutputVehicleUnlit
 {
     float4 Position      : POSITION;
@@ -183,6 +196,45 @@ VS_OutputVehicleUnlit VS_VehicleTransformUnlit(VS_InputVehicleUnlit IN)
     #ifdef DIRT_UV
         OUT.DirtTexCoord = IN.DirtTexCoord;
     #endif //DIRT_UV
+
+    return OUT;
+}
+
+VS_OutputVehicleUnlit VS_VehicleTransformSkinUnlit(VS_InputSkinVehicleUnlit IN)
+{
+    VS_OutputVehicleUnlit OUT;
+
+    float3 position = IN.Position;
+    float3 normal = float3(0, 0, 0);
+
+    #ifdef VEHICLE_DAMAGE
+        ComputeVehicleDamage(position, normal);
+    #endif
+
+    int i = D3DCOLORtoUBYTE4(IN.BlendIndices).b;
+    float4x3 skinMtx = gBoneMtx[i];
+    float3 posWorld = mul(float4(position, 1.0), skinMtx).xyz;
+
+    OUT.Position = mul(float4(posWorld, 1.0), gWorldViewProj);
+    
+    #ifdef DIFFUSE_TEXTURE2
+        OUT.TexCoord0And1.xy = IN.TexCoord0;
+        OUT.TexCoord0And1.zw = IN.TexCoord1;
+    #else
+        OUT.TexCoord0 = IN.TexCoord0;
+    #endif //DIFFUSE_TEXTURE2
+
+    #ifdef DIRT_UV
+        OUT.DirtTexCoord = IN.DirtTexCoord;
+    #endif //DIRT_UV
+
+    #ifdef DIMMER_SET
+        int index = int(IN.Color.w * 255.0 + 0.5);
+        OUT.Color.xyz = IN.Color.xyz * dimmerSet[index];
+    #else
+        OUT.Color.xyz = IN.Color.xyz;
+    #endif //DIMMER_SET
+    OUT.Color.w = 1.0;
 
     return OUT;
 }
