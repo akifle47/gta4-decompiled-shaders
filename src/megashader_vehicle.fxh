@@ -133,30 +133,91 @@
     }
 #endif //VEHICLE_DAMAGE
 
-struct VS_InputVehicleUnlit
+#if defined(DIRT_UV) && defined(DIFFUSE_TEXTURE2)
+    #error DIRT_UV and DIFFUSE_TEXTURE2 are mutually exclusive
+#endif //DIRT_UV && DIFFUSE_TEXTURE2
+
+struct VS_InputVehicle
 {
     float3 Position     : POSITION;
-    float4 Color        : COLOR;
     float2 TexCoord0    : TEXCOORD0;
 #ifdef DIRT_UV
     float2 DirtTexCoord : TEXCOORD1;
 #elif defined(DIFFUSE_TEXTURE2)
     float2 TexCoord1    : TEXCOORD1;
 #endif //DIRT_UV
+    float3 Normal       : NORMAL;
+#ifdef NORMAL_MAP
+    float4 Tangent      : TANGENT;
+#endif //NORMAL_MAP
+    float4 Color        : COLOR;
 };
 
-struct VS_InputSkinVehicleUnlit
+struct VS_InputSkinVehicle
 {
     float3 Position     : POSITION;
     float4 BlendIndices : BLENDINDICES;
-    float4 Color        : COLOR;
     float2 TexCoord0    : TEXCOORD0;
 #ifdef DIRT_UV
     float2 DirtTexCoord : TEXCOORD1;
 #elif defined(DIFFUSE_TEXTURE2)
     float2 TexCoord1    : TEXCOORD1;
 #endif //DIRT_UV
+    float3 Normal       : NORMAL;
+#ifdef NORMAL_MAP
+    float4 Tangent      : TANGENT;
+#endif //NORMAL_MAP
+    float4 Color        : COLOR;
 };
+
+struct VS_OutputVehicleShadowDepth
+{
+    float4 Position : POSITION;
+    float  Depth    : TEXCOORD0;
+};
+
+struct VS_OutputVehicleShadowDepthDisc
+{
+    float4 Position : POSITION;
+    float2 TexCoord : TEXCOORD0;
+    float4 Color    : COLOR;
+};
+
+VS_OutputVehicleShadowDepthDisc VS_VehicleShadowDepthDisc(VS_InputVehicle IN)
+{
+    VS_OutputVehicleShadowDepthDisc OUT;
+
+    OUT.Position = mul(float4(IN.Position, 1.0), gWorldViewProj);
+    OUT.TexCoord = IN.TexCoord0;
+    OUT.Color = IN.Color;
+    
+    return OUT;
+}
+
+VS_OutputVehicleShadowDepth VS_VehicleShadowDepth(VS_InputVehicle IN)
+{
+    VS_OutputVehicleShadowDepth OUT;
+
+    float3 position = IN.Position;
+    float3 normal = float3(0, 0, 0);
+
+    #ifdef VEHICLE_DAMAGE
+        ComputeVehicleDamage(position, normal);
+    #endif
+
+    #ifdef TIRE_DEFORMATION
+        position = mul(float4(position, 1.0), matWheelTransform).xyz;
+    #endif //TIRE_DEFORMATION
+
+    float3 posWorld = mul(float4(position, 1.0), gWorld).xyz;
+    float4 posClip = mul(float4(posWorld, 1.0), gShadowMatrix);
+
+    OUT.Position.xyw = posClip.xyw = float3(posClip.xy, 1.0);
+    OUT.Position.z = 1.0 - min(posClip.z, 1.0);
+    OUT.Depth = posClip.w;
+    
+    return OUT;
+}
 
 struct VS_OutputVehicleUnlit
 {
@@ -172,7 +233,7 @@ struct VS_OutputVehicleUnlit
     float4 Color         : COLOR;
 };
 
-VS_OutputVehicleUnlit VS_VehicleTransformUnlit(VS_InputVehicleUnlit IN)
+VS_OutputVehicleUnlit VS_VehicleTransformUnlit(VS_InputVehicle IN)
 {
     VS_OutputVehicleUnlit OUT;
 
@@ -200,7 +261,7 @@ VS_OutputVehicleUnlit VS_VehicleTransformUnlit(VS_InputVehicleUnlit IN)
     return OUT;
 }
 
-VS_OutputVehicleUnlit VS_VehicleTransformSkinUnlit(VS_InputSkinVehicleUnlit IN)
+VS_OutputVehicleUnlit VS_VehicleTransformSkinUnlit(VS_InputSkinVehicle IN)
 {
     VS_OutputVehicleUnlit OUT;
 
@@ -238,43 +299,6 @@ VS_OutputVehicleUnlit VS_VehicleTransformSkinUnlit(VS_InputSkinVehicleUnlit IN)
 
     return OUT;
 }
-
-#if defined(DIRT_UV) && defined(DIFFUSE_TEXTURE2)
-    #error DIRT_UV and DIFFUSE_TEXTURE2 are mutually exclusive
-#endif //DIRT_UV && DIFFUSE_TEXTURE2
-
-struct VS_InputVehicle
-{
-    float3 Position     : POSITION;
-    float2 TexCoord0    : TEXCOORD0;
-#ifdef DIRT_UV
-    float2 DirtTexCoord : TEXCOORD1;
-#elif defined(DIFFUSE_TEXTURE2)
-    float2 TexCoord1    : TEXCOORD1;
-#endif //DIRT_UV
-    float3 Normal       : NORMAL;
-#ifdef NORMAL_MAP
-    float4 Tangent      : TANGENT;
-#endif //NORMAL_MAP
-    float4 Color        : COLOR;
-};
-
-struct VS_InputSkinVehicle
-{
-    float3 Position     : POSITION;
-    float4 BlendIndices : BLENDINDICES;
-    float2 TexCoord0    : TEXCOORD0;
-#ifdef DIRT_UV
-    float2 DirtTexCoord : TEXCOORD1;
-#elif defined(DIFFUSE_TEXTURE2)
-    float2 TexCoord1    : TEXCOORD1;
-#endif //DIRT_UV
-    float3 Normal       : NORMAL;
-#ifdef NORMAL_MAP
-    float4 Tangent      : TANGENT;
-#endif //NORMAL_MAP
-    float4 Color        : COLOR;
-};
 
 struct VS_OutputVehicle
 {
