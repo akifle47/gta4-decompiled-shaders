@@ -156,6 +156,7 @@ struct VS_InputVehicle
 struct VS_InputSkinVehicle
 {
     float3 Position     : POSITION;
+    float4 BlendWeights : BLENDWEIGHT;
     float4 BlendIndices : BLENDINDICES;
     float2 TexCoord0    : TEXCOORD0;
 #ifdef DIRT_UV
@@ -218,6 +219,49 @@ VS_OutputVehicleShadowDepth VS_VehicleShadowDepth(VS_InputVehicle IN)
     
     return OUT;
 }
+
+#ifdef NO_SHADOW_CASTING_VEHICLE
+    VS_OutputVehicleShadowDepthDisc VS_VehicleShadowDepthSkinDisc(VS_InputSkinVehicle IN)
+    {
+        VS_OutputVehicleShadowDepthDisc OUT;
+
+        int i = D3DCOLORtoUBYTE4(IN.BlendIndices).b;
+        float4x3 skinMtx = gBoneMtx[i];
+        float3 posWorld = mul(float4(IN.Position, 1.0), skinMtx).xyz;
+
+        OUT.Position = mul(float4(posWorld, 1.0), gWorldViewProj);
+        OUT.TexCoord = IN.TexCoord0;
+        OUT.Color = IN.Color;
+        
+        return OUT;
+    }
+#else
+    VS_OutputVehicleShadowDepth VS_VehicleShadowDepthSkin(VS_InputSkinVehicle IN)
+    {
+        VS_OutputVehicleShadowDepth OUT;
+
+        float3 position = IN.Position;
+        float3 normal = float3(0, 0, 0);
+
+        #ifdef VEHICLE_DAMAGE
+            ComputeVehicleDamage(position, normal);
+        #endif
+
+        float4x3 skinMtx = ComputeSkinMatrix(IN.BlendIndices, IN.BlendWeights);
+        float3 posWorld = mul(float4(position, 1.0), skinMtx).xyz + gWorld[3].xyz;
+        float4 posClip = mul(float4(posWorld, 1), gShadowMatrix);
+
+        float4 cascadeMask = ComputeCascadeMask(posClip);
+
+        OUT.Position.x = dot(cascadeMask, float4(1, 1, 1, 1)) * 0.00001 + posClip.x;
+        OUT.Position.yw = float2(posClip.y, 1);
+        OUT.Position.z = 1.0 - min(posClip.z, 1.0);
+
+        OUT.Depth = posClip.w;
+
+        return OUT;
+    }
+#endif //NO_SHADOW_CASTING_VEHICLE
 
 struct VS_OutputVehicleUnlit
 {

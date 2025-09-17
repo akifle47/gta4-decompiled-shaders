@@ -172,7 +172,7 @@
             float4 cascadeMask = ComputeCascadeMask(posClip);
 
             OUT.Position.x = dot(cascadeMask, float4(1, 1, 1, 1)) * 0.00001 + posClip.x;
-            OUT.Position.yw = posClip.yw * float2(1, 0) + float2(0, 0);
+            OUT.Position.yw = float2(posClip.y, 1);
 
             #ifdef ALPHA_SHADOW
                 OUT.DepthColorAndTexCoord.x = posClip.w;
