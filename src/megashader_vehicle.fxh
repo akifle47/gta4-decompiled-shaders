@@ -213,7 +213,7 @@ VS_OutputVehicleShadowDepth VS_VehicleShadowDepth(VS_InputVehicle IN)
     float3 posWorld = mul(float4(position, 1.0), gWorld).xyz;
     float4 posClip = mul(float4(posWorld, 1.0), gShadowMatrix);
 
-    OUT.Position.xyw = posClip.xyw = float3(posClip.xy, 1.0);
+    OUT.Position.xyw = float3(posClip.xy, 1.0);
     OUT.Position.z = 1.0 - min(posClip.z, 1.0);
     OUT.Depth = posClip.w;
     

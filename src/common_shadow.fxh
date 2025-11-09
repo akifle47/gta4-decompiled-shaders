@@ -74,7 +74,7 @@
         VS_ShadowDepthOutput OUT;
         float4 posClip = mul(mul(float4(IN.Position, 1),  gWorld), gShadowMatrix);
         OUT.Position.z = 1.0 - min(posClip.z, 1.0);
-        OUT.Position.xyw = posClip.xyw * float3(1, 1, 0) + float3(0, 0, 1);
+        OUT.Position.xyw = float3(posClip.xy, 1.0);
         #ifdef ALPHA_SHADOW
             OUT.DepthColorAndTexCoord.x = posClip.w;
             OUT.DepthColorAndTexCoord.yz = IN.TexCoord;
