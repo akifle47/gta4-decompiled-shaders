@@ -21,8 +21,7 @@
 #ifdef ANIMATED
     float2 ComputeUvAnimation(in float2 texCoord)
     {
-        //float3(IN.TexCoord0.xy, 1)
-        float3 uv = texCoord.xyx * float3(1.0, 1.0, 0.0) + float3(0.0, 0.0, 1.0);
+        float3 uv = float3(texCoord, 1.0);
         return float2(dot(globalAnimUV0, uv), dot(globalAnimUV1, uv));
     }
 #endif //ANIMATED
@@ -835,13 +834,10 @@ VS_OutputParaboloid VS_TransformParaboloid(VS_InputParaboloid IN)
     float3 posView = mul(float4(IN.Position, 1.0), gWorldView).xyz;
     posView.z += PARABOLOID_HEIGHT_OFFSET;
     float L = length(posView);
-    posView.z = 1.0 - (posView.z / L);
-    posView.z *= L;
 
-    OUT.Position.xy = posView.xy / posView.z;
+    OUT.Position.xy = posView.xy / (L - posView.z);
+    OUT.Position.z = L / (L + 1.0);
     OUT.NormalWorldAndDepth.w = L;
-    L = 1.0 / (L + 1.0);
-    OUT.Position.z = 1.0 - L;
 
     #ifdef ANIMATED
         OUT.TexCoord = ComputeUvAnimation(IN.TexCoord);
