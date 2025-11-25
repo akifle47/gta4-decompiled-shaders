@@ -5,7 +5,6 @@
 #define NORMAL_MAP
 #define SPECULAR_MAP
 #define ENVIRONMENT_MAP
-#define COMPUTE_VIEW_DIR
 
 #include "common_vehicle.fxh"
 #include "megashader_vehicle.fxh"

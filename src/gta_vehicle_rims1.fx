@@ -6,7 +6,6 @@
 #define REFLECTIVE_POWER
 #define DIRT
 #define DIRT_UV
-#define COMPUTE_VIEW_DIR
 
 #include "common_vehicle.fxh"
 #include "megashader_vehicle.fxh"

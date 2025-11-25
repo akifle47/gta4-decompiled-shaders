@@ -475,6 +475,10 @@ VS_OutputVehicle VS_VehicleTransformSkin(VS_InputSkinVehicle IN)
     return OUT;
 }
 
+#if defined(ENVIRONMENT_MAP) || defined(SPECULAR2)
+    #define COMPUTE_VIEW_DIR
+#endif
+
 struct VS_OutputVehicleDeferred
 {
     float4 Position            : POSITION;

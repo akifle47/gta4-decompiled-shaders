@@ -7,7 +7,6 @@
 #define ENVIRONMENT_MAP
 #define DIRT
 #define DIRT_UV
-#define COMPUTE_VIEW_DIR
 
 #include "common_vehicle.fxh"
 #include "megashader_vehicle.fxh"

@@ -5,7 +5,6 @@
 #define SPECULAR2
 #define REFLECTIVE_POWER
 #define DIRT
-#define COMPUTE_VIEW_DIR
 
 #include "common_vehicle.fxh"
 #include "megashader_vehicle.fxh"
