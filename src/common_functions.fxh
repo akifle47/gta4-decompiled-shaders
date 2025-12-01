@@ -1,3 +1,5 @@
+#define SQUARE(x) x * x
+
 struct VS_InputBlit
 {
     float3 Position : POSITION;
@@ -84,8 +86,9 @@ float4 EncodeGBufferNormal(in float3 normal)
         #endif //PARALLAX
 
         normal.z = sqrt(dot(normal.xy, -normal.xy) + 1.0);
+        normal.xy -= 0.5;
         #ifndef NO_BUMPINESS
-            normal.xy = (normal.xy - 0.5) * bumpiness;
+            normal.xy *= bumpiness;
         #endif //NO_BUMPINESS
         return normal;
     }

@@ -1,6 +1,7 @@
 #include "megashader_todo.fxh"
 #include "common_functions.fxh"
 #include "common_shadow.fxh"
+#include "shader_inputs.fxh"
 
 #ifdef VEHICLE_DAMAGE
     float3 DecodeDamageSample(in float dmgSample)
@@ -642,6 +643,158 @@ VS_OutputVehicleDeferred VS_VehicleTransformSkinD(VS_InputSkinVehicle IN)
         OUT.Color.xyz = IN.Color.xyz;
     #endif //DIMMER_SET
     OUT.Color.w = 1.0;
+
+    return OUT;
+}
+
+PS_OutputDeferred PS_DeferredVehicleTextured(VS_OutputVehicleDeferred IN)
+{
+    PS_OutputDeferred OUT;
+
+    #ifdef DIFFUSE_TEXTURE2
+        float2 texCoord0 = IN.TexCoord0And1.xy;
+        float2 texCoord1 = IN.TexCoord0And1.zw;
+    #else
+        float2 texCoord0 = IN.TexCoord0.xy;
+    #endif //DIFFUSE_TEXTURE2
+
+    #ifdef DIRT_UV
+        float2 dirtTexCoord = IN.DirtTexCoord;
+    #else
+        float2 dirtTexCoord = texCoord0;
+    #endif //DIRT_UV
+
+    float4 diffuse = tex2D(TextureSampler, texCoord0);
+    diffuse.xyz *= matDiffuseColor;
+    #ifdef DIFFUSE_TEXTURE2
+        float4 diffuse2 = tex2D(TextureSampler2, texCoord1) * matDiffuseColor2;
+        diffuse.xyz = lerp(diffuse.xyz, diffuse2.xyz, diffuse2.w);
+    #endif //DIFFUSE_TEXTURE2
+
+    #ifndef EMISSIVE
+        diffuse.xyz *= IN.Color.xyz;
+    #endif //EMISSIVE
+
+    float alpha = diffuse.w * globalScalars.x * IN.Color.w;
+
+    float3 normal;
+    #if defined(NORMAL_MAP)
+        float3x3 tbn = float3x3(IN.TangentWorld.xyz, IN.BitangentWorld.xyz, IN.NormalWorldAndDepth.xyz);
+        float4 normalMap = tex2D(BumpSampler, texCoord0);
+        normal = UnpackNormalMap(normalMap);
+        #ifdef VEHICLE_SHUTS
+            normal.xy *= 5.0;
+        #elif defined(TIRE_DEFORMATION)
+            normal.xy *= 3.0;
+        #endif //VEHICLE_SHUTS
+
+        normal = normalize(mul(normal, tbn) + 0.00001);
+    #else
+        normal = normalize(IN.NormalWorldAndDepth.xyz + 0.00001);
+    #endif //NORMAL_MAP
+
+    float4 specMap = tex2D(SpecSampler, texCoord0);
+    float specIntensity = dot(specMap.xyz, specMapIntMask.xyz) * reflectivePowerED;
+    float specPower = specMap.w * reflectivePowerED * matDiffuseColor2.w;
+
+    #ifdef VEHICLE_PAINT
+        specPower *= 190;
+        specIntensity *= 0.15;
+    #elif defined(SPECULAR)
+        specPower *= specularFactor;
+        specIntensity *= specularColorFactor;
+    #endif //SPECULAR
+
+    #ifdef TIRE_DEFORMATION
+        specIntensity *= 1.34;
+    #endif //TIRE_DEFORMATION
+
+    #ifdef ENVIRONMENT_MAP
+        specIntensity = min(specIntensity * 0.225, 1.0);
+    #endif //ENVIRONMENT_MAP
+
+    #ifdef VEHICLE_PAINT
+        float specIntensity2 = specIntensity / (specularColorFactorED * 0.15);
+        float specPower2 = specPower / (specularFactorED * 190);
+        specIntensity2 *= SQUARE(specular2ColorIntensityED);
+        specPower2 *= specular2FactorED * 6.8;
+    #elif defined(SPECULAR2)
+        float specIntensity2 = specIntensity / (specularColorFactorED * specularColorFactor);
+        float specPower2 = specPower / (specularFactorED * specularFactor);
+        specIntensity2 *= SQUARE(specular2ColorIntensityRE * specular2ColorIntensityED);
+        specPower2 *= specular2FactorED * specular2Factor;
+    #endif //VEHICLE_PAINT
+
+    #ifdef DIRT
+        if(dirtLevel > 0.0)
+        {
+            float dirtTex = tex2D(DirtSampler, dirtTexCoord).x;
+            float4 dirtCol;
+            dirtCol.w = dirtTex * dirtLevel;
+            dirtCol.xyz = lerp(diffuse.xyz, dirtColor, dirtCol.w);
+            diffuse = dirtTex >= 0.0 ? float4(dirtCol.xyz, 1.0 - dirtCol.w) : float4(diffuse.xyz, 1.0);
+        }
+        else
+        {
+            diffuse.w = 1.0;
+        }
+
+        specIntensity *= diffuse.w;
+    #endif //DIRT
+    
+    specIntensity *= matDiffuseColor2.w;
+
+    #ifdef SPECULAR2
+        float3 fragToViewDir = normalize(IN.FragToViewDir + 0.000001);
+        float3 R = reflect(-fragToViewDir, normal);
+
+        float specularLight = dot(-gDirectionalLight.xyz, R);
+        specularLight = specularLight >= 0.0 ? log(specularLight + 0.00001) : -13.2877121;
+        specularLight = exp(specPower2 * specularLight);
+
+        #ifdef VEHICLE_PAINT
+            diffuse.xyz = specular2ColorIntensityED == 0 ? diffuse.xyz : diffuse.xyz + (specular2Color * specIntensity2 * specularLight);
+        #else
+            diffuse.xyz = SQUARE(specular2ColorIntensityRE) == 0 ? diffuse.xyz : diffuse.xyz + (specIntensity2 * specularLight);
+        #endif //VEHICLE_PAINT
+    #endif //SPECULAR2
+
+    diffuse.w = alpha;
+    OUT.Diffuse.xyz = diffuse.xyz;
+
+    #ifdef VEHICLE_PAINT
+        OUT.Normal = EncodeGBufferNormal(normal);
+    #else
+        OUT.Normal.xyz = (normal + 1.0) * 0.5;
+        OUT.Normal.w = alpha;
+    #endif //VEHICLE_PAINT
+
+    #ifdef VEHICLE_INTERIOR
+        OUT.SpecularAndAO.x = specIntensity * 0.0025;
+        OUT.SpecularAndAO.y = sqrt(specPower / 51.2);
+    #else
+        #ifdef VEHICLE_SHUTS
+            OUT.SpecularAndAO.x = specIntensity * 0.075;
+        #else
+            OUT.SpecularAndAO.x = specIntensity * 0.5;
+        #endif //VEHICLE_SHUTS
+
+        #ifdef POWER_FACTOR
+            OUT.SpecularAndAO.y = sqrt(specPower * POWER_FACTOR);
+        #else
+            OUT.SpecularAndAO.y = sqrt(specPower / 512.0);
+        #endif //POWER_FACTOR
+    #endif //VEHICLE_INTERIOR
+
+    #ifdef EMISSIVE
+        OUT.SpecularAndAO.z = globalScalars.z;
+    #else
+        OUT.SpecularAndAO.z = dot(IN.Color.xyz, LuminanceConstants) * globalScalars.z;
+    #endif //EMISSIVE
+
+    OUT.Stencil = float4(stencil.x, 0, 0, 0);
+    OUT.Diffuse.w = alpha;
+    OUT.SpecularAndAO.w = alpha;
 
     return OUT;
 }
