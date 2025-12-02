@@ -134,6 +134,24 @@
     }
 #endif //VEHICLE_DAMAGE
 
+#ifdef DIRT
+    void ComputeDirt(inout float4 diffuse, in float2 dirtTexCoord)
+    {
+        if(dirtLevel > 0.0)
+        {
+            float dirtTex = tex2D(DirtSampler, dirtTexCoord).x;
+            float4 dirtCol;
+            dirtCol.w = dirtTex * dirtLevel;
+            dirtCol.xyz = lerp(diffuse.xyz, dirtColor, dirtCol.w);
+            diffuse = dirtTex >= 0.0 ? float4(dirtCol.xyz, 1.0 - dirtCol.w) : float4(diffuse.xyz, 1.0);
+        }
+        else
+        {
+            diffuse.w = 1.0;
+        }
+    }
+#endif //DIRT
+
 #if defined(DIRT_UV) && defined(DIFFUSE_TEXTURE2)
     #error DIRT_UV and DIFFUSE_TEXTURE2 are mutually exclusive
 #endif //DIRT_UV && DIFFUSE_TEXTURE2
@@ -726,19 +744,7 @@ PS_OutputDeferred PS_DeferredVehicleTextured(VS_OutputVehicleDeferred IN)
     #endif //VEHICLE_PAINT
 
     #ifdef DIRT
-        if(dirtLevel > 0.0)
-        {
-            float dirtTex = tex2D(DirtSampler, dirtTexCoord).x;
-            float4 dirtCol;
-            dirtCol.w = dirtTex * dirtLevel;
-            dirtCol.xyz = lerp(diffuse.xyz, dirtColor, dirtCol.w);
-            diffuse = dirtTex >= 0.0 ? float4(dirtCol.xyz, 1.0 - dirtCol.w) : float4(diffuse.xyz, 1.0);
-        }
-        else
-        {
-            diffuse.w = 1.0;
-        }
-
+        ComputeDirt(diffuse, dirtTexCoord);
         specIntensity *= diffuse.w;
     #endif //DIRT
     
@@ -797,4 +803,38 @@ PS_OutputDeferred PS_DeferredVehicleTextured(VS_OutputVehicleDeferred IN)
     OUT.SpecularAndAO.w = alpha;
 
     return OUT;
+}
+
+float4 PS_VehicleTexturedUnlit(VS_OutputVehicle IN) : COLOR
+{
+    #ifdef DIFFUSE_TEXTURE2
+        float2 texCoord0 = IN.TexCoord0And1.xy;
+        float2 texCoord1 = IN.TexCoord0And1.zw;
+    #else
+        float2 texCoord0 = IN.TexCoord0.xy;
+    #endif //DIFFUSE_TEXTURE2
+
+    #ifdef DIRT_UV
+        float2 dirtTexCoord = IN.DirtTexCoord;
+    #else
+        float2 dirtTexCoord = texCoord0;
+    #endif //DIRT_UV
+
+    float4 diffuse = tex2D(TextureSampler, texCoord0);
+    diffuse.xyz *= matDiffuseColor;
+    #ifdef DIFFUSE_TEXTURE2
+        float4 diffuse2 = tex2D(TextureSampler2, texCoord1);
+        diffuse.xyz = lerp(diffuse.xyz, diffuse2.xyz, diffuse2.w);
+    #endif //DIFFUSE_TEXTURE2
+
+    diffuse *= IN.Color;
+    float alpha = diffuse.w * globalScalars.x;
+
+    #ifdef DIRT
+        ComputeDirt(diffuse, dirtTexCoord);
+    #endif //DIRT
+
+    diffuse.w = alpha;
+
+    return diffuse;
 }
