@@ -208,7 +208,7 @@ float2 vol_offsets[12] : vol_offsets =
 };
 float4 debugLightColour : debugLightColour = float4(1.0, 1.0, 1.0, 1.0);
 
-#define DEFERRED_LIGHTING
+#define IS_DEFERRED_LIGHTING_SHADER
 #define NO_SKINNING
 #include "common_shadow.fxh"
 #include "common_lighting.fxh"

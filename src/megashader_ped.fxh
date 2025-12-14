@@ -397,10 +397,10 @@ float4 TexturedLit(in int numLights, in VS_OutputPed IN, in float2 screenCoords)
         }
     }
 
-    float3 fragToViewDir = -normalize(IN.FragToViewDir + 0.00001);
+    float3 viewToFragDir = -normalize(IN.FragToViewDir + 0.00001);
 
     #ifdef ENVIRONMENT_MAP
-        float3 R = reflect(fragToViewDir, normal);
+        float3 R = reflect(viewToFragDir, normal);
         R = normalize(R + 0.00001);
 
         float3 envRefl = tex2D(EnvironmentSampler, (R.xz + 1) * -0.5).xyz;
@@ -414,7 +414,7 @@ float4 TexturedLit(in int numLights, in VS_OutputPed IN, in float2 screenCoords)
     surfaceProperties.SpecularIntensity = specIntensity;
     surfaceProperties.SpecularPower = specPower;
     surfaceProperties.AmbientOcclusion = IN.Color.x;
-    float4 lighting = float4(ComputeLighting(numLights, true, IN.PositionWorld.xyz, fragToViewDir, surfaceProperties), globalScalars.x);
+    float4 lighting = float4(ComputeLighting(numLights, true, IN.PositionWorld.xyz, viewToFragDir, surfaceProperties), globalScalars.x);
 
     lighting.xyz = ComputeDepthEffects(1.0, lighting.xyz, IN.NormalWorldAndDepth.w) * matMaterialColorScale.x;
 

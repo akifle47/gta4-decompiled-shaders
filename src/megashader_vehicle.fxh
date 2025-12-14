@@ -1,6 +1,9 @@
+#define IS_VEHICLE_SHADER
+
 #include "megashader_todo.fxh"
 #include "common_functions.fxh"
 #include "common_shadow.fxh"
+#include "common_lighting.fxh"
 #include "shader_inputs.fxh"
 
 #ifdef VEHICLE_DAMAGE
@@ -837,4 +840,126 @@ float4 PS_VehicleTexturedUnlit(VS_OutputVehicle IN) : COLOR
     diffuse.w = alpha;
 
     return diffuse;
+}
+
+float4 TexturedLit(in int numLights, in VS_OutputVehicle IN)
+{
+    #ifdef DIFFUSE_TEXTURE2
+        float2 texCoord0 = IN.TexCoord0And1.xy;
+        float2 texCoord1 = IN.TexCoord0And1.zw;
+    #else
+        float2 texCoord0 = IN.TexCoord0.xy;
+    #endif //DIFFUSE_TEXTURE2
+
+    #ifdef DIRT_UV
+        float2 dirtTexCoord = IN.DirtTexCoord;
+    #else
+        float2 dirtTexCoord = texCoord0;
+    #endif //DIRT_UV
+
+    float4 diffuse = tex2D(TextureSampler, texCoord0);
+    diffuse.xyz *= matDiffuseColor;
+    #ifdef DIFFUSE_TEXTURE2
+        float4 diffuse2 = tex2D(TextureSampler2, texCoord1) * matDiffuseColor2;
+        diffuse.xyz = lerp(diffuse.xyz, diffuse2.xyz, diffuse2.w);
+    #endif //DIFFUSE_TEXTURE2
+
+    #ifdef EMISSIVE
+        float3 emissiveColor = diffuse.xyz * IN.Color.xyz;
+    #else
+        diffuse.xyz *= IN.Color.xyz;
+    #endif //EMISSIVE
+
+    float alpha = diffuse.w * IN.Color.w;
+
+    float4 specMap = tex2D(SpecSampler, texCoord0);
+    float specIntensity = dot(specMap.xyz, specMapIntMask.xyz) * reflectivePowerED;
+    float specPower = specMap.w * reflectivePowerED;
+
+    #ifdef VEHICLE_INTERIOR
+        specPower *= 10;
+        specIntensity *= 0.005;
+    #elif defined(VEHICLE_PAINT) || defined(VEHICLE_SHUTS)
+        specPower *= 190;
+        specIntensity *= 0.15;
+    #elif defined(TIRE_DEFORMATION)
+        specIntensity *= 1.4;
+        specPower *= 50.0;
+    #elif defined(ENVIRONMENT_MAP)
+        specPower *= 190;
+        specIntensity *= min(specIntensity * 0.225, 1.0);
+    #elif defined(POWER_FACTOR)
+        specPower *= 50.0;
+    #endif //VEHICLE_INTERIOR
+
+    #ifdef SPECULAR
+        specPower *= specularFactor;
+        specIntensity *= specularColorFactor;
+    #endif //SPECULAR
+
+    float3 normal;
+    #if defined(NORMAL_MAP)
+        float3x3 tbn = float3x3(IN.TangentWorld.xyz, IN.BitangentWorld.xyz, IN.NormalWorldAndDepth.xyz);
+        float4 normalMap = tex2D(BumpSampler, texCoord0);
+        normal = UnpackNormalMap(normalMap);
+        #ifdef VEHICLE_SHUTS
+            normal.xy *= 5.0;
+        #elif defined(TIRE_DEFORMATION)
+            normal.xy *= 3.0;
+        #endif //VEHICLE_SHUTS
+
+        normal = normalize(mul(normal, tbn) + 0.00001);
+    #else
+        normal = normalize(IN.NormalWorldAndDepth.xyz + 0.00001);
+    #endif //NORMAL_MAP
+    
+    float3 fragToViewDir = normalize(IN.FragToViewDir.xyz + 0.00001);
+
+    #ifdef DIRT
+        ComputeDirt(diffuse, dirtTexCoord);
+        specIntensity *= diffuse.w;
+    #endif //DIRT
+
+    float ambientOcclusion = globalScalars.z;
+    #ifndef EMISSIVE
+        ambientOcclusion *= dot(IN.Color.xyz, LuminanceConstants);
+    #endif //!EMISSIVE
+
+    float glassSpecFactor = 1;
+    #ifdef IS_VEHICLE_GLASS
+        alpha = saturate(alpha);
+        glassSpecFactor = alpha - 0.001 >= 0 ? 1.0 / alpha : 100.0;
+    #endif //IS_VEHICLE_GLASS
+    alpha *= globalScalars.x;
+
+    SurfaceProperties surfaceProperties;
+    surfaceProperties.Diffuse = diffuse.xyz;
+    surfaceProperties.Normal = normal;
+    surfaceProperties.SpecularIntensity = specIntensity;
+    surfaceProperties.SpecularPower = specPower;
+    surfaceProperties.AmbientOcclusion = ambientOcclusion;
+    float4 lighting = float4(ComputeLighting(0, true, IN.PositionWorld.xyz, -fragToViewDir, glassSpecFactor, surfaceProperties), alpha);
+    #ifdef EMISSIVE
+        lighting.xyz += emissiveColor * emissiveMultiplier;
+    #elif defined(DISK_BRAKE_GLOW)
+        lighting.xyz += DiskBrakeGlow * float3(98, 25, 0);
+    #endif //EMISSIVE
+    lighting.xyz = ComputeDepthEffects(1.0, lighting.xyz, IN.NormalWorldAndDepth.w);
+        
+    return lighting;
+}
+
+float4 PS_VehicleTexturedZero(VS_OutputVehicle IN) : COLOR
+{
+    return TexturedLit(0, IN);
+}
+
+float4 PS_VehicleTexturedFour(VS_OutputVehicle IN) : COLOR
+{
+    return TexturedLit(4, IN);
+}
+
+float4 PS_VehicleTexturedEight(VS_OutputVehicle IN) : COLOR
+{
+    return TexturedLit(8, IN);
 }
