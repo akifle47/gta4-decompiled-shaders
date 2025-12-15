@@ -226,18 +226,14 @@ VS_OutputDeferredPed VS_PedTransformSkinD(VS_InputSkin IN)
         OUT.BitangentWorld.xyz = bitangentWorld * IN.Tangent.w;
     #endif //NORMAL_MAP || PARALLAX
 
-    #ifdef ENVIRONMENT_MAP
-        OUT.Color = IN.Color;
+    OUT.Color.x = (globalScalars2.y * globalScalars2.z) * (IN.Color.x * globalScalars.z - 1) + 1;
+    OUT.Color.y = globalScalars2.w * IN.Color.y;
+    #ifdef SUBSURFACE_SCATTERING
+        OUT.Color.z = 1.0 - (IN.Color.y * IN.Color.x);
     #else
-        OUT.Color.x = (globalScalars2.y * globalScalars2.z) * (IN.Color.x * globalScalars.z - 1) + 1;
-        OUT.Color.y = globalScalars2.w * IN.Color.y;
-        #ifdef SUBSURFACE_SCATTERING
-            OUT.Color.z = 1.0 - (IN.Color.y * IN.Color.x);
-        #else
-            OUT.Color.z = IN.Color.z;
-        #endif //SUBSURFACE_SCATTERING
-        OUT.Color.w = IN.Color.w;
-    #endif //ENVIRONMENT_MAP
+        OUT.Color.z = IN.Color.z;
+    #endif //SUBSURFACE_SCATTERING
+    OUT.Color.w = IN.Color.w;
 
     OUT.TexCoord = IN.TexCoord;
 
@@ -253,7 +249,7 @@ PS_OutputDeferred PS_DeferredPedTextured(VS_OutputDeferredPed IN, float2 screenC
     diffuse.w *= globalScalars.x;
 
     #ifdef HAIR_SORTED
-        AlphaClip(diffuse.w, screenCoords);
+        AlphaClip(diffuse.w * IN.Color.w, screenCoords);
     #else
         AlphaClip(globalScalars.x, screenCoords);
     #endif //HAIR_SORTED
@@ -293,22 +289,24 @@ PS_OutputDeferred PS_DeferredPedTextured(VS_OutputDeferredPed IN, float2 screenC
     normal = normalize(mul(normal, tbn) + 0.00001);
 
     #ifdef SUBSURFACE_SCATTERING
-        float v0 = dot(gDirectionalLight.xyz, normal) + SubScatWrap;
-        v0 = max(v0 / (1 + SubScatWrap), 0);
-        float v1 = saturate(v0 / SubScatWidth);
-        v1 = (v1 * v1) * (v1 * -2 + 3);
-        float v2 = v0 - (SubScatWidth * 2);
-        v2 = saturate(v2 / -SubScatWidth);
-        float v3 = v2 * -2 + 3;
-        v2 = v2 * v2 * v3;
-        v1 = v1 * v2;
-        float3 subScattColor = v1 * SubColor.xyz * diffuse.w;
+        float wrappedNdotL = (dot(gDirectionalLight.xyz, normal) + SubScatWrap) / (1 + SubScatWrap);
+        wrappedNdotL = max(wrappedNdotL, 0);
+
+        float a = smoothstep(0.0, SubScatWidth, wrappedNdotL);
+        float b = 1.0 - smoothstep(SubScatWidth, SubScatWidth * 2.0, wrappedNdotL);
+
+        float subScattIntensity = a * b;
+        float3 subScattColor = subScattIntensity * SubColor.xyz * diffuse.w;
         diffuse.xyz += (subScattColor * 0.5);
     #endif //SUBSURFACE_SCATTERING
 
     OUT.Diffuse.xyz = diffuse.xyz * matMaterialColorScale.x;
-    OUT.Diffuse.w = diffuse.w * IN.Color.w;
-    
+    #ifdef SUBSURFACE_SCATTERING
+        OUT.Diffuse.w = IN.Color.w * globalScalars.x;
+    #else
+        OUT.Diffuse.w = diffuse.w * IN.Color.w;
+    #endif //SUBSURFACE_SCATTERING
+
     #ifdef USE_SPECULAR_MAP
         specIntensity *= matMaterialColorScale.w;
         specPower *= matMaterialColorScale.w;
