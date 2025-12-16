@@ -9,7 +9,6 @@
 #include "common_vehicle.fxh"
 #include "megashader_vehicle.fxh"
 
-//Vertex shaders
 //Pixel shaders
 PixelShader PixelShader0 = NULL;
 
