@@ -356,6 +356,18 @@ PS_OutputDeferred PS_DeferredPedTextured(VS_OutputDeferredPed IN, float2 screenC
 }
 
 
+PS_OutputDeferred PS_DeferredPedTexturedOnlyPedMaterialID()
+{
+    PS_OutputDeferred OUT;
+    OUT.Diffuse = float4(0, 0, 0, 1.0 / 255.0);
+    OUT.Normal = float4(0, 0, 0, 0);
+    OUT.SpecularAndAO = float4(0, 0, 0, 0);
+    OUT.Stencil = float4(stencil.x, 0, 0, 0);
+
+    return OUT;
+}
+
+
 float4 TexturedLit(in int numLights, in VS_OutputPed IN, in float2 screenCoords)
 {
     float4 diffuse = tex2D(TextureSampler, IN.TexCoord);
@@ -440,3 +452,202 @@ float4 PS_PedTexturedEight(VS_OutputPed IN, float2 screenCoords : VPOS) : COLOR
 {
     return TexturedLit(8, IN, screenCoords);
 }
+
+
+
+#ifndef NO_GENERATED_TECHNIQUES
+    technique wd_draw
+    {
+        pass p0
+        {
+            CullMode = CW;
+    
+            VertexShader = compile vs_3_0 VS_ShadowDepthPed();
+            PixelShader = compile ps_3_0 PS_ShadowDepthPed();
+        }
+    }
+    
+    technique wd_drawskinned
+    {
+        pass p0
+        {
+            CullMode = CW;
+    
+            VertexShader =  compile vs_3_0 VS_ShadowDepthSkinPed();
+            PixelShader = compile ps_3_0 PS_ShadowDepthPed();
+        }
+    }
+    
+    technique draw
+    {
+        pass p0
+        {
+            #ifdef HAIR_SORTED
+                AlphaBlendEnable = false;
+                AlphaTestEnable = false;
+                ZWriteEnable = true;
+            #else
+                AlphaRef = 0x64;
+                AlphaBlendEnable = true;
+                AlphaTestEnable = true;
+            #endif //HAIR_SORTED
+    
+            VertexShader = compile vs_3_0 VS_PedTransform();
+            PixelShader = compile ps_3_0 PS_PedTexturedEight();
+        }
+    }
+    
+    technique unlit_draw
+    {
+        pass p0
+        {
+            AlphaRef = 0x64;
+            AlphaBlendEnable = true;
+            AlphaTestEnable = true;
+    
+            VertexShader = compile vs_3_0 VS_PedTransform();
+            PixelShader = compile ps_3_0 PS_PedTexturedZero();
+        }
+    }
+    
+    technique lightweight0_draw
+    {
+        pass p0
+        {
+            AlphaRef = 0x64;
+            AlphaBlendEnable = true;
+            AlphaTestEnable = true;
+    
+            VertexShader = compile vs_3_0 VS_PedTransform();
+            PixelShader = compile ps_3_0 PS_PedTexturedZero();
+        }
+    }
+    
+    technique lightweight4_draw
+    {
+        pass p0
+        {
+            AlphaRef = 0x64;
+            AlphaBlendEnable = true;
+            AlphaTestEnable = true;
+    
+            VertexShader = compile vs_3_0 VS_PedTransform();
+            PixelShader = compile ps_3_0 PS_PedTexturedFour();
+        }
+    }
+    
+    technique drawskinned
+    {
+        pass p0
+        {
+            #ifdef HAIR_SORTED
+                AlphaBlendEnable = false;
+                AlphaTestEnable = false;
+                ZWriteEnable = true;
+            #else
+                AlphaBlendEnable = true;
+                AlphaRef = 0x64;
+                AlphaTestEnable = true;
+            #endif //HAIR_SORTED
+    
+            VertexShader = compile vs_3_0 VS_PedTransformSkin();
+            PixelShader = compile ps_3_0 PS_PedTexturedEight();
+        }
+    }
+    
+    technique unlit_drawskinned
+    {
+        pass p0
+        {
+            AlphaTestEnable = true;
+            AlphaRef = 0x64;
+            AlphaBlendEnable = true;
+    
+            VertexShader = compile vs_3_0 VS_PedTransformSkin();
+            PixelShader = compile ps_3_0 PS_PedTexturedZero();
+        }
+    }
+    
+    technique lightweight0_drawskinned
+    {
+        pass p0
+        {
+            AlphaTestEnable = true;
+            AlphaRef = 0x64;
+            AlphaBlendEnable = true;
+    
+            VertexShader = compile vs_3_0 VS_PedTransformSkin();
+            PixelShader = compile ps_3_0 PS_PedTexturedZero();
+        }
+    }
+    
+    technique lightweight4_drawskinned
+    {
+        pass p0
+        {
+            AlphaTestEnable = true;
+            AlphaRef = 0x64;
+            AlphaBlendEnable = true;
+    
+            VertexShader = compile vs_3_0 VS_PedTransformSkin();
+            PixelShader = compile ps_3_0 PS_PedTexturedFour();
+        }
+    }
+    
+    technique deferred_draw
+    {
+        pass p0
+        {
+            #ifdef HAIR_SORTED
+                ZWriteEnable = true;
+                ColorWriteEnable = RED | GREEN | BLUE;
+                ColorWriteEnable1 = RED | GREEN | BLUE;
+                ColorWriteEnable2 = RED | GREEN | BLUE;
+                ColorWriteEnable3 = RED | GREEN | BLUE | ALPHA;
+            #endif //HAIR_SORTED
+
+            VertexShader = compile vs_3_0 VS_PedTransformD();
+            #ifdef HAIR_SORTED_EXP
+                PixelShader = compile ps_3_0 PS_DeferredPedTexturedOnlyPedMaterialID();
+            #else
+                PixelShader = compile ps_3_0 PS_DeferredPedTextured();
+            #endif //HAIR_SORTED_EXP
+        }
+        #ifdef HAIR_SORTED_EXP
+            pass p1
+            {
+                VertexShader = compile vs_3_0 VS_PedTransformD();
+                PixelShader = compile ps_3_0 PS_DeferredPedTextured();
+            }        
+        #endif //HAIR_SORTED_EXP
+    }
+    
+    technique deferred_drawskinned
+    {
+        pass p0
+        {
+            #ifdef HAIR_SORTED
+                CullMode = NONE;
+                ZWriteEnable = true;
+                ColorWriteEnable = RED | GREEN | BLUE;
+                ColorWriteEnable1 = RED | GREEN | BLUE;
+                ColorWriteEnable2 = RED | GREEN | BLUE;
+                ColorWriteEnable3 = RED | GREEN | BLUE | ALPHA;
+            #endif //HAIR_SORTED
+
+            VertexShader = compile vs_3_0 VS_PedTransformSkinD();
+            #ifdef HAIR_SORTED_EXP
+                PixelShader = compile ps_3_0 PS_DeferredPedTexturedOnlyPedMaterialID();
+            #else
+                PixelShader = compile ps_3_0 PS_DeferredPedTextured();
+            #endif //HAIR_SORTED_EXP
+        }
+        #ifdef HAIR_SORTED_EXP
+            pass p1
+            {
+                VertexShader = compile vs_3_0 VS_PedTransformSkinD();
+                PixelShader = compile ps_3_0 PS_DeferredPedTextured();
+            }        
+        #endif //HAIR_SORTED_EXP
+    }
+#endif //!NO_GENERATED_TECHNIQUES

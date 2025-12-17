@@ -263,11 +263,11 @@ VS_OutputDeferred VS_TransformD(VS_Input IN)
         OUT.TexCoord = ComputeUvAnimation(IN.TexCoord0);
     #endif //ANIMATED
 
-    #if !defined(DIRT_DECAL_MASK) && !defined(NO_LIGHTING) //idk
+    #if !defined(DIRT_DECAL) && !defined(NO_LIGHTING) //idk
         OUT.Color.xy = ComputeDayNightEffects(IN.Color.xy);
     #else
         OUT.Color.xy = IN.Color.xy;
-    #endif //DIRT_DECAL_MASK
+    #endif //DIRT_DECAL
 
     float4 posClip = mul(float4(IN.Position, 1.0), gWorldViewProj);
 
@@ -318,9 +318,9 @@ PS_OutputDeferred DeferredTextured(bool dither, VS_OutputDeferred IN, float2 scr
         float alpha = diffuse.w * IN.Color.w * globalScalars.x;
     #endif //NO_DIFFUSE_WRITE
 
-    #ifdef DIRT_DECAL_MASK
+    #ifdef DIRT_DECAL
         float dirtMask = dot(diffuse.xyz, dirtDecalMask.xyz) * IN.Color.w * globalScalars.x;
-    #endif //DIRT_DECAL_MASK
+    #endif //DIRT_DECAL
 
     if(dither)
     {
@@ -358,7 +358,7 @@ PS_OutputDeferred DeferredTextured(bool dither, VS_OutputDeferred IN, float2 scr
     
     #if defined(NO_DIFFUSE_WRITE)
         OUT.Diffuse = float4(0, 0, 0, 0);
-    #elif defined(DIRT_DECAL_MASK)
+    #elif defined(DIRT_DECAL)
         OUT.Diffuse.xyz = IN.Color.xyz;
         OUT.Diffuse.w = dirtMask;
     #else
@@ -402,11 +402,11 @@ PS_OutputDeferred DeferredTextured(bool dither, VS_OutputDeferred IN, float2 scr
     #ifdef SPECULAR
         OUT.SpecularAndAO.x = specIntensity * 0.5;
         OUT.SpecularAndAO.y = sqrt(specPower / 512.0);
-        #ifdef DIRT_DECAL_MASK
+        #ifdef DIRT_DECAL
             OUT.SpecularAndAO.z = 0.0;
         #else
             OUT.SpecularAndAO.z = IN.Color.x;
-        #endif //DIRT_DECAL_MASK
+        #endif //DIRT_DECAL
     #else
         #if defined(NO_SPECULAR_WRITE)
             OUT.SpecularAndAO.xyz = float3(0, 0, 0);
@@ -421,13 +421,13 @@ PS_OutputDeferred DeferredTextured(bool dither, VS_OutputDeferred IN, float2 scr
         OUT.SpecularAndAO.z *= v0;
     #endif //PARALLAX
 
-    #if defined(AMBIENT_DECAL_MASK)
+    #if defined(AMBIENT_DECAL)
         OUT.SpecularAndAO.w = saturate(1.0 - dot(diffuse.xyz, ambientDecalMask.xyz)) * alpha * globalScalars2.z;
-    #elif defined(DIRT_DECAL_MASK)
+    #elif defined(DIRT_DECAL)
         OUT.SpecularAndAO.w = dirtMask;
     #else
         OUT.SpecularAndAO.w = alpha;
-    #endif //AMBIENT_DECAL_MASK
+    #endif //AMBIENT_DECAL
 
     OUT.Stencil = float4(1, 0, 0, 0) * stencil.x;
     
@@ -612,7 +612,7 @@ VS_OutputUnlit VS_TransformUnlit(VS_InputUnlit IN)
             OUT.Color.xy = ComputeDayNightEffects(IN.Color.xy);
         #else
             OUT.Color.xy = IN.Color.xy;
-        #endif //DIRT_DECAL_MASK
+        #endif //DIRT_DECAL
 
         float4 posClip = mul(float4(posWorld, 1.0), gWorldViewProj);
 
@@ -906,10 +906,10 @@ float4 TexturedLit(in int numLights, in bool instanced, in VS_Output IN, in floa
 
     float4 diffuse = tex2D(TextureSampler, texCoord);
 
-    #ifdef DIRT_DECAL_MASK
+    #ifdef DIRT_DECAL
         float dirtMask = dot(diffuse.xyz, dirtDecalMask);
         diffuse = float4(1, 1, 1, dirtMask) * IN.Color;
-    #endif //DIRT_DECAL_MASK
+    #endif //DIRT_DECAL
 
     #ifdef COLORIZE
         diffuse *= colorize;
@@ -1066,7 +1066,7 @@ float4 TexturedBasic(InputBasic IN)
     #endif //!DIFFUSE_ALPHA
     
     float4 diffuse = tex2D(TextureSampler, IN.TexCoord);
-    #ifdef DIRT_DECAL_MASK
+    #ifdef DIRT_DECAL
         diffuse *= IN.Color;
     #else
         diffuse.w *= IN.Color.w;
@@ -1076,7 +1076,7 @@ float4 TexturedBasic(InputBasic IN)
     
     #if defined(EMISSIVE)
         float ambientOcclusion = globalScalars.z;
-    #elif defined(DIRT_DECAL_MASK)
+    #elif defined(DIRT_DECAL)
         float ambientOcclusion = 1.0;
     #else
         float ambientOcclusion = IN.Color.x;
@@ -1164,3 +1164,415 @@ float4 PS_DeferredImposter() : COLOR
 {
     return float4(0, 0, 0, 0);
 }
+
+
+
+#ifndef NO_GENERATED_TECHNIQUES
+    technique draw
+    {
+        pass p0
+        {
+            #ifdef WIRE
+                ZWriteEnable = false;
+            #endif //WIRE
+
+            VertexShader = compile vs_3_0 VS_Transform();
+            PixelShader = compile ps_3_0 PS_TexturedEight();
+        }
+    }
+    
+    technique drawskinned
+    {
+        pass p0
+        {
+            VertexShader = compile vs_3_0 VS_TransformSkin();
+            PixelShader = compile ps_3_0 PS_TexturedEight();
+        }
+    }
+    
+    technique unlit_draw
+    {
+        pass p0
+        {
+            #ifdef WIRE
+                ZWriteEnable = false;
+            #endif //WIRE
+
+            #if defined(EMISSIVE)
+                SrcBlend = SRCALPHA;
+                #if defined(EMISSIVE_IDK)
+                    DestBlend = INVSRCALPHA;
+                #else
+                    DestBlend = ONE;
+                #endif //EMISSIVE_IDK
+            #endif //EMISSIVE
+
+            VertexShader = compile vs_3_0 VS_TransformUnlit();
+            PixelShader = compile ps_3_0 PS_TexturedUnlit();
+        }
+    }
+    
+    technique unlit_drawskinned
+    {
+        pass p0
+        {
+            #ifdef WIRE
+                ZWriteEnable = false;
+            #endif //WIRE
+            
+            #if defined(EMISSIVE)
+                SrcBlend = SRCALPHA;
+                #if defined(EMISSIVE_IDK)
+                    DestBlend = INVSRCALPHA;
+                #else
+                    DestBlend = ONE;
+                #endif //EMISSIVE_IDK
+            #endif //EMISSIVE
+
+            VertexShader = compile vs_3_0 VS_TransformSkinUnlit();
+            PixelShader = compile ps_3_0 PS_TexturedUnlit();
+        }
+    }
+    
+    technique deferred_draw
+    {
+        pass p0
+        {
+            #if defined(GLUE_DECAL)
+                ZWriteEnable = true;
+            #endif //GLUE_DECAL
+
+            #if defined(DRAWBUCKET_DECAL) && !defined(DECAL_COLORWRITE_ALL)
+                #ifdef NO_DIFFUSE_WRITE
+                    ColorWriteEnable = 0;
+                #else
+                    ColorWriteEnable = RED | GREEN | BLUE;
+                #endif //NO_DIFFUSE_WRITE
+
+                #ifdef NO_NORMAL_WRITE
+                    ColorWriteEnable1 = 0;
+                #else
+                    ColorWriteEnable1 = RED | GREEN | BLUE;
+                #endif //NO_NORMAL_WRITE
+
+                #if defined(AMBIENT_DECAL)
+                    ColorWriteEnable2 = BLUE;
+                #elif defined(GLUE_DECAL)
+                    ColorWriteEnable2 = RED | GREEN | BLUE;
+                #elif defined(NORMAL_ONLY_DECAL)
+                    ColorWriteEnable2 = 0;
+                #elif !defined(NO_SPECULAR_WRITE)
+                    ColorWriteEnable2 = RED | GREEN;
+                #endif //AMBIENT_DECAL
+
+                ColorWriteEnable3 = RED | GREEN | BLUE | ALPHA;
+            #endif //DRAWBUCKET_DECAL && !DECAL_COLORWRITE_ALL
+
+            VertexShader = compile vs_3_0 VS_TransformD();
+            PixelShader = compile ps_3_0 PS_DeferredTextured();
+        }
+    }
+    
+    technique deferredalphaclip_draw
+    {
+        pass p0
+        {
+            #if defined(GLUE_DECAL)
+                ZWriteEnable = true;
+            #endif //GLUE_DECAL
+
+            #if defined(DRAWBUCKET_DECAL) && !defined(DECAL_COLORWRITE_ALL)
+                #ifdef NO_DIFFUSE_WRITE
+                    ColorWriteEnable = 0;
+                #else
+                    ColorWriteEnable = RED | GREEN | BLUE;
+                #endif //NO_DIFFUSE_WRITE
+
+                #ifdef NO_NORMAL_WRITE
+                    ColorWriteEnable1 = 0;
+                #else
+                    ColorWriteEnable1 = RED | GREEN | BLUE;
+                #endif //NO_NORMAL_WRITE
+
+                #if defined(AMBIENT_DECAL)
+                    ColorWriteEnable2 = BLUE;
+                #elif defined(GLUE_DECAL)
+                    ColorWriteEnable2 = RED | GREEN | BLUE;
+                #elif defined(NORMAL_ONLY_DECAL)
+                    ColorWriteEnable2 = 0;
+                #elif !defined(NO_SPECULAR_WRITE)
+                    ColorWriteEnable2 = RED | GREEN;
+                #endif //AMBIENT_DECAL
+
+                ColorWriteEnable3 = RED | GREEN | BLUE | ALPHA;
+            #endif //DRAWBUCKET_DECAL && !DECAL_COLORWRITE_ALL
+
+            VertexShader = compile vs_3_0 VS_TransformAlphaClipD();
+            PixelShader = compile ps_3_0 PS_DeferredTexturedAlphaClip();
+        }
+    }
+    
+    technique deferred_drawskinned
+    {
+        pass p0
+        {
+            #if defined(GLUE_DECAL)
+                ZWriteEnable = true;
+            #endif //GLUE_DECAL
+
+            #if defined(DRAWBUCKET_DECAL) && !defined(DECAL_COLORWRITE_ALL)
+                #ifdef NO_DIFFUSE_WRITE
+                    ColorWriteEnable = 0;
+                #else
+                    ColorWriteEnable = RED | GREEN | BLUE;
+                #endif //NO_DIFFUSE_WRITE
+
+                #ifdef NO_NORMAL_WRITE
+                    ColorWriteEnable1 = 0;
+                #else
+                    ColorWriteEnable1 = RED | GREEN | BLUE;
+                #endif //NO_NORMAL_WRITE
+
+                #if defined(AMBIENT_DECAL)
+                    ColorWriteEnable2 = BLUE;
+                #elif defined(GLUE_DECAL)
+                    ColorWriteEnable2 = RED | GREEN | BLUE;
+                #elif defined(NORMAL_ONLY_DECAL)
+                    ColorWriteEnable2 = 0;
+                #elif !defined(NO_SPECULAR_WRITE)
+                    ColorWriteEnable2 = RED | GREEN;
+                #endif //AMBIENT_DECAL
+
+                ColorWriteEnable3 = RED | GREEN | BLUE | ALPHA;
+            #endif //DRAWBUCKET_DECAL && !DECAL_COLORWRITE_ALL
+            
+            VertexShader = compile vs_3_0 VS_TransformSkinD();
+            PixelShader = compile ps_3_0 PS_DeferredTextured();
+        }
+    }
+    
+    technique deferredalphaclip_drawskinned
+    {
+        pass p0
+        {
+            #if defined(GLUE_DECAL)
+                ZWriteEnable = true;
+            #endif //GLUE_DECAL
+            
+            #if defined(DRAWBUCKET_DECAL) && !defined(DECAL_COLORWRITE_ALL)
+                #ifdef NO_DIFFUSE_WRITE
+                    ColorWriteEnable = 0;
+                #else
+                    ColorWriteEnable = RED | GREEN | BLUE;
+                #endif //NO_DIFFUSE_WRITE
+
+                #ifdef NO_NORMAL_WRITE
+                    ColorWriteEnable1 = 0;
+                #else
+                    ColorWriteEnable1 = RED | GREEN | BLUE;
+                #endif //NO_NORMAL_WRITE
+
+                #if defined(AMBIENT_DECAL)
+                    ColorWriteEnable2 = BLUE;
+                #elif defined(GLUE_DECAL)
+                    ColorWriteEnable2 = RED | GREEN | BLUE;
+                #elif defined(NORMAL_ONLY_DECAL)
+                    ColorWriteEnable2 = 0;
+                #elif !defined(NO_SPECULAR_WRITE)
+                    ColorWriteEnable2 = RED | GREEN;
+                #endif //AMBIENT_DECAL
+
+                ColorWriteEnable3 = RED | GREEN | BLUE | ALPHA;
+            #endif //DRAWBUCKET_DECAL && !DECAL_COLORWRITE_ALL
+
+            VertexShader = compile vs_3_0 VS_TransformSkinD();
+            PixelShader = compile ps_3_0 PS_DeferredTexturedAlphaClip();
+        }
+    }
+    
+    technique wd_draw
+    {
+        pass p0
+        {
+            VertexShader = compile vs_3_0 VS_ShadowDepth();
+            PixelShader = compile ps_3_0 PS_ShadowDepth();
+        }
+    }
+    
+    technique wd_drawskinned
+    {
+        pass p0
+        {
+            VertexShader = compile vs_3_0 VS_ShadowDepthSkin();
+            PixelShader = compile ps_3_0 PS_ShadowDepth();
+        }
+    }
+    
+    technique wd_masked_draw
+    {
+        pass p0
+        {
+            VertexShader = compile vs_3_0 VS_ShadowDepth();
+            PixelShader = compile ps_3_0 PS_ShadowDepthMasked();
+        }
+    }
+    
+    technique wd_masked_drawskinned
+    {
+        pass p0
+        {
+            VertexShader = compile vs_3_0 VS_ShadowDepthSkin();
+            PixelShader = compile ps_3_0 PS_ShadowDepthMasked();
+        }
+    }
+    
+    technique paraboloid_draw
+    {
+        pass p0
+        {
+            #if defined(EMISSIVE)
+                SrcBlend = SRCALPHA;
+                #if defined(EMISSIVE_IDK)
+                    DestBlend = INVSRCALPHA;
+                #else
+                    DestBlend = ONE;
+                #endif //EMISSIVE_IDK
+            #endif //EMISSIVE
+
+            VertexShader = compile vs_3_0 VS_TransformParaboloid();
+            PixelShader = compile ps_3_0 PS_TexturedBasicParaboloid();
+        }
+    }
+    
+    technique paraboloid_drawskinned
+    {
+        pass p0
+        {
+            #if defined(EMISSIVE)
+                SrcBlend = SRCALPHA;
+                #if defined(EMISSIVE_IDK)
+                    DestBlend = INVSRCALPHA;
+                #else
+                    DestBlend = ONE;
+                #endif //EMISSIVE_IDK
+            #endif //EMISSIVE
+
+            VertexShader = compile vs_3_0 VS_TransformParaboloid();
+            PixelShader = compile ps_3_0 PS_TexturedBasicParaboloid();
+        }
+    }
+    
+    technique reflection_draw
+    {
+        pass p0
+        {
+            VertexShader = compile vs_3_0 VS_Transform();
+            PixelShader = compile ps_3_0 PS_TexturedBasic();
+        }
+    }
+    
+    technique reflection_drawskinned
+    {
+        pass p0
+        {
+            VertexShader = compile vs_3_0 VS_Transform();
+            PixelShader = compile ps_3_0 PS_TexturedBasic();
+        }
+    }
+    
+    #ifdef USE_IMPOSTOR_TECH
+        technique imposterdeferred_draw
+        {
+            pass p0
+            {
+                VertexShader = compile vs_3_0 VS_TransformD();
+                PixelShader = compile ps_3_0 PS_DeferredImposter();
+            }
+        }
+        
+        technique imposterdeferred_drawskinned
+        {
+            pass p0
+            {
+                VertexShader = compile vs_3_0 VS_TransformSkinD();
+                PixelShader = compile ps_3_0 PS_DeferredImposter();
+            }
+        }
+    #endif //USE_IMPOSTOR_TECH
+    
+    technique lightweight0_draw
+    {
+        pass p0
+        {
+            #ifdef WIRE
+                ZWriteEnable = false;
+            #endif //WIRE
+
+            VertexShader = compile vs_3_0 VS_Transform();
+            PixelShader = compile ps_3_0 PS_TexturedZero();
+        }
+    }
+    
+    technique lightweight0_drawskinned
+    {
+        pass p0
+        {
+            VertexShader = compile vs_3_0 VS_TransformSkin();
+            PixelShader = compile ps_3_0 PS_TexturedZero();
+        }
+    }
+    
+    technique lightweight4_draw
+    {
+        pass p0
+        {
+            #ifdef WIRE
+                ZWriteEnable = false;
+            #endif //WIRE
+
+            VertexShader = compile vs_3_0 VS_Transform();
+            PixelShader = compile ps_3_0 PS_TexturedFour();
+        }
+    }
+    
+    technique lightweight4_drawskinned
+    {
+        pass p0
+        {
+            VertexShader = compile vs_3_0 VS_TransformSkin();
+            PixelShader = compile ps_3_0 PS_TexturedFour();
+        }
+    }
+    
+    technique draw_inst
+    {
+        pass p0
+        {
+            #ifdef WIRE
+                ZWriteEnable = false;
+            #endif //WIRE
+
+            CullMode = CW;
+    
+            VertexShader = compile vs_3_0 VS_TransformInst();
+            PixelShader = compile ps_3_0 PS_TexturedEightInst();
+        }
+    }
+    
+    technique unlit_draw_inst
+    {
+        pass p0
+        {
+            #ifdef WIRE
+                ZWriteEnable = false;
+            #endif //WIRE
+            
+            SrcBlend = SRCALPHA;
+            DestBlend = INVSRCALPHA;
+            CullMode = CW;
+    
+            VertexShader = compile vs_3_0 VS_TransformUnlitInst();
+            PixelShader = compile ps_3_0 PS_TexturedUnlit();
+        }
+    }
+#endif //!NO_GENERATED_TECHNIQUES

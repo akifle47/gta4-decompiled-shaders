@@ -84,11 +84,11 @@
     float emissiveMultiplier : EmissiveMultiplier<string UIName = "Emissive HDR Multiplier"; float UIMin = 0.0; float UIMax = 255.0; float UIStep = 0.100000;> = 1.0;
 #endif
 
-#ifdef AMBIENT_DECAL_MASK
+#ifdef AMBIENT_DECAL
     float3 ambientDecalMask : AmbientDecalMask<string UIWidget = "slider"; float UIMin = 0.0; float UIMax = 1.0; float UIStep = 0.00999999978; string UIName = "ambient map mask color";> = float3(1.0, 0.0, 0.0);
 #endif
 
-#ifdef DIRT_DECAL_MASK
+#ifdef DIRT_DECAL
     float3 dirtDecalMask : DirtDecalMask<string UIWidget = "slider"; float UIMin = 0.0; float UIMax = 1.0; float UIStep = 0.00999999978; string UIName = "dirt map mask color";> = float3(1.0, 0.0, 0.0);
 #endif
 

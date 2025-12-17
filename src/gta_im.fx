@@ -1,4 +1,5 @@
 #define DAY_NIGHT_EFFECTS
+#define NO_GENERATED_TECHNIQUES
 
 #include "common_globals.fxh"
 

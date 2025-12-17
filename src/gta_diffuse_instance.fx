@@ -1,6 +1,7 @@
 #define NO_SKINNING
 #define DIFFUSE_TEXTURE
 #define ALPHA_SHADOW
+#define NO_GENERATED_TECHNIQUES
 
 #include "common.fxh"
 #include "megashader.fxh"

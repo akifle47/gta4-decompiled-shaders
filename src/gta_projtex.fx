@@ -6,6 +6,8 @@
 #define PARALLAX
 #define ALPHA_SHADOW
 #define DIFFUSE_ALPHA
+//TODO: temporary until projtex functions are translated
+#define NO_GENERATED_TECHNIQUES
 
 #include "common.fxh"
 #include "megashader.fxh"

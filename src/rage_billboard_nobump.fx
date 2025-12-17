@@ -1,6 +1,8 @@
 #define DIFFUSE_TEXTURE
+#define NO_GENERATED_TECHNIQUES
 
 #include "common.fxh"
+//this shouldnt even be in here
 #include "megashader.fxh"
 
 texture imposterTexture;

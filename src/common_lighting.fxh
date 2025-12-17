@@ -140,9 +140,9 @@ float3 ComputeDepthEffects(in float noSkyMask, in float3 color, in float linearD
         #endif //IS_VEHICLE_SHADER
         
         float3 ambientLight = gLightAmbient1.xyz * saturate(normal.z * -0.5 + 0.5) + gLightAmbient0.xyz;
-        #ifndef DIRT_DECAL_MASK
+        #ifndef DIRT_DECAL
             ambientLight *= surfProperties.AmbientOcclusion;
-        #endif //!DIRT_DECAL_MASK
+        #endif //!DIRT_DECAL
 
         float nDotL = dot(-gDirectionalLight.xyz, normal);
         nDotL = saturate((nDotL - 0.25) * 1.33333337);
