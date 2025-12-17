@@ -4,7 +4,6 @@
 #define PAD_LIGHT_CONSTANTS
 
 #include "common.fxh"
-#include "common_functions.fxh"
 
 shared float4x4 gCameraMatrix : CameraMatrix;
 shared float4 gShadowmap_ShadowColor0 : Shadowmap_ShadowColor0 = float4(1.0, 1.0, 1.0, 0.723000);
@@ -184,9 +183,6 @@ asm
     // approximately 31 instruction slots used
 };
 
-//this outputs a color and 3 texture coordinates but all of the pixel shaders that use its output only use the texture coordinate so i replaced all
-//the techniques that use it with the megashader VS_Blit for less code duplication and potentially 1 less microsecond per frame
-/*
 VertexShader VS_Blit
 <
 > =
@@ -213,7 +209,6 @@ asm
     
     // approximately 5 instruction slots used
 };
-*/
 
 PixelShader PixelShader0 = NULL;
 
@@ -301,7 +296,7 @@ technique CopyRT
         AlphaBlendEnable = false;
         AlphaTestEnable = false;
 
-        VertexShader = compile vs_3_0 VS_Blit();
+        VertexShader = VS_Blit;
         PixelShader = PS_CopyDepth;
     }
 }

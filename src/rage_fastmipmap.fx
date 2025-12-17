@@ -4,7 +4,6 @@
 #define NO_SHADOW_CASTING
 
 #include "common.fxh"
-#include "common_functions.fxh"
 
 shared float4x4 gCameraMatrix : CameraMatrix;
 shared float4 gShadowmap_ShadowColor0 : Shadowmap_ShadowColor0 = float4(1.0, 1.0, 1.0, 0.723000);
@@ -107,9 +106,6 @@ float4 TexelSize : TexelSize;
 float AlphaRange : AlphaRange = 3.03571439;
 float MipMapLod : MipMapLod;
 
-//this outputs a color and 3 texture coordinates but all of the pixel shaders that use its output only use the texture coordinate so i replaced all
-//the techniques that use it with the megashader VS_Blit for less code duplication and potentially 1 less microsecond per frame
-/*
 VertexShader VS_Blit
 <
 > =
@@ -136,10 +132,10 @@ asm
     
     // approximately 5 instruction slots used
 };
-*/
+
 PixelShader PixelShader0 = NULL;
 
-//???
+
 PixelShader PS_BlitBlur4Outputs
 <
     string BaseSampler = "parameter register(0)";
@@ -372,7 +368,7 @@ technique draw
         AlphaBlendEnable = false;
         AlphaTestEnable = false;
 
-        VertexShader = compile vs_3_0 VS_Blit();
+        VertexShader = VS_Blit;
         PixelShader = PS_BlitBlur4Outputs;
     }
 }
@@ -387,7 +383,7 @@ technique drawBlit
         AlphaBlendEnable = false;
         AlphaTestEnable = false;
 
-        VertexShader = compile vs_3_0 VS_Blit();
+        VertexShader = VS_Blit;
         PixelShader = PS_BlitBlur4Outputs;
     }
 }
@@ -402,7 +398,7 @@ technique drawBlur
         AlphaBlendEnable = false;
         AlphaTestEnable = false;
 
-        VertexShader = compile vs_3_0 VS_Blit();
+        VertexShader = VS_Blit;
         PixelShader = PS_BlitBlur;
     }
 }
@@ -417,7 +413,7 @@ technique drawBlitX2
         AlphaBlendEnable = false;
         AlphaTestEnable = false;
 
-        VertexShader = compile vs_3_0 VS_Blit();
+        VertexShader = VS_Blit;
         PixelShader = PS_Blit;
     }
 }
@@ -432,7 +428,7 @@ technique drawDepth
         AlphaBlendEnable = false;
         AlphaTestEnable = false;
 
-        VertexShader = compile vs_3_0 VS_Blit();
+        VertexShader = VS_Blit;
         PixelShader = PS_BlitDepth;
     }
 }
@@ -447,7 +443,7 @@ technique drawCutOut
         AlphaBlendEnable = false;
         AlphaTestEnable = false;
 
-        VertexShader = compile vs_3_0 VS_Blit();
+        VertexShader = VS_Blit;
         PixelShader = PS_BlitCutout;
     }
 }

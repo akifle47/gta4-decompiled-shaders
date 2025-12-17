@@ -3,9 +3,10 @@
 
 #include "megashader_todo.fxh"
 #include "common_functions.fxh"
-#include "common_shadow.fxh"
+#ifndef NO_SHADOW_CASTING
+    #include "common_shadow.fxh"
+#endif //!NO_SHADOW_CASTING
 #include "common_lighting.fxh"
-#include "shader_inputs.fxh"
 
 #ifndef NO_LIGHTING
     float2 ComputeDayNightEffects(in float2 vertexColor)
@@ -218,7 +219,6 @@ struct VS_OutputDeferred
 #endif //PARALLAX
 };
 
-//ignoring macros this produces the same result as VS_Transform just with some stuff moved around to generate the same(ish) assembly
 VS_OutputDeferred VS_TransformD(VS_Input IN)
 {
     VS_OutputDeferred OUT;
@@ -291,6 +291,15 @@ VS_OutputDeferred VS_TransformAlphaClipD(VS_Input IN)
     return VS_TransformD(IN);
 }
 
+
+struct PS_OutputDeferred
+{
+    float4 Diffuse       : COLOR0;
+    float4 Normal        : COLOR1;
+    //intensity and power/glossiness
+    float4 SpecularAndAO : COLOR2;
+    float4 Stencil       : COLOR3;
+};
 
 PS_OutputDeferred DeferredTextured(bool dither, VS_OutputDeferred IN, float2 screenCoords)
 {
@@ -443,7 +452,6 @@ PS_OutputDeferred PS_DeferredTextured(VS_OutputDeferred IN, float2 screenCoords 
     #endif //NO_DEFERRED_ALPHA_DITHER
 }
 
-//just PS_DeferredTextured but with dithering
 PS_OutputDeferred PS_DeferredTexturedAlphaClip(VS_OutputDeferred IN, float2 screenCoords : VPOS)
 {
     return DeferredTextured(true, IN, screenCoords);
@@ -490,6 +498,19 @@ VS_OutputUnlit VS_TransformUnlit(VS_InputUnlit IN)
 
 
 #ifndef NO_SKINNING
+    struct VS_InputSkin
+    {
+        float3 Position     : POSITION;
+        float4 BlendWeights : BLENDWEIGHT;
+        float4 BlendIndices : BLENDINDICES;
+        float2 TexCoord     : TEXCOORD0;
+        float3 Normal       : NORMAL;
+    #if defined(NORMAL_MAP) || defined(PARALLAX)
+        float4 Tangent      : TANGENT; 
+    #endif //NORMAL_MAP || PARALLAX
+        float4 Color        : COLOR0;
+    };
+
     VS_Output VS_TransformSkin(VS_InputSkin IN)
     {
         VS_Output OUT;

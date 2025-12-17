@@ -2,9 +2,10 @@
 
 #include "megashader_todo.fxh"
 #include "common_functions.fxh"
-#include "common_shadow.fxh"
+#ifndef NO_SHADOW_CASTING
+    #include "common_shadow.fxh"
+#endif //!NO_SHADOW_CASTING
 #include "common_lighting.fxh"
-#include "shader_inputs.fxh"
 
 #ifdef VEHICLE_DAMAGE
     float3 DecodeDamageSample(in float dmgSample)
@@ -285,6 +286,7 @@ VS_OutputVehicleShadowDepth VS_VehicleShadowDepth(VS_InputVehicle IN)
     }
 #endif //NO_SHADOW_CASTING_VEHICLE
 
+
 struct VS_OutputVehicleUnlit
 {
     float4 Position      : POSITION;
@@ -365,6 +367,7 @@ VS_OutputVehicleUnlit VS_VehicleTransformSkinUnlit(VS_InputSkinVehicle IN)
 
     return OUT;
 }
+
 
 struct VS_OutputVehicle
 {
@@ -496,6 +499,7 @@ VS_OutputVehicle VS_VehicleTransformSkin(VS_InputSkinVehicle IN)
 
     return OUT;
 }
+
 
 #if defined(ENVIRONMENT_MAP) || defined(SPECULAR2)
     #define COMPUTE_VIEW_DIR
@@ -668,6 +672,16 @@ VS_OutputVehicleDeferred VS_VehicleTransformSkinD(VS_InputSkinVehicle IN)
     return OUT;
 }
 
+
+struct PS_OutputDeferred
+{
+    float4 Diffuse       : COLOR0;
+    float4 Normal        : COLOR1;
+    //intensity and power/glossiness
+    float4 SpecularAndAO : COLOR2;
+    float4 Stencil       : COLOR3;
+};
+
 PS_OutputDeferred PS_DeferredVehicleTextured(VS_OutputVehicleDeferred IN)
 {
     PS_OutputDeferred OUT;
@@ -808,6 +822,7 @@ PS_OutputDeferred PS_DeferredVehicleTextured(VS_OutputVehicleDeferred IN)
     return OUT;
 }
 
+
 float4 PS_VehicleTexturedUnlit(VS_OutputVehicle IN) : COLOR
 {
     #ifdef DIFFUSE_TEXTURE2
@@ -841,6 +856,7 @@ float4 PS_VehicleTexturedUnlit(VS_OutputVehicle IN) : COLOR
 
     return diffuse;
 }
+
 
 float4 TexturedLit(in int numLights, in VS_OutputVehicle IN)
 {
