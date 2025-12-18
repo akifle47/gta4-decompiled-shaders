@@ -552,29 +552,31 @@ VS_OutputVehicleDeferred VS_VehicleTransformD(VS_InputVehicle IN)
     #ifdef TIRE_DEFORMATION
         if(tyreDeformSwitchOn)
         {
-            float2 v0 = position.yz * position.yz;
+            const float rimRadius = tyreDeformParams2.x;
+            const float groundZ = tyreDeformParams2.y;
+            const float deformScalar = tyreDeformParams2.z;
+            const float tireScalar = tyreDeformParams2.w;
 
-            float3 v2 = position * tyreDeformParams2.w;
-            float v3 = (v0.x + v0.y) * tyreDeformParams2.w;
-            v3 = v3 > pow(tyreDeformParams2.x * 1.1, 2);
-            float v5 = tyreDeformParams2.y + 0.03;
-            float v6 = posWorld.z < v5;
-            float v7 = tyreDeformParams2.y - posWorld.z;
-            float v9 = v7 - (v7 * (v7 < 0));
-            v5 -= posWorld.z;
-            float v10 = v5 * tyreDeformParams2.z;
-            v5 = 1.0 - (v5 * tyreDeformParams2.z);
-            v5 = (v10 > 1) * v5 + v10;
+            float tireDist = dot(position.yz, position.yz);
+
+            float3 scaledPos = position * tireScalar;
+            float isRubber = (tireDist * tireScalar) > pow(rimRadius * 1.1, 2);
+
+            float isUnderGround = posWorld.z < groundZ + 0.03;
+            float flatFactor = max(groundZ - posWorld.z, 0.0);
+            float groundDist = ((groundZ + 0.03) - posWorld.z) * deformScalar;
+            float bulgeFactor = 1.0 - groundDist;
+            bulgeFactor = (groundDist > 1) * bulgeFactor + groundDist;
             
-            float t = (tyreDeformParams2.x * tyreDeformParams2.x) < (v0.x + v0.y);
             float3 targetPos;
-            targetPos.x = v2.x - (tyreDeformParams.w * v5);
-            targetPos.x += (tyreDeformParams.x * position.x * v5);
-            targetPos.yz = tyreDeformParams.yz * v9 + v2.yz;
+            targetPos.x = scaledPos.x - (tyreDeformParams.w * bulgeFactor);
+            targetPos.x += (tyreDeformParams.x * position.x * bulgeFactor);
+            targetPos.yz = tyreDeformParams.yz * flatFactor + scaledPos.yz;
 
-            targetPos -= (position * tyreDeformParams2.w);
-            targetPos *= v6;
-            targetPos = v2 + (targetPos * v3);
+            targetPos -= (position * tireScalar);
+            targetPos *= isUnderGround;
+            targetPos = scaledPos + (targetPos * isRubber);
+            float t = (rimRadius * rimRadius) < tireDist;
             position = lerp(position, targetPos, t);
         }
     #endif //TIRE_DEFORMATION
