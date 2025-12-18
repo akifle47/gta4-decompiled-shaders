@@ -219,10 +219,10 @@ float3 ComputeDepthEffects(in float noSkyMask, in float3 color, in float linearD
             float2 parabReflCoords = (R.xy / denom) + 0.5;
 
             float3 parabRefl = tex2Dlod(EnvironmentSampler, float4(1 - parabReflCoords, 0, 0)).xyz;
-            parabRefl *= parabReflVerticalFade * reflectivePowerED * surfProperties.AmbientOcclusion * surfProperties.SpecularIntensity * rimLighting * 10;
+            parabRefl *= parabReflVerticalFade * reflectivePowerED * surfProperties.AmbientOcclusion * surfProperties.SpecularIntensity * rimLighting;
             #ifdef IS_VEHICLE_GLASS
                 specularLight *= glassSpecFactor * 4 * surfProperties.SpecularIntensity;
-                parabRefl *= glassSpecFactor * (globalScalars.w * 2) * 1.8 * surfProperties.SpecularIntensity;
+                parabRefl *= glassSpecFactor * (globalScalars.w * 2) * 1.8 * surfProperties.SpecularIntensity * 10;
             #else
                 parabRefl *= 18;
             #endif //IS_VEHICLE_GLASS

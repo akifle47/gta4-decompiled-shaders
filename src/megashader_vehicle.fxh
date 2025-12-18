@@ -905,7 +905,7 @@ float4 TexturedLit(in int numLights, in VS_OutputVehicle IN)
         specPower *= 50.0;
     #elif defined(ENVIRONMENT_MAP)
         specPower *= 190;
-        specIntensity *= min(specIntensity * 0.225, 1.0);
+        specIntensity = min(specIntensity * 0.225, 1.0);
     #elif defined(POWER_FACTOR)
         specPower *= 50.0;
     #endif //VEHICLE_INTERIOR
@@ -956,14 +956,14 @@ float4 TexturedLit(in int numLights, in VS_OutputVehicle IN)
     surfaceProperties.SpecularIntensity = specIntensity;
     surfaceProperties.SpecularPower = specPower;
     surfaceProperties.AmbientOcclusion = ambientOcclusion;
-    float4 lighting = float4(ComputeLighting(0, true, IN.PositionWorld.xyz, -fragToViewDir, glassSpecFactor, surfaceProperties), alpha);
+    float4 lighting = float4(ComputeLighting(numLights, true, IN.PositionWorld.xyz, -fragToViewDir, glassSpecFactor, surfaceProperties), alpha);
     #ifdef EMISSIVE
         lighting.xyz += emissiveColor * emissiveMultiplier;
     #elif defined(DISK_BRAKE_GLOW)
         lighting.xyz += DiskBrakeGlow * float3(98, 25, 0);
     #endif //EMISSIVE
     lighting.xyz = ComputeDepthEffects(1.0, lighting.xyz, IN.NormalWorldAndDepth.w);
-        
+
     return lighting;
 }
 
