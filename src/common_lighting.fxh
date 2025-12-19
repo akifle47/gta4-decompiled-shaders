@@ -128,6 +128,8 @@ float3 ComputeDepthEffects(in float noSkyMask, in float3 color, in float linearD
                 specularLight *= directionalColor * shadow;
                 #ifdef IS_DEFERRED_LIGHTING_SHADER
                     specularLight *= (gDirectionalLight.w * 2);
+                #elif defined(IS_VEHICLE_GLASS)
+                    specularLight *= gDirectionalLight.w * 4;
                 #else
                     specularLight *= gDirectionalLight.w;
                 #endif //IS_DEFERRED_LIGHTING_SHADER
@@ -221,7 +223,7 @@ float3 ComputeDepthEffects(in float noSkyMask, in float3 color, in float linearD
             float3 parabRefl = tex2Dlod(EnvironmentSampler, float4(1 - parabReflCoords, 0, 0)).xyz;
             parabRefl *= parabReflVerticalFade * reflectivePowerED * surfProperties.AmbientOcclusion * surfProperties.SpecularIntensity * rimLighting;
             #ifdef IS_VEHICLE_GLASS
-                specularLight *= glassSpecFactor * 4 * surfProperties.SpecularIntensity;
+                specularLight *= glassSpecFactor * surfProperties.SpecularIntensity;
                 parabRefl *= glassSpecFactor * (globalScalars.w * 2) * 1.8 * surfProperties.SpecularIntensity * 10;
             #else
                 parabRefl *= 18;
