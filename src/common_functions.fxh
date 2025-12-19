@@ -15,8 +15,8 @@ struct VS_OutputBlit
 VS_OutputBlit VS_Blit(VS_InputBlit IN)
 {
     VS_OutputBlit OUT;
-    OUT.Position = IN.Position.xyzx * float4(1, 1, 1, 0) + float4(0, 0, 0, 1);
-    OUT.TexCoord = IN.TexCoord.xyxx * float4(1, 1, 0, 0);
+    OUT.Position = float4(IN.Position.xyz, 1);
+    OUT.TexCoord = float4(IN.TexCoord.xy, 0, 0);
     return OUT;
 }
 
@@ -27,7 +27,7 @@ struct VS_BlitPositionOnlyInput
 
 float4 VS_BlitPositionOnly(VS_BlitPositionOnlyInput IN) : POSITION
 {
-    return IN.Position.xyzx * float4(1, 1, 1, 0) + float4(0, 0, 0, 1);
+    return float4(IN.Position.xyz, 1);
 }
 
 #ifndef NO_LIGHTING

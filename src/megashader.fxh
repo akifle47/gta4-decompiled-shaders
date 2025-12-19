@@ -420,9 +420,9 @@ PS_OutputDeferred DeferredTextured(bool dither, VS_OutputDeferred IN, float2 scr
         #if defined(NO_SPECULAR_WRITE)
             OUT.SpecularAndAO.xyz = float3(0, 0, 0);
         #elif defined(EMISSIVE)
-            OUT.SpecularAndAO.xyz = globalScalars.z * float3(0, 0, 1) + float3(0, 0.25, 0);
+            OUT.SpecularAndAO.xyz = float3(0, 0.25, globalScalars.z);
         #else
-            OUT.SpecularAndAO.xyz = IN.Color.x * float3(0, 0, 1) + float3(0, 0.25, 0);
+            OUT.SpecularAndAO.xyz = float3(0, 0.25, IN.Color.x);
         #endif //NO_SPECULAR_WRITE
     #endif //SPECULAR
 
@@ -438,7 +438,7 @@ PS_OutputDeferred DeferredTextured(bool dither, VS_OutputDeferred IN, float2 scr
         OUT.SpecularAndAO.w = alpha;
     #endif //AMBIENT_DECAL
 
-    OUT.Stencil = float4(1, 0, 0, 0) * stencil.x;
+    OUT.Stencil = float4(stencil.x, 0, 0, 0);
     
     return OUT;
 }
