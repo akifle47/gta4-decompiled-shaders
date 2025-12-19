@@ -31,6 +31,79 @@ float4 VS_BlitPositionOnly(VS_BlitPositionOnlyInput IN) : POSITION
 }
 
 #ifndef NO_LIGHTING
+    float2 ComputeDayNightEffects(in float2 vertexColor)
+    {
+        float2 color = gDayNightEffects.xy * vertexColor;
+        color.x = color.y + color.x;
+        color.x = color.x * globalScalars.z  - 1;
+        color.x = color.x * globalScalars2.z + 1;
+        return color.xx;
+    }
+#endif //NO_LIGHTING
+
+#ifdef ANIMATED
+    float2 ComputeUvAnimation(in float2 texCoord)
+    {
+        float3 uv = float3(texCoord, 1.0);
+        return float2(dot(globalAnimUV0, uv), dot(globalAnimUV1, uv));
+    }
+#endif //ANIMATED
+
+#ifdef DEPTH_SHIFT
+    float3 ComputeDepthShift(inout float4 posClip)
+    {
+        float3 posClipOut = posClip.xyz;
+        posClipOut.xy = globalScreenSize.zw * (posClip.w / 2) + posClip.xy; //?
+        #ifdef DEPTH_SHIFT_POSITIVE
+            posClipOut.z = posClip.z + zShift;
+        #else
+            posClipOut.z = posClip.z - zShift;
+        #endif //DEPTH_SHIFT_POSITIVE
+
+        return posClipOut;
+    }
+#endif //DEPTH_SHIFT
+
+#ifdef PARALLAX
+    void ComputeParallax(in float3 fragToViewDirTangent, in float2 texCoordIn, out float2 texCoordOut, out float4 normalMapOut)
+    {
+        fragToViewDirTangent.xy = normalize(fragToViewDirTangent + 0.00001).xy;
+
+        #if defined(PARALLAX_STEEP)
+            const int numSamples = 8;
+            const float stepSize = 1.0 / numSamples;
+            
+            fragToViewDirTangent.xy = -fragToViewDirTangent.xy * parallaxScaleBias;
+            texCoordOut = texCoordIn;
+            normalMapOut = tex2D(BumpSampler, texCoordOut);
+            float height = -normalMapOut.w;
+            float layerHeight = -1.0;
+
+            for(int i = 0; i < numSamples; i++)
+            {
+                float2 sampleTexCoord = texCoordOut + (fragToViewDirTangent.xy * stepSize);
+                float4 sampleNormalMap = tex2D(BumpSampler, sampleTexCoord);
+
+                if(layerHeight <= height)
+                {
+                    texCoordOut = sampleTexCoord;
+                    normalMapOut = sampleNormalMap;
+                    height = -normalMapOut.w;
+                    layerHeight += stepSize;
+                }
+            }
+        #else
+            float height = (tex2D(BumpSampler, texCoordIn).w * parallaxScaleBias) - (parallaxScaleBias / 2.0);
+            #ifndef DEPTH_SHIFT_SCALE
+                height = saturate(height);
+            #endif //DEPTH_SHIFT_SCALE
+            texCoordOut = saturate(fragToViewDirTangent.xy * height + texCoordIn);
+            normalMapOut = tex2D(BumpSampler, texCoordOut);
+        #endif //PARALLAX_STEEP
+    }
+#endif //PARALLAX
+
+#ifndef NO_LIGHTING
     void AlphaClip(in float alpha, in float2 screenCoords)
     {
         float y = saturate(alpha) * 3.996;
