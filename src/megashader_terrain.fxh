@@ -1,4 +1,12 @@
-#include "common.fxh" //todo?
+#ifdef NO_SHADOW_CASTING
+    float ComputeDirectionalShadow(in float3 posWorld)
+    {
+        return 1;
+    }
+#endif //NO_SHADOW_CASTING
+
+#include "common.fxh"
+#include "common_lighting.fxh"
 #include "common_functions.fxh"
 
 texture DiffuseTexture_layer0;
@@ -146,6 +154,53 @@ VS_OutputTerrain VS_TransformPass1(VS_InputTerrain IN)
             OUT.ColorAndBlendWeight = float4(materialDiffuse, IN.BlendWeights2.y);
 
             return OUT;
+        }
+    #endif //TERRAIN_4LYR
+#endif //TERRAIN_3LYR || TERRAIN_4LYR
+
+
+float4 TexturedPass(in float4 diffuse, VS_OutputTerrain IN)
+{
+    float alpha = globalScalars.x * IN.ColorAndBlendWeight.w * diffuse.w;
+
+    SurfaceProperties surfaceProperties;
+    surfaceProperties.Diffuse = diffuse.xyz;
+    surfaceProperties.Normal = IN.NormalWorld;
+    surfaceProperties.SpecularIntensity = 0;
+    surfaceProperties.SpecularPower = 1;
+    float3 viewToFragDir = float3(0, 0, 0);
+    surfaceProperties.AmbientOcclusion = 1;
+
+    float4 lighting = float4(ComputeLighting(8, false, IN.PositionWorld.xyz, viewToFragDir, surfaceProperties), alpha);
+    lighting.xyz = ComputeDepthEffects(1.0, lighting.xyz, IN.TexCoordAndDepth.w);
+
+    return lighting;
+}
+
+float4 PS_TexturedPass0(VS_OutputTerrain IN) : COLOR
+{
+    float4 diffuse = tex2D(TextureSampler_layer0, IN.TexCoordAndDepth.xy);
+    return TexturedPass(diffuse, IN);
+}
+
+float4 PS_TexturedPass1(VS_OutputTerrain IN) : COLOR
+{
+    float4 diffuse = tex2D(TextureSampler_layer1, IN.TexCoordAndDepth.xy);
+    return TexturedPass(diffuse, IN);
+}
+
+#if defined(TERRAIN_3LYR) || defined(TERRAIN_4LYR)
+    float4 PS_TexturedPass2(VS_OutputTerrain IN) : COLOR
+    {
+        float4 diffuse = tex2D(TextureSampler_layer2, IN.TexCoordAndDepth.xy);
+        return TexturedPass(diffuse, IN);
+    }
+
+    #if defined(TERRAIN_4LYR)
+        float4 PS_TexturedPass3(VS_OutputTerrain IN) : COLOR
+        {
+            float4 diffuse = tex2D(TextureSampler_layer3, IN.TexCoordAndDepth.xy);
+            return TexturedPass(diffuse, IN);
         }
     #endif //TERRAIN_4LYR
 #endif //TERRAIN_3LYR || TERRAIN_4LYR
