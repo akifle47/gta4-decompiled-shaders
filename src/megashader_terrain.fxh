@@ -289,3 +289,52 @@ PS_OutputTerrainDeferred PS_TexturedDeferredC(VS_OutputTerrainDeferred IN)
 
     return OUT;
 }
+
+
+
+technique draw
+{
+    pass p0
+    {
+        AlphaBlendEnable = true;
+
+        VertexShader = compile vs_3_0 VS_TransformPass0();
+        PixelShader = compile ps_3_0 PS_TexturedPass0();
+    }
+    pass p1
+    {
+        AlphaBlendEnable = true;
+
+        VertexShader = compile vs_3_0 VS_TransformPass1();
+        PixelShader = compile ps_3_0 PS_TexturedPass1();
+    }
+    #if defined(TERRAIN_3LYR) || defined(TERRAIN_4LYR)
+        pass p2
+        {
+            AlphaBlendEnable = true;
+
+            VertexShader = compile vs_3_0 VS_TransformPass2();
+            PixelShader = compile ps_3_0 PS_TexturedPass2();
+        }
+        #if defined(TERRAIN_4LYR)
+            pass p3
+            {
+                AlphaBlendEnable = true;
+
+                VertexShader = compile vs_3_0 VS_TransformPass3();
+                PixelShader = compile ps_3_0 PS_TexturedPass3();
+            }        
+        #endif //TERRAIN_4LYR
+    #endif //TERRAIN_3LYR || TERRAIN_4LYR
+}
+
+technique deferred_draw
+{
+    pass p0
+    {
+        StencilRef = 4;
+
+        VertexShader = compile vs_3_0 VS_TransformDeferredC();
+        PixelShader = compile ps_3_0 PS_TexturedDeferredC();
+    }
+}
