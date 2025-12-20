@@ -80,6 +80,77 @@ struct VS_InputTerrain
     float3 Normal             : NORMAL;
 };
 
+
+struct VS_OutputTerrain
+{
+    float4 Position            : POSITION;
+    float4 TexCoordAndDepth    : TEXCOORD0;
+    float4 ColorAndBlendWeight : COLOR;
+    float3 PositionWorld       : TEXCOORD2;
+    float3 NormalWorld         : TEXCOORD3;
+};
+
+VS_OutputTerrain VS_TransformPass0(VS_InputTerrain IN)
+{
+    VS_OutputTerrain OUT;
+
+    OUT.Position = mul(float4(IN.Position, 1.0), gWorldViewProj);
+    OUT.PositionWorld = mul(float4(IN.Position, 1.0), gWorld).xyz;
+    OUT.NormalWorld = normalize(mul(IN.Normal, (float3x3)gWorld) + 0.000001).xyz;
+
+    OUT.TexCoordAndDepth = float4(IN.Layer0TexCoord, 0, OUT.Position.w);
+    OUT.ColorAndBlendWeight = float4(materialDiffuse, IN.BlendWeights1.x);
+
+    return OUT;
+}
+
+VS_OutputTerrain VS_TransformPass1(VS_InputTerrain IN)
+{
+    VS_OutputTerrain OUT;
+
+    OUT.Position = mul(float4(IN.Position, 1.0), gWorldViewProj);
+    OUT.PositionWorld = mul(float4(IN.Position, 1.0), gWorld).xyz;
+    OUT.NormalWorld = normalize(mul(IN.Normal, (float3x3)gWorld) + 0.000001).xyz;
+
+    OUT.TexCoordAndDepth = float4(IN.Layer1TexCoord, 0, OUT.Position.w);
+    OUT.ColorAndBlendWeight = float4(materialDiffuse, IN.BlendWeights1.y);
+
+    return OUT;
+}
+
+#if defined(TERRAIN_3LYR) || defined(TERRAIN_4LYR)
+    VS_OutputTerrain VS_TransformPass2(VS_InputTerrain IN)
+    {
+        VS_OutputTerrain OUT;
+
+        OUT.Position = mul(float4(IN.Position, 1.0), gWorldViewProj);
+        OUT.PositionWorld = mul(float4(IN.Position, 1.0), gWorld).xyz;
+        OUT.NormalWorld = normalize(mul(IN.Normal, (float3x3)gWorld) + 0.000001).xyz;
+
+        OUT.TexCoordAndDepth = float4(IN.Layer2TexCoord, 0, OUT.Position.w);
+        OUT.ColorAndBlendWeight = float4(materialDiffuse, IN.BlendWeights2.x);
+
+        return OUT;
+    }
+
+    #if defined(TERRAIN_4LYR)
+        VS_OutputTerrain VS_TransformPass3(VS_InputTerrain IN)
+        {
+            VS_OutputTerrain OUT;
+
+            OUT.Position = mul(float4(IN.Position, 1.0), gWorldViewProj);
+            OUT.PositionWorld = mul(float4(IN.Position, 1.0), gWorld).xyz;
+            OUT.NormalWorld = normalize(mul(IN.Normal, (float3x3)gWorld) + 0.000001).xyz;
+
+            OUT.TexCoordAndDepth = float4(IN.Layer3TexCoord, 0, OUT.Position.w);
+            OUT.ColorAndBlendWeight = float4(materialDiffuse, IN.BlendWeights2.y);
+
+            return OUT;
+        }
+    #endif //TERRAIN_4LYR
+#endif //TERRAIN_3LYR || TERRAIN_4LYR
+
+
 struct VS_OutputTerrainDeferred
 {
     float4 Position           : POSITION;
