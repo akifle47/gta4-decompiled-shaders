@@ -124,3 +124,42 @@ VS_OutputTerrainDeferred VS_TransformDeferredC(VS_InputTerrain IN)
 
     return OUT;
 }
+
+struct PS_OutputTerrainDeferred
+{
+    float4 Diffuse       : COLOR0;
+    float4 Normal        : COLOR1;
+    //intensity and power/glossiness
+    float4 SpecularAndAO : COLOR2;
+    float4 Stencil       : COLOR3;
+};
+
+PS_OutputTerrainDeferred PS_TexturedDeferredC(VS_OutputTerrainDeferred IN)
+{
+    PS_OutputTerrainDeferred OUT;
+
+    float3 diffuse = tex2D(TextureSampler_layer0, IN.Layer0TexCoord).xyz;
+    float4 diffuse1 = tex2D(TextureSampler_layer1, IN.Layer1TexCoord);
+
+    diffuse = lerp(diffuse, diffuse1.xyz, diffuse1.w * IN.BlendWeights.y);
+    #if defined(TERRAIN_3LYR) || defined(TERRAIN_4LYR)
+        float4 diffuse2 = tex2D(TextureSampler_layer2, IN.Layer2TexCoord);
+        diffuse = lerp(diffuse, diffuse2.xyz, diffuse2.w * IN.BlendWeights.z);
+        #if defined(TERRAIN_4LYR)
+            float4 diffuse3 = tex2D(TextureSampler_layer3, IN.Layer3TexCoord);
+            diffuse = lerp(diffuse, diffuse3.xyz, diffuse3.w * IN.BlendWeights.w);
+        #endif //TERRAIN_4LYR
+    #endif //TERRAIN_3LYR || TERRAIN_4LYR
+
+    OUT.Diffuse.xyz = diffuse * IN.ColorAndAO.xyz;
+    OUT.Diffuse.w = globalScalars.x;
+    
+    OUT.Normal.xyz = IN.NormalWorld * 0.5 + 0.5;
+    OUT.Normal.w = globalScalars.x;
+    
+    OUT.SpecularAndAO.xyz = float3(0, 0.25, IN.ColorAndAO.w);
+    OUT.SpecularAndAO.w = globalScalars.x;
+    OUT.Stencil = float4(stencil.x, 0, 0, 0);
+
+    return OUT;
+}
