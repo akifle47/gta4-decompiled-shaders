@@ -150,13 +150,24 @@ float ComputeDirectionalShadow(in float3 posWorld)
         VS_ShadowDepthOutput VS_ShadowDepthSkin(VS_ShadowDepthSkinInput IN)
         {
             VS_ShadowDepthOutput OUT;
+
+            float3 position = IN.Position;
+            float3 normal = float3(0, 0, 0);
+
+            #ifdef VEHICLE_DAMAGE
+                ComputeVehicleDamage(position, normal);
+            #endif //VEHICLE_DAMAGE
+            
             float4x3 skinMtx = ComputeSkinMatrix(IN.BlendIndices, IN.BlendWeights);
-            float3 posWorld = mul(float4(IN.Position, 1.0), skinMtx).xyz + gWorld[3].xyz;
+            float3 posWorld = mul(float4(position, 1.0), skinMtx).xyz + gWorld[3].xyz;
             float4 posClip = mul(float4(posWorld, 1), gShadowMatrix);
+
             OUT.Position.z = 1.0 - min(posClip.z, 1.0);
+
             float4 cascadeMask = ComputeCascadeMask(posClip);
             OUT.Position.x = dot(cascadeMask, float4(1, 1, 1, 1)) * 0.00001 + posClip.x;
             OUT.Position.yw = float2(posClip.y, 1);
+
             #ifdef ALPHA_SHADOW
                 OUT.DepthColorAndTexCoord.x = posClip.w;
                 OUT.DepthColorAndTexCoord.yz = IN.TexCoord;
@@ -165,19 +176,31 @@ float ComputeDirectionalShadow(in float3 posWorld)
             #endif //ALPHA_SHADOW
             return OUT;
         }
+
         VS_ShadowDepthPedOutput VS_ShadowDepthSkinPed(VS_ShadowDepthSkinInput IN)
         {
             VS_ShadowDepthPedOutput OUT;
+
+            float3 position = IN.Position;
+            float3 normal = float3(0, 0, 0);
+
+            #ifdef VEHICLE_DAMAGE
+                ComputeVehicleDamage(position, normal);
+            #endif //VEHICLE_DAMAGE
+
             float4x3 skinMtx = ComputeSkinMatrix(IN.BlendIndices, IN.BlendWeights);
-            float3 posWorld = mul(float4(IN.Position, 1.0), skinMtx).xyz + gWorld[3].xyz;
+            float3 posWorld = mul(float4(position, 1.0), skinMtx).xyz + gWorld[3].xyz;
             float4 posClip =  mul(float4(posWorld, 1), gShadowMatrix);
+
             float4 cascadeMask = ComputeCascadeMask(posClip);
             float3 a;
             a.xy = float2(cascadeMask.w, posWorld.z);
             a.z = cascadeMask.w * gShadowParam0123.w + cascadeMask.w;
             a.z = a.z * (gShadowParam14151617.x == 3) + cascadeMask.w;
+
             float3 b = float3(1, cascadeMask.wz);
             float3 v4 = lerp(a, b, gShadowParam14151617.x == 0.0);
+
             OUT.Position.xyz = cascadeMask.xyz;
             OUT.Position.w = v4.x;
             OUT.PositionWorldAndUnknown.xy = posWorld.xy;
@@ -185,6 +208,7 @@ float ComputeDirectionalShadow(in float3 posWorld)
             return OUT;
         }
     #endif //!NO_SKINNING
+
     #ifdef ALPHA_SHADOW
         float4 PS_ShadowDepth(VS_ShadowDepthOutput IN, float2 screenCoords : VPOS) : COLOR
     #else

@@ -1,7 +1,6 @@
 //base for most shaders. you should use or extend this to reduce code duplication unless you really need specialized shaders for an effect
 #define PARABOLOID_HEIGHT_OFFSET 512
 
-#include "megashader_todo.fxh"
 #include "common_functions.fxh"
 #ifndef NO_SHADOW_CASTING
     #include "common_shadow.fxh"
@@ -50,7 +49,14 @@ VS_Output VS_Transform(VS_Input IN)
 {
     VS_Output OUT;
     
-    float3 posWorld = mul(float4(IN.Position, 1.0), gWorld).xyz;
+    float3 position = IN.Position;
+    float3 normal = IN.Normal;
+
+    #ifdef VEHICLE_DAMAGE
+        ComputeVehicleDamage(position, normal);
+    #endif //VEHICLE_DAMAGE
+
+    float3 posWorld = mul(float4(position, 1.0), gWorld).xyz;
 
     #if defined(SPECULAR) || defined(ENVIRONMENT_MAP)
         float3 fragToViewDir = gViewInverse[3].xyz - posWorld;
@@ -58,7 +64,7 @@ VS_Output VS_Transform(VS_Input IN)
     #endif //SPECULAR || ENVIRONMENT_MAP
     OUT.PositionWorld.xyz = posWorld;
     
-    float3 normalWorld = normalize(mul(IN.Normal, (float3x3)gWorld) + 0.00001);
+    float3 normalWorld = normalize(mul(normal, (float3x3)gWorld) + 0.00001);
     #if defined(NORMAL_MAP) || defined(PARALLAX)
         float3 tangentWorld = normalize(mul(IN.Tangent.xyz, (float3x3)gWorld) + 0.00001);
         float3 bitangentWorld = cross(tangentWorld, normalWorld);
@@ -87,8 +93,14 @@ VS_Output VS_Transform(VS_Input IN)
         OUT.Color.xy = IN.Color.xy;
     #endif //DAY_NIGHT_EFFECTS
 
-    float4 posClip = mul(float4(IN.Position, 1.0), gWorldViewProj);
-    
+    #ifdef VEHICLE_DAMAGE
+        float3 v1 = mul(gViewInverse[3].xyz - gWorld[3].xyz, (float3x3)transpose(gWorld));
+        float3 v2 = normalize(v1 - position);
+        position += v2 * zShiftScale;
+    #endif //VEHICLE_DAMAGE
+
+    float4 posClip = mul(float4(position, 1.0), gWorldViewProj);
+
     #ifdef DEPTH_SHIFT
         OUT.Position.xyz = ComputeDepthShift(posClip);
     #elif defined(WIRE)
@@ -150,7 +162,14 @@ VS_OutputDeferred VS_TransformD(VS_Input IN)
 {
     VS_OutputDeferred OUT;
     
-    float3 posWorld = mul(float4(IN.Position, 1.0), gWorld).xyz;
+    float3 position = IN.Position;
+    float3 normal = IN.Normal;
+
+    #ifdef VEHICLE_DAMAGE
+        ComputeVehicleDamage(position, normal);
+    #endif //VEHICLE_DAMAGE
+
+    float3 posWorld = mul(float4(position, 1.0), gWorld).xyz;
     float3 fragToViewDir = gViewInverse[3].xyz - posWorld;
 
     #ifdef ENVIRONMENT_MAP
@@ -162,7 +181,7 @@ VS_OutputDeferred VS_TransformD(VS_Input IN)
         float3 tangentWorld = normalize(mul(IN.Tangent.xyz, (float3x3)gWorld) + 0.00001);
         OUT.FragToViewDirTangent.x = dot(tangentWorld, fragToViewDir);
         
-        float3 normalWorld = normalize(mul(IN.Normal, (float3x3)gWorld) + 0.00001);
+        float3 normalWorld = normalize(mul(normal, (float3x3)gWorld) + 0.00001);
         float3 bitangentWorld = cross(tangentWorld, normalWorld);
 
         OUT.TangentWorld.xyz = tangentWorld;
@@ -172,7 +191,7 @@ VS_OutputDeferred VS_TransformD(VS_Input IN)
         OUT.FragToViewDirTangent.z = dot(normalWorld, fragToViewDir);
         OUT.NormalWorldAndDepth.xyz = normalWorld;
     #else
-        float3 normalWorld = normalize(mul(IN.Normal, (float3x3)gWorld) + 0.00001);
+        float3 normalWorld = normalize(mul(normal, (float3x3)gWorld) + 0.00001);
         #if defined(NORMAL_MAP) || defined(PARALLAX)
             float3 tangentWorld = normalize(mul(IN.Tangent.xyz, (float3x3)gWorld) + 0.00001);
             float3 bitangentWorld = cross(tangentWorld, normalWorld);
@@ -196,8 +215,14 @@ VS_OutputDeferred VS_TransformD(VS_Input IN)
         OUT.Color.xy = IN.Color.xy;
     #endif //DIRT_DECAL
 
-    float4 posClip = mul(float4(IN.Position, 1.0), gWorldViewProj);
+    #ifdef VEHICLE_DAMAGE
+        float3 v1 = mul(gViewInverse[3].xyz - gWorld[3].xyz, (float3x3)transpose(gWorld));
+        float3 v2 = normalize(v1 - position);
+        position += v2 * zShiftScale;
+    #endif //VEHICLE_DAMAGE
 
+    float4 posClip = mul(float4(position, 1.0), gWorldViewProj);
+    
     OUT.Position.xyz = posClip.xyz;
     OUT.Position.w = OUT.NormalWorldAndDepth.w = posClip.w;
     
@@ -403,6 +428,13 @@ VS_OutputUnlit VS_TransformUnlit(VS_InputUnlit IN)
 {
     VS_OutputUnlit OUT;
 
+    float3 position = IN.Position;
+    float3 normal = float3(0, 0, 0);
+
+    #ifdef VEHICLE_DAMAGE
+        ComputeVehicleDamage(position, normal);
+    #endif //VEHICLE_DAMAGE
+
     float4 posClip = mul(float4(IN.Position, 1.0), gWorldViewProj);
     #ifndef DEPTH_SHIFT
         OUT.Position = posClip;
@@ -442,8 +474,15 @@ VS_OutputUnlit VS_TransformUnlit(VS_InputUnlit IN)
     {
         VS_Output OUT;
 
+        float3 position = IN.Position;
+        float3 normal = IN.Normal;
+
+        #ifdef VEHICLE_DAMAGE
+            ComputeVehicleDamage(position, normal);
+        #endif //VEHICLE_DAMAGE
+        
         float4x3 skinMtx = ComputeSkinMatrix(IN.BlendIndices, IN.BlendWeights);
-        float3 posWorld = mul(float4(IN.Position, 1.0), skinMtx).xyz;
+        float3 posWorld = mul(float4(position, 1.0), skinMtx).xyz;
         float3 fragToViewDir = gViewInverse[3].xyz - posWorld;
 
         #if defined(SPECULAR) || defined(ENVIRONMENT_MAP)
@@ -451,7 +490,7 @@ VS_OutputUnlit VS_TransformUnlit(VS_InputUnlit IN)
         #endif //SPECULAR || ENVIRONMENT_MAP
         OUT.PositionWorld.xyz = posWorld + gWorld[3].xyz;
         
-        float3 normalWorld = mul(IN.Normal, (float3x3)gWorld);
+        float3 normalWorld = mul(normal, (float3x3)gWorld);
         #if defined(NORMAL_MAP) || defined(PARALLAX)
             float3 tangentWorld = mul(IN.Tangent.xyz, (float3x3)gWorld);
             float3 bitangentWorld = cross(tangentWorld, normalWorld);
@@ -484,7 +523,7 @@ VS_OutputUnlit VS_TransformUnlit(VS_InputUnlit IN)
 
         #ifdef DEPTH_SHIFT
             OUT.Position.xyz = ComputeDepthShift(posClip);
-    #elif defined(WIRE)
+        #elif defined(WIRE)
             float distFromView = distance(posWorld, gViewInverse[3].xyz);
 
             float4 v2 = mul(float4(IN.Position + IN.Normal, 1), gWorldViewProj);
@@ -585,8 +624,15 @@ VS_OutputUnlit VS_TransformUnlit(VS_InputUnlit IN)
     {
         VS_OutputUnlit OUT;
 
+        float3 position = IN.Position;
+        float3 normal = float3(0, 0, 0);
+
+        #ifdef VEHICLE_DAMAGE
+            ComputeVehicleDamage(position, normal);
+        #endif //VEHICLE_DAMAGE
+        
         float4x3 skinMtx = ComputeSkinMatrix(IN.BlendIndices, IN.BlendWeights);
-        float3 posWorld = mul(float4(IN.Position, 1.0), skinMtx).xyz;
+        float3 posWorld = mul(float4(position, 1.0), skinMtx).xyz;
         
         float4 posClip = mul(float4(posWorld, 1.0), gWorldViewProj);
         #ifndef DEPTH_SHIFT
@@ -646,17 +692,23 @@ struct VS_OutputInst
 VS_OutputInst VS_TransformInst(VS_InputInst IN)
 {
     VS_OutputInst OUT;
-    
-    float4x3 instanceWorldMtx = float4x3(IN.WorldMatrixRow1AndColor.xyz, IN.WorldMatrixRow2AndColor.xyz, IN.WorldMatrixRow3AndColor.xyz, IN.WorldMatrixRow4AndColor.xyz);
-    float3 posWorld = mul(float4(IN.Position, 1.0), instanceWorldMtx).xyz;
 
-    OUT.PositionWorld.xyz = mul(float4(posWorld, 1.0), gWorld).xyz;
+    float4x3 instanceWorldMtx = float4x3(IN.WorldMatrixRow1AndColor.xyz, IN.WorldMatrixRow2AndColor.xyz, IN.WorldMatrixRow3AndColor.xyz, IN.WorldMatrixRow4AndColor.xyz);
+    float3 position = mul(float4(IN.Position, 1.0), instanceWorldMtx).xyz;
+
+    float3 normal = IN.Normal;
+    
+    #ifdef VEHICLE_DAMAGE
+        ComputeVehicleDamage(position, normal);
+    #endif //VEHICLE_DAMAGE
+
+    OUT.PositionWorld.xyz = mul(float4(position, 1.0), gWorld).xyz;
     #if defined(SPECULAR) || defined(ENVIRONMENT_MAP)
         float3 fragToViewDir = gViewInverse[3].xyz - OUT.PositionWorld.xyz;
         OUT.FragToViewDir = fragToViewDir;
     #endif //SPECULAR
 
-    float3 normalWorld = normalize(mul(IN.Normal, (float3x3)gWorld) + 0.00001);
+    float3 normalWorld = normalize(mul(normal, (float3x3)gWorld) + 0.00001);
     #if defined(NORMAL_MAP) || defined(PARALLAX)
         float3 tangentWorld = normalize(mul(IN.Tangent.xyz, (float3x3)gWorld) + 0.00001);
         float3 bitangentWorld = cross(tangentWorld, normalWorld);
@@ -683,7 +735,14 @@ VS_OutputInst VS_TransformInst(VS_InputInst IN)
         OUT.TexCoord = ComputeUvAnimation(IN.TexCoord);
     #endif //ANIMATED
 
-    float4 posClip = mul(float4(posWorld, 1.0), gWorldViewProj);
+    #ifdef VEHICLE_DAMAGE
+        float3 v1 = mul(gViewInverse[3].xyz - gWorld[3].xyz, (float3x3)transpose(gWorld));
+        float3 v2 = normalize(v1 - position);
+        position += v2 * zShiftScale;
+    #endif //VEHICLE_DAMAGE
+
+    float4 posClip = mul(float4(position, 1.0), gWorldViewProj);
+
     #ifdef DEPTH_SHIFT
         OUT.Position.xyz = ComputeDepthShift(posClip);
     #else
