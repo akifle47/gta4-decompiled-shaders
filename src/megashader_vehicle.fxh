@@ -255,8 +255,14 @@ VS_OutputVehicle VS_VehicleTransform(VS_InputSkinVehicle IN)
     #ifdef TIRE_DEFORMATION
         worldMtx = matWheelTransform;
     #endif //TIRE_DEFORMATION
+
     float3 posWorld = mul(float4(position, 1.0), worldMtx).xyz;
-    float4 posClip = mul(float4(posWorld, 1.0), gWorldViewProj);
+
+    #ifdef TIRE_DEFORMATION
+        float4 posClip = mul(float4(posWorld, 1.0), gWorldViewProj);
+    #else
+        float4 posClip = mul(float4(position, 1.0), gWorldViewProj);
+    #endif //TIRE_DEFORMATION
 
     posWorld += gWorld[3].xyz;
     OUT.FragToViewDir = gViewInverse[3].xyz - posWorld;
@@ -432,7 +438,12 @@ VS_OutputVehicleDeferred VS_VehicleTransformD(VS_InputVehicle IN)
     #endif //TIRE_DEFORMATION
 
     posWorld = mul(float4(position, 1.0), worldMtx).xyz;
-    float4 posClip = mul(float4(posWorld, 1.0), gWorldViewProj);
+    
+    #ifdef TIRE_DEFORMATION
+        float4 posClip = mul(float4(posWorld, 1.0), gWorldViewProj);
+    #else
+        float4 posClip = mul(float4(position, 1.0), gWorldViewProj);
+    #endif //TIRE_DEFORMATION
 
     OUT.Position = posClip;
     OUT.PositionWorld = float4(posWorld, 1.0);
