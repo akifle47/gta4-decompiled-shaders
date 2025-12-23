@@ -363,20 +363,19 @@ PS_OutputDeferred DeferredTextured(bool dither, VS_OutputDeferred IN, float2 scr
     #ifdef SPECULAR
         OUT.SpecularAndAO.x = specIntensity * 0.5;
         OUT.SpecularAndAO.y = sqrt(specPower / 512.0);
-        #ifdef DIRT_DECAL
-            OUT.SpecularAndAO.z = 0.0;
-        #else
-            OUT.SpecularAndAO.z = IN.Color.x;
-        #endif //DIRT_DECAL
+    #elif defined(NO_SPECULAR_WRITE)
+        OUT.SpecularAndAO.xy = float2(0.0, 0);
     #else
-        #if defined(NO_SPECULAR_WRITE)
-            OUT.SpecularAndAO.xyz = float3(0, 0, 0);
-        #elif defined(EMISSIVE)
-            OUT.SpecularAndAO.xyz = float3(0, 0.25, globalScalars.z);
-        #else
-            OUT.SpecularAndAO.xyz = float3(0, 0.25, IN.Color.x);
-        #endif //NO_SPECULAR_WRITE
+        OUT.SpecularAndAO.xy = float2(0.0, 0.25);
     #endif //SPECULAR
+
+    #if defined(DIRT_DECAL) || defined(NO_SPECULAR_WRITE)
+        OUT.SpecularAndAO.z = 0.0;
+    #elif defined(EMISSIVE)
+        OUT.SpecularAndAO.z = globalScalars.z;
+    #else
+        OUT.SpecularAndAO.z = IN.Color.x;
+    #endif //DIRT_DECAL || NO_SPECULAR_WRITE
 
     #ifdef PARALLAX
         OUT.SpecularAndAO.z *= v0;
