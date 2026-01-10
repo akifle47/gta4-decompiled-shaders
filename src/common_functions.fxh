@@ -93,11 +93,11 @@ float4 VS_BlitPositionOnly(VS_BlitPositionOnlyInput IN) : POSITION
                 }
             }
         #else
-            float height = (tex2D(BumpSampler, texCoordIn).w * parallaxScaleBias) - (parallaxScaleBias / 2.0);
-            #ifndef DEPTH_SHIFT_SCALE
-                height = saturate(height);
+            float height = (tex2D(BumpSampler, texCoordIn).w * parallaxScaleBias) - (parallaxScaleBias * 0.5);
+            texCoordOut = texCoordIn + (fragToViewDirTangent.xy * height);
+            #ifdef DEPTH_SHIFT_SCALE
+                texCoordOut = saturate(texCoordOut);
             #endif //DEPTH_SHIFT_SCALE
-            texCoordOut = saturate(fragToViewDirTangent.xy * height + texCoordIn);
             normalMapOut = tex2D(BumpSampler, texCoordOut);
         #endif //PARALLAX_STEEP
     }
